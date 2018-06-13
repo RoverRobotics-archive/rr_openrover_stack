@@ -1,0 +1,19 @@
+<launch>
+
+    <node pkg="rr_openrover_basic"  type="openrover_basic_node" name="openrover_basic_node" output="screen"/>
+
+    <!-- Xbox 360 Controller Button Mapping -->
+    <node pkg="rr_openrover_basic" type="joystick.py" name="joystick" >
+        <param name="max_vel" value="2.6" />
+        <param name="drive_type" value="diff_drive" />
+        <param name="full_throttle" value="0.6" />
+        <param name="adjustable_throttle" value="True" />
+        <param name="increment" value="0.2" />
+    </node>
+
+    <node pkg="joy" type="joy_node" name="joy_node" >
+        <remap from="/joy" to="/joystick" />
+        <param name="autorepeat_rate" value="3" /> 
+    </node>
+ 
+</launch>
