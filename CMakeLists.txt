@@ -32,10 +32,17 @@ find_package(catkin REQUIRED COMPONENTS
 ##   your messages/services/actions (e.g. std_msgs, actionlib_msgs, ...).
 ## * In the file package.xml:
 ##   * add a build_depend tag for "message_generation"
+<<<<<<< HEAD
 ##   * add a build_depend and a run_depend tag for each package in MSG_DEP_SET
 ##   * If MSG_DEP_SET isn't empty the following dependency has been pulled in
 ##     but can be declared for certainty nonetheless:
 ##     * add a run_depend tag for "message_runtime"
+=======
+##   * add a build_depend and a exec_depend tag for each package in MSG_DEP_SET
+##   * If MSG_DEP_SET isn't empty the following dependency has been pulled in
+##     but can be declared for certainty nonetheless:
+##     * add a exec_depend tag for "message_runtime"
+>>>>>>> 5cf2938d8aec2b85a5b60b21e852796136dcb5ca
 ## * In this file (CMakeLists.txt):
 ##   * add "message_generation" and every package in MSG_DEP_SET to
 ##     find_package(catkin REQUIRED COMPONENTS ...)
@@ -80,7 +87,11 @@ find_package(catkin REQUIRED COMPONENTS
 ## To declare and build dynamic reconfigure parameters within this
 ## package, follow these steps:
 ## * In the file package.xml:
+<<<<<<< HEAD
 ##   * add a build_depend and a run_depend tag for "dynamic_reconfigure"
+=======
+##   * add a build_depend and a exec_depend tag for "dynamic_reconfigure"
+>>>>>>> 5cf2938d8aec2b85a5b60b21e852796136dcb5ca
 ## * In this file (CMakeLists.txt):
 ##   * add "dynamic_reconfigure" to
 ##     find_package(catkin REQUIRED COMPONENTS ...)
@@ -133,7 +144,11 @@ include_directories(
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
+<<<<<<< HEAD
 add_executable(openrover_basic_node src/openrover_basic.cpp)
+=======
+# add_executable(${PROJECT_NAME}_node src/rr_openrover_basic_node.cpp)
+>>>>>>> 5cf2938d8aec2b85a5b60b21e852796136dcb5ca
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -146,7 +161,13 @@ add_executable(openrover_basic_node src/openrover_basic.cpp)
 # add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
+<<<<<<< HEAD
 target_link_libraries(openrover_basic_node ${catkin_LIBRARIES} )
+=======
+# target_link_libraries(${PROJECT_NAME}_node
+#   ${catkin_LIBRARIES}
+# )
+>>>>>>> 5cf2938d8aec2b85a5b60b21e852796136dcb5ca
 
 #############
 ## Install ##
