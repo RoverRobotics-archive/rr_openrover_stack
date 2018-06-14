@@ -2,23 +2,7 @@
 #include <termios.h>
 #include "ros/ros.h"
 #include "geometry_msgs/Twist.h"
-
-
-class OpenRover
-{
-public:
-    OpenRover( ros::NodeHandle &_nh, ros::NodeHandle &_nh_priv );
-    bool start();
-    bool openComs();
-    bool setMotorSpeed(int left_motor_speed, int right_motor_speed, int flipper_motor_speed);
-private:
-    std::string port;
-    int baud;
-    int fd;
-    ros::NodeHandle nh;
-    ros::NodeHandle nh_priv;
-    void cmdVelCB(const geometry_msgs::Twist::ConstPtr& msg);
-};
+#include "rr_openrover_basic/openrover.hpp"
 
 OpenRover::OpenRover( ros::NodeHandle &_nh, ros::NodeHandle &_nh_priv ) :
     port("/dev/ttyUSB0"),
@@ -31,8 +15,9 @@ OpenRover::OpenRover( ros::NodeHandle &_nh, ros::NodeHandle &_nh_priv ) :
 
 bool OpenRover::start()
 {
+    openComs();
     ROS_INFO("Creating Subscriber");
-    ros::Subscriber sub = nh.subscribe("cmd_vel", 10, &OpenRover::cmdVelCB, this);
+    cmd_vel_sub = nh.subscribe("cmd_vel", 1, &OpenRover::cmdVelCB, this);
     return true;
 }
 
@@ -40,8 +25,8 @@ void OpenRover::cmdVelCB(const geometry_msgs::Twist::ConstPtr& msg)
 {
     ROS_INFO("I heard: %f, %f", msg->linear.x, msg->angular.z);
     int left_motor_speed, right_motor_speed;
-    left_motor_speed = (msg->linear.x*10) + (msg->angular.z*20) + 125;
-    right_motor_speed = (msg->linear.x*10) - (msg->angular.z*20) + 125;
+    left_motor_speed = (msg->linear.x*30) + (msg->angular.z*20) + 125;
+    right_motor_speed = (msg->linear.x*30) - (msg->angular.z*20) + 125;
     setMotorSpeed(left_motor_speed, right_motor_speed, 125);    
 }
 
@@ -110,54 +95,48 @@ bool OpenRover::setMotorSpeed(int left_motor_speed, int right_motor_speed, int f
     }
 }
 
-int main(int argc, char **argv)
+int main( int argc, char *argv[] )
 {
-    ros::NodeHandle *nh = NULL;
-    ros::NodeHandle *nh_priv = NULL;
-    OpenRover *openrover = NULL;
-    
-    ROS_INFO("Creating node");
-    ros::init(argc, argv, "openrover_node");
+        ros::NodeHandle *nh = NULL;
+        ros::NodeHandle *nh_priv = NULL;
+        OpenRover *openrover = NULL;
 
-    nh = new ros::NodeHandle( );
-    if( !nh )
-    {
-	ROS_FATAL( "Failed to initialize NodeHandle" );
-	ros::shutdown( );
-	return -1;
-    }
-    nh_priv = new ros::NodeHandle( "~" );
-    if( !nh_priv )
-    {
-	ROS_FATAL( "Failed to initialize private NodeHandle" );
-	delete nh;
-	ros::shutdown( );
-	return -2;
-    }
-    openrover = new OpenRover( *nh, *nh_priv );
-    if( !openrover )
-    {
-	ROS_FATAL( "Failed to initialize driver" );
-	delete nh_priv;
-	delete nh;
-	ros::shutdown( );
-	return -3;
-    }
+        ROS_INFO("Creating node");
+        ros::init( argc, argv, "openrover_basic_node" );
 
-    if(!openrover->start())
-        ROS_ERROR( "Failed to start the driver" );
+        nh = new ros::NodeHandle( );
+        if( !nh )
+        {
+                ROS_FATAL( "Failed to initialize NodeHandle" );
+                ros::shutdown( );
+                return -1;
+        }
+        nh_priv = new ros::NodeHandle( "~" );
+        if( !nh_priv )
+        {
+                ROS_FATAL( "Failed to initialize private NodeHandle" );
+                delete nh;
+                ros::shutdown( );
+                return -2;
+        }
+        openrover = new OpenRover( *nh, *nh_priv );
+        if( !openrover )
+        {
+                ROS_FATAL( "Failed to initialize driver" );
+                delete nh_priv;
+                delete nh;
+                ros::shutdown( );
+                return -3;
+        }
+        if( !openrover->start( ) )
+                ROS_ERROR( "Failed to start the driver" );
 
-    openrover->openComs();
-    //while (ros::ok())
-    //{
-    //    openrover->setMotorSpeed(150, 150, 125);
-    //    r.sleep();
-    //}
-    ros::spin();
+        ros::spin( );
 
-    delete openrover;
-    delete nh;
-    delete nh_priv;
+        delete openrover;
+        delete nh_priv;
+        delete nh;
 
-    return 0;
+        return 0;
 }
+
