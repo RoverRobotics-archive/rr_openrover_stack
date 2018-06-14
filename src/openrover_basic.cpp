@@ -8,15 +8,16 @@ class OpenRover
 {
 public:
     OpenRover( ros::NodeHandle &_nh, ros::NodeHandle &_nh_priv );
-    void cmdVelCB(const geometry_msgs::Twist::ConstPtr& msg);
-    bool openComms();
-    bool spinMotors();
+    bool start();
+    bool openComs();
+    bool setMotorSpeed(int left_motor_speed, int right_motor_speed, int flipper_motor_speed);
 private:
     std::string port;
     int baud;
     int fd;
     ros::NodeHandle nh;
     ros::NodeHandle nh_priv;
+    void cmdVelCB(const geometry_msgs::Twist::ConstPtr& msg);
 };
 
 OpenRover::OpenRover( ros::NodeHandle &_nh, ros::NodeHandle &_nh_priv ) :
@@ -26,16 +27,25 @@ OpenRover::OpenRover( ros::NodeHandle &_nh, ros::NodeHandle &_nh_priv ) :
     ROS_INFO( "Initializing" );
     nh_priv.param( "port", port, (std::string)"/dev/ttyUSB0" );
     nh_priv.param( "baud", baud, 57600 );
+}
 
+bool OpenRover::start()
+{
+    ROS_INFO("Creating Subscriber");
     ros::Subscriber sub = nh.subscribe("cmd_vel", 10, &OpenRover::cmdVelCB, this);
+    return true;
 }
 
 void OpenRover::cmdVelCB(const geometry_msgs::Twist::ConstPtr& msg)
 {
     ROS_INFO("I heard: %f, %f", msg->linear.x, msg->angular.z);
+    int left_motor_speed, right_motor_speed;
+    left_motor_speed = (msg->linear.x*10) + (msg->angular.z*20) + 125;
+    right_motor_speed = (msg->linear.x*10) - (msg->angular.z*20) + 125;
+    setMotorSpeed(left_motor_speed, right_motor_speed, 125);    
 }
 
-bool OpenRover::openComms()
+bool OpenRover::openComs()
 {
     ROS_INFO("Opening serial port");
     struct termios fd_options;
@@ -75,33 +85,28 @@ bool OpenRover::openComms()
     return true;
 }
 
-bool OpenRover::spinMotors()
+bool OpenRover::setMotorSpeed(int left_motor_speed, int right_motor_speed, int flipper_motor_speed)
 {
     unsigned char buffer[6];
-    if (openComms())
+    if (true)
     {
         buffer[0] = 0xfd;
-        buffer[1] = 0x64;
-        buffer[2] = 0x64;
-        buffer[3] = 0x00;
+        buffer[1] = (char)left_motor_speed;
+        buffer[2] = (char)right_motor_speed;
+        buffer[3] = (char)flipper_motor_speed;
         buffer[4] = 0x00;
         buffer[5] = 0x00;
-        buffer[6] = 0x37;
-        ROS_INFO("Attempting to spin motors");
-        speed_t cfgetispeed(const struct termios *attribs);
-//        ROS_INFO("Baud rate set to: %i", speed_t);
-        while(true)
-            write(fd, buffer, 7); 
-        for (int i=0; i<7; i++)
-        { 
-            ROS_INFO("I sent %i", buffer[i]);
-        }        
-        ROS_INFO("Did the motors spin yet?");
-        //if (0 > write(fd, buffer, 7))
-	//{
-	//   ROS_ERROR("Failed to update channel: %s", strerror(errno));
-	//    return false;
-	//}    
+
+        //Calculate Checksum
+        int checksum;
+        checksum = 255-(buffer[1]+buffer[2]+buffer[3])%255;
+        ROS_INFO("Integer checksum: %i", checksum);
+        buffer[6] = (char)checksum;
+        //ROS_INFO("Byte checksum: %p", buffer[6]); 
+        ROS_INFO("I sent: %p", buffer);
+
+        speed_t cfgetispeed(const struct termios *attribs);        
+        write(fd, buffer, 7); 
     }
 }
 
@@ -113,7 +118,7 @@ int main(int argc, char **argv)
     
     ROS_INFO("Creating node");
     ros::init(argc, argv, "openrover_node");
-    
+
     nh = new ros::NodeHandle( );
     if( !nh )
     {
@@ -138,8 +143,16 @@ int main(int argc, char **argv)
 	ros::shutdown( );
 	return -3;
     }
-    openrover->spinMotors();    
-    ROS_INFO("ROS spin");
+
+    if(!openrover->start())
+        ROS_ERROR( "Failed to start the driver" );
+
+    openrover->openComs();
+    //while (ros::ok())
+    //{
+    //    openrover->setMotorSpeed(150, 150, 125);
+    //    r.sleep();
+    //}
     ros::spin();
 
     delete openrover;

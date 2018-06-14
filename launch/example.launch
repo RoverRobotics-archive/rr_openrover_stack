@@ -1,6 +1,8 @@
 <launch>
 
-    <node pkg="rr_openrover_basic"  type="openrover_basic_node" name="openrover_basic_node" output="screen"/>
+    <node pkg="rr_openrover_basic"  type="openrover_basic_node" name="openrover_basic_node" output="screen">
+        <param name="port" value="/dev/ttyUSB1" />
+    </node>
 
     <!-- Xbox 360 Controller Button Mapping -->
     <node pkg="rr_openrover_basic" type="joystick.py" name="joystick" >
