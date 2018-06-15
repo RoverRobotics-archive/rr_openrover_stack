@@ -28,11 +28,12 @@ bool OpenRover::start()
 void OpenRover::cmdVelCB(const geometry_msgs::Twist::ConstPtr& msg)
 {
     ROS_INFO("cmd_vel said: %f, %f", msg->linear.x, msg->angular.z);
-    int left_motor_speed, right_motor_speed;
+    int left_motor_speed, right_motor_speed, flipper_motor_speed;
     left_motor_speed = (int)((msg->linear.x*30) + (msg->angular.z*20) + 125)%250;
     right_motor_speed =(int)((msg->linear.x*30) - (msg->angular.z*20) + 125)%250;
+    flipper_motor_speed = (int)((msg->angular.y*20) + 125)%250;
     ROS_INFO("Converted motor speeds to: %i, %i", left_motor_speed, right_motor_speed);
-    setMotorSpeed(left_motor_speed, right_motor_speed, 125);    
+    setMotorSpeed(left_motor_speed, right_motor_speed, flipper_motor_speed);
 }
 
 bool OpenRover::openComs()
@@ -104,14 +105,16 @@ bool OpenRover::openComs()
 bool OpenRover::setMotorSpeed(int left_motor_speed, int right_motor_speed, int flipper_motor_speed)
 {
     unsigned char write_buffer[7], read_buffer[5], test;
-    int checksum;    
+    int checksum;
 
     write_buffer[0] = 0xfd;
     write_buffer[1] = (char)left_motor_speed;
     write_buffer[2] = (char)right_motor_speed;
     write_buffer[3] = (char)flipper_motor_speed;
-    write_buffer[4] = 0x0a; //read data
-    write_buffer[5] = 0x28; //encoder2
+    write_buffer[4] = 10; // 0x0a //read data //10 -> get value
+    write_buffer[5] = 0; // 0x28; //encoder2 //40 -> specify sensor
+
+    //start byte is 0xfd ->253 ->11111101
 
     //write_buffer[1] = 0x00
     //write_buffer[2] = 0x00

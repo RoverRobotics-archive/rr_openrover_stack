@@ -251,6 +251,11 @@ def joy_cb(Joy):
     if turn_cmd < DEADBAND and -DEADBAND < turn_cmd:
         turn_cmd = 0
 
+    # Flipper up/down commands
+    flipper_cmd = (FULL_THROTTLE * Joy.axes[L_TRIG_AXES]) - (FULL_THROTTLE * Joy.axes[R_TRIG_AXES])
+    if flipper_cmd < DEADBAND and -DEADBAND < flipper_cmd:
+        flipper_cmd = 0
+
     #Limit acceleration
     #drive_cmd, turn_cmd = limit_acc(drive_cmd, turn_cmd)
 
@@ -260,6 +265,7 @@ def joy_cb(Joy):
 
     # Publish move commands
     cmd.linear.x = drive_cmd
+    cmd.angular.y = flipper_cmd
     cmd.angular.z = turn_cmd
     pub.publish(cmd)
     
