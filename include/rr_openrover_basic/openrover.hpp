@@ -28,6 +28,8 @@ private:
     ros::NodeHandle nh_priv;
 
     //ROS Publisher and Subscribers
+    ros::Publisher encoder_pub;
+    ros::Publisher battery_soc_pub;
     ros::Subscriber cmd_vel_sub;
 
     //General Class variables
