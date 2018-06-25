@@ -1,14 +1,45 @@
 #include <fcntl.h>
 #include <termios.h>
+#include <ctime>
 #include "ros/ros.h"
 #include "std_msgs/Int8.h"
 #include "geometry_msgs/Twist.h"
+#include <std_msgs/Bool.h>
 #include "nav_msgs/Odometry.h"
 #include "rr_openrover_basic/openrover.hpp"
+
+const int START_BYTE = 253;
+const int i_OUT_PACKAGE_LENGTH = 7;
+
+const int i_REG_PWR_TOTAL_CURRENT_INDEX = 0;
+const int i_REG_MOTOR_FB_RPM_LEFT_INDEX = 2;
+const int i_REG_MOTOR_FB_RPM_RIGHT_INDEX = 4;
+const int i_REG_FLIPPER_FB_POSITION_POT1 = 6;
+const int i_REG_FLIPPER_FB_POSITION_POT2 = 8;
+const int i_REG_MOTOR_FB_CURRENT_LEFT = 10;
+const int i_REG_MOTOR_FB_CURRENT_RIGHT = 12;
+const int i_REG_MOTOR_FAULT_FLAG_LEFT = 18;
+const int i_REG_MOTOR_TEMP_LEFT = 20;
+const int i_REG_MOTOR_TEMP_RIGHT = 22;
+const int i_REG_POWER_BAT_VOLTAGE_A = 24;
+const int i_REG_POWER_BAT_VOLTAGE_B = 26;
+const int i_ENCODER_INTERVAL_MOTOR_LEFT = 28;
+const int i_ENCODER_INTERVAL_MOTER_RIGHT = 20;
+const int i_ENCODER_INTERVAL_MOTOR_FLIPPER = 32;
+const int i_REG_ROBOT_REL_SOC_A = 34;
+const int i_REG_ROBOT_REL_SOC_B = 36;
+const int i_REG_MOTOR_CHARGER_STATE = 38;
+const int i_BUILDNO = 40;
+const int i_REG_POWER_A_CURRENT = 42;
+const int i_REG_POWER_B_CURRENT = 44;
+const int i_REG_MOTOR_FLIPPER_ANGLE = 46;
+const int i_to_computer_REG_MOTOR_SIDE_FAN_SPEED = 48;
+const int i_to_computer_REG_MOTOR_SLOW_SPEED = 50;
 
 OpenRover::OpenRover( ros::NodeHandle &_nh, ros::NodeHandle &_nh_priv ) :
     port("/dev/ttyUSB0"),
     baud(57600)
+    
 {
     ROS_INFO( "Initializing" );
     nh_priv.param( "port", port, (std::string)"/dev/ttyUSB0" );
@@ -22,18 +53,168 @@ bool OpenRover::start()
     //encoder_pub = nh.advertise<nav_msgs::Odometry>("odom", 2);
     //battery_soc_pub = nh.advertise<std_msgs::Int8("battery_soc",2);
     cmd_vel_sub = nh.subscribe("cmd_vel", 1, &OpenRover::cmdVelCB, this);
+    x_button_sub = nh.subscribe("joystick/x_button", 1, &OpenRover::toggleLowSpeedMode, this);
     return true;
 }
 
 void OpenRover::cmdVelCB(const geometry_msgs::Twist::ConstPtr& msg)
 {
-    ROS_INFO("cmd_vel said: %f, %f", msg->linear.x, msg->angular.z);
+    //ROS_INFO("cmd_vel said: %f, %f", msg->linear.x, msg->angular.z);
     int left_motor_speed, right_motor_speed, flipper_motor_speed;
     left_motor_speed = (int)((msg->linear.x*30) + (msg->angular.z*20) + 125)%250;
     right_motor_speed =(int)((msg->linear.x*30) - (msg->angular.z*20) + 125)%250;
     flipper_motor_speed = (int)((msg->angular.y*20) + 125)%250;
-    ROS_INFO("Converted motor speeds to: %i, %i", left_motor_speed, right_motor_speed);
+    //ROS_INFO("Converted motor speeds to: %i, %i", left_motor_speed, right_motor_speed);
+   
+   	output_mutex.lock();
+	input_mutex.lock();
     setMotorSpeed(left_motor_speed, right_motor_speed, flipper_motor_speed);
+    output_mutex.unlock();
+	input_mutex.unlock();
+}
+
+bool OpenRover::setMotorSpeed(int left_motor_speed, int right_motor_speed, int flipper_motor_speed)
+{
+	updateMotorSpeeds(left_motor_speed, right_motor_speed, flipper_motor_speed);
+    unsigned char write_buffer[7], read_buffer[5], test;
+    int checksum;
+    static int timer1 = 0;
+    static int j = 0;
+    int val_tot;
+    //static std::time_t start = 0;
+    double duration;
+    
+    static struct timespec ts1;
+    static struct timespec ts2;
+    
+    timer1 = (timer1 + 1)%40; //every 4s reset
+    write_buffer[0] = 0xfd;
+    write_buffer[1] = (char)left_motor_speed;
+    write_buffer[2] = (char)right_motor_speed;
+    write_buffer[3] = (char)flipper_motor_speed;
+    write_buffer[4] = 10; //Param 1: 10 to get data, 240 to set low speed mode 
+    write_buffer[5] = 28; //Param 2:  -> 28=left mot, 30=right mot
+
+	if(timer1==0) // every 
+	{
+		//write_buffer[4] = 240; //Param 1: 10 to get data, 240 for low speed mode 
+		j = (j+1)%2;
+		//write_buffer[5] = j;
+	} 	
+
+    //Calculate Checksum
+    checksum = 255-(write_buffer[1]+write_buffer[2]+write_buffer[3]+write_buffer[4]+write_buffer[5])%255;
+    write_buffer[6] = (char)checksum;
+    
+    //ROS_INFO("I sent: %02x,%02x,%02x,%02x,%02x,%02x,%02x", write_buffer[0],write_buffer[1],write_buffer[2],write_buffer[3],write_buffer[4],write_buffer[5],write_buffer[6]);
+    //ROS_INFO("I sent: %i,%i,%i,%i,%i,%i,%i", write_buffer[0],write_buffer[1],write_buffer[2],write_buffer[3],write_buffer[4],write_buffer[5],write_buffer[6]);
+    //ROS_INFO("Param2: %i, S_Byte: %i", write_buffer[5], write_buffer[0]);
+    //speed_t cfgetispeed(const struct termios *attribs);
+    //high_resolution_clock::time_point t1 = high_resolution_clock::now();
+    //std::time_t t1 = std::time(NULL);
+    timespec_get(&ts1, TIME_UTC);
+    write(fd, write_buffer, 7);
+    read(fd, read_buffer, 5);
+    //write(fd, write_buffer, 7);
+    //read(fd, read_buffer, 5);
+    timespec_get(&ts2, TIME_UTC);
+    double t2 = (double)ts2.tv_sec + (double)ts2.tv_nsec/1000000000.0;
+    double t1 = (double)ts1.tv_sec + (double)ts1.tv_nsec/1000000000.0;
+    duration = t2-t1;
+    //std::time_t t2 = std::time(NULL);
+    //high_resolution_clock::time_point t2 = high_resolution_clock::now();
+    //duration = duration_cast<duration<double>>(t2-t1);
+    //double int_t2 = (double)t2;
+    //double int_t1 = (double)t1;
+    //duration = int_t2-int_t1;
+ 
+    val_tot = (read_buffer[2]<<8) + read_buffer[3];
+    //ROS_WARN("I Heard: %02x,%02x,%02x,%02x,%02x", read_buffer[0], read_buffer[1], read_buffer[2], read_buffer[3], read_buffer[4]);
+    //ROS_WARN("%f Param: %i, Val: %i, Timer: %i, S_Byte: %i", (t2-t1), read_buffer[1], read_buffer[3], timer1, read_buffer[0]);
+    int crc_calc = 255-(read_buffer[1]+read_buffer[2]+read_buffer[3])%255;
+    int crc_good = crc_calc-read_buffer[4];
+    ROS_WARN("CRC_good: %i, Val: %i, S_Byte: %i", crc_good, val_tot, read_buffer[0]);
+}
+
+void OpenRover::toggleLowSpeedMode(const std_msgs::Bool::ConstPtr& msg)
+{
+	int mode_setting;
+	
+	mode_setting = getParameterData(28);
+	
+	/*if(mode_setting==1)
+	{
+		ROS_INFO("Switching off low speed mode.");
+		if(!setParameterData(240, 0))
+		{
+			ROS_ERROR("Failed to turn off low speed mode.");
+		}
+	} else if(mode_setting==0) {
+		ROS_INFO("Switching on low speed mode.");
+		if(!setParameterData(240, 1))
+		{
+			ROS_ERROR("Failed to turn on low speed mode.");
+		}
+	} else {
+		ROS_ERROR("toggleLowSpeedMode error. Mode setting not valid. Defaulting to off.");
+		if(!setParameterData(240, 0))
+		{
+			ROS_ERROR("Failed to turn off low speed mode.");
+		}
+	}*/
+}
+
+bool OpenRover::sendCommand(int param1, int param2)
+{
+	unsigned int write_buffer[7];
+	unsigned int value;
+	
+    write_buffer[0] = START_BYTE;
+    write_buffer[1] = (char)motor_speeds[0]; //left motor
+    write_buffer[2] = (char)motor_speeds[1]; //right motor
+    write_buffer[3] = (char)motor_speeds[2]; //flipper
+    write_buffer[4] = (char)param1; //Param 1: 10 to get data, 240 for low speed mode 
+    write_buffer[5] = (char)param2; //Param 2:  -> 28=left mot, 30=right mot
+    //Calculate Checksum
+    write_buffer[6] = (char) 255-(write_buffer[1]+write_buffer[2]+write_buffer[3]+write_buffer[4]+write_buffer[5])%255;
+	
+	if (0>write(fd, write_buffer, 7))
+	{
+		ROS_ERROR("Failed to send command %02x,%02x,%02x,%02x,%02x,%02x,%02x", write_buffer[0],write_buffer[1],write_buffer[2],write_buffer[3],write_buffer[4],write_buffer[5],write_buffer[6]);
+		return false;
+	}
+	return true;
+}
+
+int OpenRover::readCommand() //must be used after a send command
+{
+	int read_buffer[5];
+	int value, checksum;
+	int bits_read = read(fd, read_buffer, 5);
+	if(bits_read <5)
+	{
+		bits_read = read(fd, read_buffer, 5);
+		if (1>bits_read)
+		{
+			ROS_ERROR("Reading from serial critically failed: %s", strerror(errno));
+			return -1;
+		}
+	}
+	ROS_INFO("bits %i", bits_read);
+	
+	if(!(START_BYTE==read_buffer[0]))
+	{		
+		ROS_ERROR("Incorrect start byte: %i", read_buffer[4]);
+		return -1;		
+	}
+	checksum = 255-(read_buffer[1]+read_buffer[2]+read_buffer[3])%255;
+	if(!(checksum==read_buffer[4]))
+	{		
+		ROS_ERROR("Received bad CRC, check: %i, rec: %i", checksum, read_buffer[4]);
+		return -1;
+	}	
+	
+	return value;
 }
 
 bool OpenRover::openComs()
@@ -102,39 +283,114 @@ bool OpenRover::openComs()
     return true;
 }
 
-bool OpenRover::setMotorSpeed(int left_motor_speed, int right_motor_speed, int flipper_motor_speed)
+void OpenRover::updateAllRobotData(){
+	//int motor_speeds[3] = {left_motor_speed, right_motor_speed, flipper_motor_speed};
+	//robot_data
+/*const int  = 2;
+const int i_REG_MOTOR_FB_RPM_RIGHT_INDEX = 4;
+const int i_REG_FLIPPER_FB_POSITION_POT1 = 6;
+const int i_REG_FLIPPER_FB_POSITION_POT2 = 8;
+const int i_REG_MOTOR_FB_CURRENT_LEFT = 10;
+const int i_REG_MOTOR_FB_CURRENT_RIGHT = 12;
+const int i_REG_MOTOR_FAULT_FLAG_LEFT = 18;
+const int i_REG_MOTOR_TEMP_LEFT = 20;
+const int i_REG_MOTOR_TEMP_RIGHT = 22;
+const int i_REG_POWER_BAT_VOLTAGE_A = 24;
+const int i_REG_POWER_BAT_VOLTAGE_B = 26;
+const int i_ENCODER_INTERVAL_MOTOR_LEFT = 28;
+const int i_ENCODER_INTERVAL_MOTER_RIGHT = 20;
+const int i_ENCODER_INTERVAL_MOTOR_FLIPPER = 32;
+const int i_REG_ROBOT_REL_SOC_A = 34;
+const int i_REG_ROBOT_REL_SOC_B = 36;
+const int i_REG_MOTOR_CHARGER_STATE = 38;
+const int i_BUILDNO = 40;
+const int i_REG_POWER_A_CURRENT = 42;
+const int i_REG_POWER_B_CURRENT = 44;
+const int i_REG_MOTOR_FLIPPER_ANGLE = 46;
+ */
+	updateRobotData(i_REG_PWR_TOTAL_CURRENT_INDEX);
+	updateRobotData(i_REG_FLIPPER_FB_POSITION_POT1);
+	updateRobotData(i_REG_FLIPPER_FB_POSITION_POT2);
+	updateRobotData(i_REG_MOTOR_FB_CURRENT_LEFT);
+	updateRobotData(i_REG_MOTOR_FB_CURRENT_RIGHT);	
+}
+
+void OpenRover::updateMotorSpeeds(int left_motor, int right_motor, int flipper_motor)
 {
-    unsigned char write_buffer[7], read_buffer[5], test;
-    int checksum;
+	motor_speeds[0] = left_motor;
+	motor_speeds[1] = right_motor;
+	motor_speeds[2] = flipper_motor;
+}
 
-    write_buffer[0] = 0xfd;
-    write_buffer[1] = (char)left_motor_speed;
-    write_buffer[2] = (char)right_motor_speed;
-    write_buffer[3] = (char)flipper_motor_speed;
-    write_buffer[4] = 10; // 0x0a //read data //10 -> get value
-    write_buffer[5] = 0; // 0x28; //encoder2 //40 -> specify sensor
+void OpenRover::updateRobotData(int param)
+{
+	robot_data[param] = getParameterData(param);
+}
 
-    //start byte is 0xfd ->253 ->11111101
+bool OpenRover::setParameterData(int param1, int param2)
+{
+	output_mutex.lock();
+	input_mutex.lock();
+	
+	if(!sendCommand(param1, param2))
+	{		
+		ROS_ERROR("Failed sendCommand while setting parameter %i to %i", param1, param2);
+		return false;
+	}
+	output_mutex.unlock();
+	input_mutex.unlock();
+	
+	if(!(param2 == getParameterData(param1)))
+	{
+		ROS_ERROR("Failed to set parameter %i to %i", param1, param2);
+		return false;
+	}
+	return true;
+}
 
-    //write_buffer[1] = 0x00
-    //write_buffer[2] = 0x00
-    //write_buffer[3] = 0x00
-    //write_buffer[4] = 0x0a; //read data
-    //write_buffer[5] = 0x1C; //encoder1
-
-
-    //Calculate Checksum
-    checksum = 255-(write_buffer[1]+write_buffer[2]+write_buffer[3]+write_buffer[4]+write_buffer[5])%255;
-    write_buffer[6] = (char)checksum;
-    ROS_INFO("I sent: %02x,%02x,%02x,%02x,%02x,%02x,%02x", write_buffer[0],write_buffer[1],write_buffer[2],write_buffer[3],write_buffer[4],write_buffer[5],write_buffer[6]);
-    ROS_INFO("I sent: %i,%i,%i,%i,%i,%i,%i", write_buffer[0],write_buffer[1],write_buffer[2],write_buffer[3],write_buffer[4],write_buffer[5],write_buffer[6]);
-
-    speed_t cfgetispeed(const struct termios *attribs);        
-    write(fd, write_buffer, 7);
-    read(fd, read_buffer, 5);
-
-    ROS_WARN("I Heard: %02x,%02x,%02x,%02x,%02x", read_buffer[0], read_buffer[1], read_buffer[2], read_buffer[3], read_buffer[4]);
-    ROS_WARN("I Heard: %i,%i,%i,%i,%i", read_buffer[0], read_buffer[1], read_buffer[2], read_buffer[3], read_buffer[4]);
+int OpenRover::getParameterData(int param){
+	//unsigned int read_buffer[5];
+	int value;
+	
+	output_mutex.lock();
+	input_mutex.lock();
+    /*
+    for (int i=0; i < 3; i++)
+    {
+		sendCommand(10, param);
+		read(fd, read_buffer, 5);
+		checksum_receive = 255-(read_buffer[1]+read_buffer[2]+read_buffer[3])%255;
+		if(!(checksum_receive==read_buffer[4]))
+		{		
+			ROS_WARN("Bad CRC %i - Reattempting", i);	
+		}
+		if(i==2)
+		{
+			ROS_ERROR("Failed to get parameter %i", param);
+			return 2147483647;
+		}
+	}
+	*/
+	if(!sendCommand(10, param))
+	{
+		ROS_ERROR("Failed sendCommand while getting parameter %i", param);
+		output_mutex.unlock();
+		input_mutex.unlock();
+		return -1;
+	}
+	
+	output_mutex.unlock();
+	value = readCommand();
+	
+	if(0>value)
+	{
+		ROS_ERROR("Failed readCommand while getting parameter %i", param);
+		input_mutex.unlock();
+		return -1;
+	}
+	input_mutex.unlock();
+	
+    return value;
 }
 
 int main( int argc, char *argv[] )
