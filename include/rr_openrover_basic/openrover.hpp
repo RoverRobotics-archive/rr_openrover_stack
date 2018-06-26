@@ -18,6 +18,7 @@ public:
     OpenRover( ros::NodeHandle &_nh, ros::NodeHandle &_nh_priv );
     bool start();
     bool openComs();
+    bool commandMotors(int left_motor_speed, int right_motor_speed, int flipper_motor_speed);
     bool setMotorSpeed(int left_motor_speed, int right_motor_speed, int flipper_motor_speed);
 
 private:
