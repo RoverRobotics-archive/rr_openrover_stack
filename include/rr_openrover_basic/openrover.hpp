@@ -26,6 +26,7 @@ public:
     void EncoderTimerCB( const ros::WallTimerEvent &e);
     void RobotDataMediumCB( const ros::WallTimerEvent &e);
     void RobotDataSlowCB( const ros::WallTimerEvent &e);
+	bool publish_encoder_vals;
 
 private:
     //ROS Parameters
@@ -57,7 +58,6 @@ private:
 	double medium_rate;
 	double slow_rate;
 	
-	bool publish_encoder_vals;
 	
 	//size_t buffer_size = 50;
 	std::vector<char> serial_vect_buffer;
@@ -67,6 +67,11 @@ private:
     //ROS Subscriber callback functions
     void cmdVelCB(const geometry_msgs::Twist::ConstPtr& msg);
     void toggleLowSpeedMode(const std_msgs::Bool::ConstPtr& msg);
+    
+    //ROS Publish Functions
+    int readEncoders();
+    void publishEncoders();
+    //Utility Methods    
     void updateAllRobotData();
     int getParameterData(int parameter);
     bool setParameterData(int param1, int param2);
@@ -74,6 +79,7 @@ private:
     void updateMotorSpeeds(int left_motor_speed, int right_motor_speed, int flipper_motor_speed);
     bool sendCommand(int param1, int param2);
     int readCommand();
+    
     //void addToSerialBuffer(char param1, char param2, char priority);
     
     // mutex-es for accessing the serial port
