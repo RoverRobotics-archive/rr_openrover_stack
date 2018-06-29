@@ -12,6 +12,10 @@
 #include <termios.h>
 #include <vector>
 
+#include <rr_openrover_basic/RawRrOpenroverBasicEncoders.h>
+#include <rr_openrover_basic/RawRrOpenroverBasicMedRateData.h>
+#include <rr_openrover_basic/RawRrOpenroverBasicSlowRateData.h>
+
 
 class OpenRover
 {
@@ -21,17 +25,21 @@ public:
     bool openComs();
     bool commandMotors(int left_motor_speed, int right_motor_speed, int flipper_motor_speed);
     bool setMotorSpeed(int left_motor_speed, int right_motor_speed, int flipper_motor_speed);
-    void SerialManagerTest();
+    void SerialManager();
     void SerialManagerCB( const ros::WallTimerEvent &e );
     void EncoderTimerCB( const ros::WallTimerEvent &e);
     void RobotDataMediumCB( const ros::WallTimerEvent &e);
     void RobotDataSlowCB( const ros::WallTimerEvent &e);
 	bool publish_encoder_vals;
+	bool publish_battery_vals;
+	bool publish_med_rate_vals;
+	bool publish_slow_rate_vals;
 
 private:
     //ROS Parameters
     std::string port;
-
+	int wheel_type;
+	
     //ROS node handlers
     ros::NodeHandle nh;
     ros::NodeHandle nh_priv;
@@ -41,8 +49,13 @@ private:
     ros::WallTimer slow_timer;
 
     //ROS Publisher and Subscribers
+    ros::Publisher odom_pub;
+    ros::Publisher battery_state_pub;
+    
     ros::Publisher encoder_pub;
-    ros::Publisher battery_soc_pub;
+    ros::Publisher medium_rate_pub;
+    ros::Publisher slow_rate_pub;
+    
     ros::Subscriber cmd_vel_sub;
     ros::Subscriber x_button_sub;
 
@@ -71,7 +84,10 @@ private:
     //ROS Publish Functions
     int readEncoders();
     void publishEncoders();
-    //Utility Methods    
+    void publishMedRateData();
+    void publishSlowRateData();
+    
+    //Serial Com Functions    
     void updateAllRobotData();
     int getParameterData(int parameter);
     bool setParameterData(int param1, int param2);
@@ -80,7 +96,8 @@ private:
     bool sendCommand(int param1, int param2);
     int readCommand();
     
-    //void addToSerialBuffer(char param1, char param2, char priority);
+    //Odometry Functions
+    void parseWheelType();
     
     // mutex-es for accessing the serial port
     // output_muxes must be locked first

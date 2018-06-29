@@ -1,0 +1,12 @@
+Header header
+int32 reg_pwr_total_current
+int32 reg_motor_fb_rpm_left
+int32 reg_motor_fb_rpm_right
+int32 reg_flipper_fb_position_pot1
+int32 reg_flipper_fb_position_pot2
+int32 reg_motor_fb_current_left
+int32 reg_motor_fb_current_right
+int32 reg_motor_charger_state
+int32 reg_power_a_current
+int32 reg_power_b_current
+int32 reg_motor_flipper_angle

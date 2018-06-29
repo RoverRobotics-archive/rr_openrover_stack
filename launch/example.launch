@@ -2,6 +2,8 @@
 
     <node pkg="rr_openrover_basic"  type="openrover_basic_node" name="openrover_basic_node" output="screen">
         <param name="port" value="/dev/ttyUSB1" />
+        <!-- Options for wheels: 1=treads, 2=2wheels, 3=flippers, 4=4wheels -->
+        <param name="wheel_type" value="1" />
     </node>
 
     <!-- Xbox 360 Controller Button Mapping -->

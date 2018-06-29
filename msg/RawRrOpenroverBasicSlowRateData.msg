@@ -1,0 +1,9 @@
+Header header
+int32 reg_motor_fault_flag_left
+int32 reg_motor_temp_left
+int32 reg_motor_temp_right
+int32 reg_power_bat_voltage_a
+int32 reg_power_bat_voltage_b
+int32 reg_robot_rel_soc_a
+int32 reg_robot_rel_soc_b
+int32 buildno
