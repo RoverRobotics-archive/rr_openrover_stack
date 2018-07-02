@@ -21,9 +21,9 @@ const int SERIAL_IN_PACKAGE_LENGTH = 5;
 const int LOOP_RATE = 1000;
 
 //Firmware parameters. Maintained numbering to keep consistency.
-const int i_REG_PWR_TOTAL_CURRENT_INDEX = 0;  //5hz
-const int i_REG_MOTOR_FB_RPM_LEFT_INDEX = 2; //5hz
-const int i_REG_MOTOR_FB_RPM_RIGHT_INDEX = 4; //5hz
+const int i_REG_PWR_TOTAL_CURRENT = 0;  //5hz
+const int i_REG_MOTOR_FB_RPM_LEFT = 2; //5hz
+const int i_REG_MOTOR_FB_RPM_RIGHT = 4; //5hz
 const int i_REG_FLIPPER_FB_POSITION_POT1 = 6; //5hz
 const int i_REG_FLIPPER_FB_POSITION_POT2 = 8; //5hz 
 
@@ -51,12 +51,13 @@ const int i_REG_MOTOR_FLIPPER_ANGLE = 46;  //5hz
 //const int i_to_computer_REG_MOTOR_SLOW_SPEED = 50; //5hz
 
 const int ROBOT_DATA_INDEX_FAST[] = {
-i_ENCODER_INTERVAL_MOTOR_LEFT, i_ENCODER_INTERVAL_MOTER_RIGHT}; 
-//flipped encoder not in use now, i_ENCODER_INTERVAL_MOTOR_FLIPPER}; //10hz
+i_ENCODER_INTERVAL_MOTOR_LEFT, i_ENCODER_INTERVAL_MOTER_RIGHT,
+i_ENCODER_INTERVAL_MOTOR_FLIPPER}; //10hz
+//flipped encoder not in use now, i_ENCODER_INTERVAL_MOTOR_FLIPPER}; 
 
 const int ROBOT_DATA_INDEX_MEDIUM[] = {
-i_REG_PWR_TOTAL_CURRENT_INDEX, i_REG_MOTOR_FB_RPM_LEFT_INDEX,
-i_REG_MOTOR_FB_RPM_RIGHT_INDEX, i_REG_FLIPPER_FB_POSITION_POT1, i_REG_FLIPPER_FB_POSITION_POT2,
+i_REG_PWR_TOTAL_CURRENT, i_REG_MOTOR_FB_RPM_LEFT,i_REG_MOTOR_FB_RPM_RIGHT,
+i_REG_FLIPPER_FB_POSITION_POT1, i_REG_FLIPPER_FB_POSITION_POT2,
 i_REG_MOTOR_FB_CURRENT_LEFT, i_REG_MOTOR_FB_CURRENT_RIGHT, i_REG_MOTOR_CHARGER_STATE,
 i_REG_POWER_A_CURRENT, i_REG_POWER_B_CURRENT, i_REG_MOTOR_FLIPPER_ANGLE
 //i_to_computer_REG_MOTOR_SIDE_FAN_SPEED, i_to_computer_REG_MOTOR_SLOW_SPEED
@@ -75,7 +76,7 @@ OpenRover::OpenRover( ros::NodeHandle &_nh, ros::NodeHandle &_nh_priv ) :
     port("/dev/ttyUSB0"),
     baud(57600),
     wheel_type(1),
-    fast_rate(1.0/10.0), //10Hz Serial data is limited to 66 msgs/second
+    fast_rate(1.0/10.0), //10Hz Total Serial data is limited to 66 msgs/second
     medium_rate(1.0/2.0), //2Hz
     slow_rate(1.0/1.0), //1Hz
     motor_speeds_commanded{125,125,125}, //default motor commands to neutral
@@ -167,9 +168,9 @@ void OpenRover::publishMedRateData()
 	med_msg.header.stamp = ros::Time::now();
 	med_msg.header.frame_id = "";
 	
-	med_msg.reg_pwr_total_current = robot_data[i_REG_PWR_TOTAL_CURRENT_INDEX];
-	med_msg.reg_motor_fb_rpm_left = robot_data[i_REG_MOTOR_FB_RPM_LEFT_INDEX];
-	med_msg.reg_motor_fb_rpm_right = robot_data[i_REG_MOTOR_FB_RPM_RIGHT_INDEX];	
+	med_msg.reg_pwr_total_current = robot_data[i_REG_PWR_TOTAL_CURRENT];
+	med_msg.reg_motor_fb_rpm_left = robot_data[i_REG_MOTOR_FB_RPM_LEFT];
+	med_msg.reg_motor_fb_rpm_right = robot_data[i_REG_MOTOR_FB_RPM_RIGHT];	
 	med_msg.reg_flipper_fb_position_pot1 = robot_data[i_REG_FLIPPER_FB_POSITION_POT1];
 	med_msg.reg_flipper_fb_position_pot2 = robot_data[i_REG_FLIPPER_FB_POSITION_POT2];
 	med_msg.reg_motor_fb_current_left = robot_data[i_REG_MOTOR_FB_CURRENT_LEFT];	
@@ -254,15 +255,15 @@ void OpenRover::serialManager() //sends serial commands stored in the 3 buffers 
 			} else if (param1==240) { //param1==240 means sending low speed command
 				setParameterData(param1, param2);				
 			} else if (param1==250) { //param1==250 means calibrating flipper DO NOT USE OFTEN
-				ROS_WARN("Calibrating flipper");
 				setParameterData(param1, param2);				
 			} else if (param1==0) { //param1==0 means buffers are empty and shouldn't do anything
 			} else {
-				throw std::string("Unknown param1", param1);
+				throw std::string("Unknown param1. Removing parameter from buffer");
 			}
-		} catch (std::string s)
-		{
-			ROS_ERROR(s.c_str());			
+		} catch (std::string s) {
+			throw;			
+		} catch (...){
+			throw;
 		}
 		
 		//If one of the buffers are empty, publish the values
@@ -306,15 +307,20 @@ void OpenRover::toggleLowSpeedMode(const std_msgs::Bool::ConstPtr& msg)
 
 void OpenRover::updateRobotData(int param)
 {
-	int data = getParameterData(param);
-	if (0 > data) //check if val is good (not negative) and if not, push param back to buffer
-	{		
-		ROS_WARN("Trying to getParam %i again", param);
-		serial_fast_buffer.push_back(10);
-		serial_fast_buffer.push_back(param);		
+	try
+	{
+		int data = getParameterData(param);
+		if (0 > data) //check if val is good (not negative) and if not, push param back to buffer
+		{		
+			throw;
+		}
+		
+		robot_data[param] = data;
+	} catch(std::string s) {
+		char str_ex [50];
+		sprintf(str_ex, "Failed to update param %i. ", param);
+		throw std::string(str_ex) + s;
 	}
-	
-	robot_data[param] = data;
 }
 
 void OpenRover::updateMotorSpeedsCommanded(char left_motor, char right_motor, char flipper_motor)
@@ -339,8 +345,9 @@ bool OpenRover::sendCommand(int param1, int param2)
 	
 	if (write(fd, write_buffer, SERIAL_OUT_PACKAGE_LENGTH)<SERIAL_OUT_PACKAGE_LENGTH)
 	{
-		ROS_ERROR("Failed to send command %02x,%02x,%02x,%02x,%02x,%02x,%02x", write_buffer[0],write_buffer[1],write_buffer[2],write_buffer[3],write_buffer[4],write_buffer[5],write_buffer[6]);
-		return false;
+		char str_ex [50];
+		sprintf(str_ex, "Failed to send command: %02x,%02x,%02x,%02x,%02x,%02x,%02x", write_buffer[0],write_buffer[1],write_buffer[2],write_buffer[3],write_buffer[4],write_buffer[5],write_buffer[6]);
+		throw std::string(str_ex);
 	}
 	return true;
 }
@@ -352,15 +359,17 @@ int OpenRover::readCommand() //must be used after a send command
 	int bits_read = read(fd, read_buffer, SERIAL_IN_PACKAGE_LENGTH);
 	
 	if(!(SERIAL_START_BYTE==read_buffer[0]))
-	{		
-		ROS_ERROR("Incorrect start byte: %02x, %02x, %02x, %02x, %02x", read_buffer[0], read_buffer[1], read_buffer[2], read_buffer[3], read_buffer[4]);
-		return -1;		
+	{			
+		char str_ex [50];
+		sprintf(str_ex, "Received bad start byte. Received: %02x,%02x,%02x,%02x,%02x", read_buffer[0], read_buffer[1], read_buffer[2], read_buffer[3], read_buffer[4]);
+		throw std::string(str_ex);
 	}
 	checksum = 255-(read_buffer[1]+read_buffer[2]+read_buffer[3])%255;
 	if(!(checksum==read_buffer[4]))
 	{		
-		ROS_ERROR("Received bad CRC, correct: %i, received bytes: %02x, %02x, %02x, %02x, %02x", checksum,read_buffer[0], read_buffer[1], read_buffer[2], read_buffer[3], read_buffer[4]);
-		return -1;
+		char str_ex [50];
+		sprintf(str_ex, "Received bad CRC. Received: %02x,%02x,%02x,%02x,%02x", read_buffer[0], read_buffer[1], read_buffer[2], read_buffer[3], read_buffer[4]);
+		throw std::string(str_ex);
 	}
 
 	data = (read_buffer[2]<<8) + read_buffer[3];
@@ -369,34 +378,45 @@ int OpenRover::readCommand() //must be used after a send command
 
 bool OpenRover::setParameterData(int param1, int param2)
 {
-	if(!sendCommand(param1, param2))
-	{		
-		throw std::string("Failed sendCommand while setting parameter", param1, param2);
-		return false;
+	try
+	{
+		if(!sendCommand(param1, param2))
+		{		
+			throw;
+		}
+		
+		return true;
+		
+	} catch (std::string s) {
+		std::string s2("setParamaterData() failed. ");
+		throw (s2 + s);
+		//return false;
 	}
-	
-	return true;
 }
 
 int OpenRover::getParameterData(int param)
 {
 	int data;
 	
-	if(!sendCommand(10, param))
+	try
 	{
-		throw std::string("Failed sendCommand while getting parameter", param);
-		return -1;
+		if(!sendCommand(10, param))
+		{
+			throw;
+		}
+		
+		data = readCommand();
+		
+		if(0>data)
+		{
+			throw;
+		}
+		
+		return data;
+	} catch(std::string s) {
+		 std::string s2("getParameterData() failed. ");// %i. ", param);
+		 throw (s2 + s);
 	}
-	
-	data = readCommand();
-	
-	if(0>data)
-	{
-		throw std::string("Failed readCommand while getting parameter", param);
-		return -1;
-	}
-	
-    return data;
 }
 
 bool OpenRover::openComs()
@@ -509,10 +529,18 @@ int main( int argc, char *argv[] )
         while(ros::ok())
         {
 			//Check callbacks
-            ros::spinOnce();
-            //Process Serial Buffers
-            openrover->serialManager();
-            loop_rate.sleep();
+			try
+			{
+				ros::spinOnce();
+				//Process Serial Buffers
+				openrover->serialManager();
+				loop_rate.sleep();
+			} catch(std::string s)
+			{
+				ROS_ERROR(s.c_str());
+			} catch(...){				
+				ROS_ERROR("Unknown Exception occurred");
+			}
         }
 
         delete openrover;
