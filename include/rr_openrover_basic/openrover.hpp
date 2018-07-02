@@ -22,13 +22,11 @@ public:
     bool start();
     bool openComs();
     
-    bool setMotorSpeed(int left_motor_speed, int right_motor_speed, int flipper_motor_speed);
+    void serialManager();
     
-    void SerialManager();
-    
-    void EncoderTimerCB( const ros::WallTimerEvent &e);
-    void RobotDataMediumCB( const ros::WallTimerEvent &e);
-    void RobotDataSlowCB( const ros::WallTimerEvent &e);
+    void encoderTimerCB( const ros::WallTimerEvent &e);
+    void robotDataMediumCB( const ros::WallTimerEvent &e);
+    void robotDataSlowCB( const ros::WallTimerEvent &e);
     
 	bool publish_encoder_vals;
 	bool publish_med_rate_vals;
@@ -62,7 +60,7 @@ private:
     int baud; //serial baud rate
     int fd;	
 	int robot_data[50]; //stores all received data from robot
-	int motor_speeds_commanded[3]; //stores most recent commanded motor speeds
+	char motor_speeds_commanded[3]; //stores most recent commanded motor speeds
 	double fast_rate;	//update rate for encoders
 	double medium_rate;
 	double slow_rate;
@@ -83,7 +81,7 @@ private:
     int getParameterData(int parameter);
     bool setParameterData(int param1, int param2);
     void updateRobotData(int parameter);
-    void updateMotorSpeedsCommanded(int left_motor_speed, int right_motor_speed, int flipper_motor_speed);
+    void updateMotorSpeedsCommanded(char left_motor_speed, char right_motor_speed, char flipper_motor_speed);
     bool sendCommand(int param1, int param2);
     int readCommand();
     
