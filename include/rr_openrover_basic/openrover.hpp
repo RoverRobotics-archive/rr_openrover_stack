@@ -35,7 +35,6 @@ public:
 private:
     //ROS Parameters
     std::string port;
-	int wheel_type;
 	
     //ROS node handlers
     ros::NodeHandle nh;

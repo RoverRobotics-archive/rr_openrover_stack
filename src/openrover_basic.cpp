@@ -18,9 +18,9 @@
 const int SERIAL_START_BYTE = 253;
 const int SERIAL_OUT_PACKAGE_LENGTH = 7;
 const int SERIAL_IN_PACKAGE_LENGTH = 5;
-const int LOOP_RATE = 1000;
+const int LOOP_RATE = 1000; //sleep time in between serial manager calls
 
-//Firmware parameters. Maintained numbering to keep consistency.
+//Firmware parameters. Kept numbering to maintain consistency.
 const int i_REG_PWR_TOTAL_CURRENT = 0;  //5hz
 const int i_REG_MOTOR_FB_RPM_LEFT = 2; //5hz
 const int i_REG_MOTOR_FB_RPM_RIGHT = 4; //5hz
@@ -243,9 +243,7 @@ void OpenRover::serialManager() //sends serial commands stored in the 3 buffers 
 		// since entering the Serial Manager
 		ros::spinOnce();
 		
-		//If param1==10, then save read date to robot_data[param2]
-		//might want to add conditions for param1=240 and param1=50 explicitly
-		//then throw ROS_ERROR if param1 is none of those
+		//Check param1 to determine what communication to the robot is required
 		try{
 			if (param1==10) // Param1==10 requests data with index of param2
 			{
@@ -352,7 +350,7 @@ bool OpenRover::sendCommand(int param1, int param2)
 	return true;
 }
 
-int OpenRover::readCommand() //must be used after a send command
+int OpenRover::readCommand() //only used after a send command with param1==10
 {
 	char read_buffer[SERIAL_IN_PACKAGE_LENGTH];
 	int data, checksum;
@@ -535,10 +533,9 @@ int main( int argc, char *argv[] )
 				//Process Serial Buffers
 				openrover->serialManager();
 				loop_rate.sleep();
-			} catch(std::string s)
-			{
+			} catch(std::string s) {
 				ROS_ERROR(s.c_str());
-			} catch(...){				
+			} catch(...) {				
 				ROS_ERROR("Unknown Exception occurred");
 			}
         }
