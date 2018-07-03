@@ -75,7 +75,6 @@ const int SLOW_SIZE = sizeof(ROBOT_DATA_INDEX_SLOW)/sizeof(ROBOT_DATA_INDEX_SLOW
 OpenRover::OpenRover( ros::NodeHandle &_nh, ros::NodeHandle &_nh_priv ) :
     port("/dev/ttyUSB0"),
     baud(57600),
-    wheel_type(1),
     fast_rate(1.0/10.0), //10Hz Total Serial data is limited to 66 msgs/second
     medium_rate(1.0/2.0), //2Hz
     slow_rate(1.0/1.0), //1Hz
