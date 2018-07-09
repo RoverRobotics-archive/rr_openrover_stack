@@ -80,6 +80,8 @@ x_button_msg.data=False
 e_stop_msg = Bool()
 e_stop_msg.data=False
 
+global pub
+
 # cmd_vel publisher  
 pub = rospy.Publisher('/cmd_vel', Twist, queue_size=3)
 e_stop_pub = rospy.Publisher('/joystick/e_stop', Bool, queue_size=1, latch=True)
@@ -123,7 +125,7 @@ def joy_cb(Joy):
     global last_y_button
     global last_joycb_device_check
     global e_stop_pub, e_stop_msg, x_button_pub, x_button_msg, y_button_pub, y_button_msg
-    
+    global pub
 
     cmd_time = float(Joy.header.stamp.secs) + (float(Joy.header.stamp.nsecs)/1000000000)
     rbt_time = time.time()
@@ -198,9 +200,13 @@ def joy_cb(Joy):
             last_y_button=time.time()
             rospy.loginfo('User button Y')
             if (y_button_msg.data):
-                y_button_msg.data = False
+				global pub
+				y_button_msg.data = False
+				pub = rospy.Publisher('/cmd_vel', Twist, queue_size=3)
             else:
-                y_button_msg.data = True
+				global pub
+				y_button_msg.data = True
+				pub = rospy.Publisher('/cmd_vel_temp', Twist, queue_size=3)
             y_button_pub.publish(y_button_msg)
 
     # stay in E_STOP mode until the button is pressed again
