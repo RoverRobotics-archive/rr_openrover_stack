@@ -125,7 +125,7 @@ bool OpenRover::start()
     medium_rate_pub = nh.advertise<rr_openrover_basic::RawRrOpenroverBasicMedRateData>("rr_openrover_basic/raw_med_rate_data",1);
     slow_rate_pub = nh.advertise<rr_openrover_basic::RawRrOpenroverBasicSlowRateData>("rr_openrover_basic/raw_slow_rate_data",1);
     
-    cmd_vel_sub = nh.subscribe("cmd_vel", 1, &OpenRover::cmdVelCB, this);
+    cmd_vel_sub = nh.subscribe("/cmd_vel/managed", 1, &OpenRover::cmdVelCB, this);
     
     if (!(nh.getParam("/openrover_basic_node/timeout", timeout)))
     {
@@ -361,7 +361,6 @@ void OpenRover::updateRobotData(int param)
 
 void OpenRover::updateMotorSpeedsCommanded(char left_motor, char right_motor, char flipper_motor)
 { //updates the stored motor speeds to the most recent commanded motor speeds
-	ROS_INFO("%i, %i", left_motor, right_motor);
 	motor_speeds_commanded[0] = left_motor;
 	motor_speeds_commanded[1] = right_motor;
 	motor_speeds_commanded[2] = flipper_motor;
@@ -455,8 +454,6 @@ int OpenRover::getParameterData(int param)
 		 throw (s2 + s);
 	}
 }
-
-//bool OpenRover::loadROSParams(){}
 
 bool OpenRover::openComs()
 {
