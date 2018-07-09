@@ -59,10 +59,10 @@ R_PAD_BUTTON = 12
 U_PAD_BUTTON = 13
 D_PAD_BUTTON = 14
 
-MAX_VEL = 2.6
-FULL_THROTTLE = 0.8 
+MAX_VEL = 0.25
+FULL_THROTTLE = 0.1 
 ADJ_THROTTLE = True
-INC = 0.2 
+INC = 0.05 
 DEADBAND = 0.2
 FWD_ACC_LIM = 0.01
 TRN_ACC_LIM = 0.01
@@ -80,9 +80,9 @@ x_button_msg.data=False
 e_stop_msg = Bool()
 e_stop_msg.data=False
 
-global pub
 
 # cmd_vel publisher  
+global pub
 pub = rospy.Publisher('/cmd_vel', Twist, queue_size=3)
 e_stop_pub = rospy.Publisher('/joystick/e_stop', Bool, queue_size=1, latch=True)
 x_button_pub = rospy.Publisher('/joystick/x_button', Bool, queue_size=1, latch=True)

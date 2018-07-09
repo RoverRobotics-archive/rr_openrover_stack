@@ -24,43 +24,49 @@ public:
     
     void serialManager();
     
-    void encoderTimerCB( const ros::WallTimerEvent &e);
+    void robotDataFastCB( const ros::WallTimerEvent &e);
     void robotDataMediumCB( const ros::WallTimerEvent &e);
     void robotDataSlowCB( const ros::WallTimerEvent &e);
+    void timeoutCB( const ros::WallTimerEvent &e );
     
-	bool publish_encoder_vals;
+	bool publish_fast_rate_vals;
 	bool publish_med_rate_vals;
 	bool publish_slow_rate_vals;
+	bool low_speed_mode_on;
+	bool timed_out;
 
 private:
     //ROS Parameters
-    std::string port;
+    std::string port, drive_type;
+    
+	float timeout; //Default to neutral motor values after timeout seconds
 	
     //ROS node handlers
     ros::NodeHandle nh;
     ros::NodeHandle nh_priv;
-    ros::WallTimer poll_timer;
-    ros::WallTimer encoder_timer;
+    
+    //ROS Timers
+    ros::WallTimer fast_timer;
     ros::WallTimer medium_timer;
     ros::WallTimer slow_timer;
+    ros::WallTimer timeout_timer;
 
     //ROS Publisher and Subscribers
     ros::Publisher odom_pub;
     ros::Publisher battery_state_pub;
     
-    ros::Publisher encoder_pub;
+    ros::Publisher fast_rate_pub;
     ros::Publisher medium_rate_pub;
     ros::Publisher slow_rate_pub;
     
     ros::Subscriber cmd_vel_sub;
-    ros::Subscriber x_button_sub;
 
     //General Class variables
     int baud; //serial baud rate
     int fd;	
 	int robot_data[50]; //stores all received data from robot
 	char motor_speeds_commanded[3]; //stores most recent commanded motor speeds
-	double fast_rate;	//update rate for encoders
+	double fast_rate;	//update rate for encoders, 10Hz recommended
 	double medium_rate;
 	double slow_rate;
 	std::vector<char> serial_fast_buffer;
@@ -69,7 +75,6 @@ private:
 	
     //ROS Subscriber callback functions
     void cmdVelCB(const geometry_msgs::Twist::ConstPtr& msg);
-    void toggleLowSpeedMode(const std_msgs::Bool::ConstPtr& msg);
     
     //ROS Publish Functions (robot_data[X] to ros topics)
     void publishFastRateData();

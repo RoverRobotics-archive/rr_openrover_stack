@@ -19,17 +19,25 @@ const int SERIAL_START_BYTE = 253;
 const int SERIAL_OUT_PACKAGE_LENGTH = 7;
 const int SERIAL_IN_PACKAGE_LENGTH = 5;
 const int LOOP_RATE = 1000; //sleep time in between serial manager calls
+const int MOTOR_NEUTRAL = 125;
+const int MOTOR_SPEED_MAX = 250;
+const int MOTOR_SPEED_MIN = 0;
+const int MOTOR_LINEAR_SCALE_FACTOR = 495;
+const int MOTOR_ANGULAR_SCALE_FACTOR = 644;
 
-//Firmware parameters. Kept numbering to maintain consistency.
+//Firmware parameters. Kept numbering from Firmware SDK-Protocol Documents_07-03-2018_1
+//to maintain consistency. Some parameters are still a work in progress (WIP)
+//as labeled below and so will return -1.
+
 const int i_REG_PWR_TOTAL_CURRENT = 0;  //5hz
-const int i_REG_MOTOR_FB_RPM_LEFT = 2; //5hz
-const int i_REG_MOTOR_FB_RPM_RIGHT = 4; //5hz
+const int i_REG_MOTOR_FB_RPM_LEFT = 2; //5hz ------ WIP
+const int i_REG_MOTOR_FB_RPM_RIGHT = 4; //5hz ------ WIP
 const int i_REG_FLIPPER_FB_POSITION_POT1 = 6; //5hz
 const int i_REG_FLIPPER_FB_POSITION_POT2 = 8; //5hz 
 
 const int i_REG_MOTOR_FB_CURRENT_LEFT = 10; //5hz
 const int i_REG_MOTOR_FB_CURRENT_RIGHT = 12; //5hz
-const int i_REG_MOTOR_FAULT_FLAG_LEFT = 18; //1hz
+const int i_REG_MOTOR_FAULT_FLAG_LEFT = 18; //1hz ------ WIP
 const int i_REG_MOTOR_TEMP_LEFT = 20; //1hz
 const int i_REG_MOTOR_TEMP_RIGHT = 22; //1hz
 
@@ -37,9 +45,9 @@ const int i_REG_POWER_BAT_VOLTAGE_A = 24; //1hz
 const int i_REG_POWER_BAT_VOLTAGE_B = 26; //1hz
 const int i_ENCODER_INTERVAL_MOTOR_LEFT = 28; //10hz
 const int i_ENCODER_INTERVAL_MOTER_RIGHT = 30; //10hz
-const int i_ENCODER_INTERVAL_MOTOR_FLIPPER = 32; //10hz
+const int i_ENCODER_INTERVAL_MOTOR_FLIPPER = 32; //10hz ------ WIP
 
-const int i_REG_ROBOT_REL_SOC_A = 34; //1hz
+const int i_REG_ROBOT_REL_SOC_A = 34; //1hz ------ WIP
 const int i_REG_ROBOT_REL_SOC_B = 36; //1hz
 const int i_REG_MOTOR_CHARGER_STATE = 38;  //5hz
 const int i_BUILDNO = 40;  //1hz
@@ -47,24 +55,25 @@ const int i_REG_POWER_A_CURRENT = 42;  //5hz
 
 const int i_REG_POWER_B_CURRENT = 44; //5hz
 const int i_REG_MOTOR_FLIPPER_ANGLE = 46;  //5hz
-//const int i_to_computer_REG_MOTOR_SIDE_FAN_SPEED = 48; //5hz
-//const int i_to_computer_REG_MOTOR_SLOW_SPEED = 50; //5hz
+
+//const int i_to_computer_REG_MOTOR_SIDE_FAN_SPEED = 48; //5hz----WIP
+//const int i_to_computer_REG_MOTOR_SLOW_SPEED = 50; //5hz ----WIP
 
 const int ROBOT_DATA_INDEX_FAST[] = {
-i_ENCODER_INTERVAL_MOTOR_LEFT, i_ENCODER_INTERVAL_MOTER_RIGHT,
-i_ENCODER_INTERVAL_MOTOR_FLIPPER}; //10hz
-//flipped encoder not in use now, i_ENCODER_INTERVAL_MOTOR_FLIPPER}; 
+i_ENCODER_INTERVAL_MOTOR_LEFT, i_ENCODER_INTERVAL_MOTER_RIGHT}; /*,
+i_ENCODER_INTERVAL_MOTOR_FLIPPER}; ----WIP //10hz*/ 
 
 const int ROBOT_DATA_INDEX_MEDIUM[] = {
-i_REG_PWR_TOTAL_CURRENT, i_REG_MOTOR_FB_RPM_LEFT,i_REG_MOTOR_FB_RPM_RIGHT,
+i_REG_PWR_TOTAL_CURRENT, //i_REG_MOTOR_FB_RPM_LEFT,i_REG_MOTOR_FB_RPM_RIGHT, ----WIP
 i_REG_FLIPPER_FB_POSITION_POT1, i_REG_FLIPPER_FB_POSITION_POT2,
 i_REG_MOTOR_FB_CURRENT_LEFT, i_REG_MOTOR_FB_CURRENT_RIGHT, i_REG_MOTOR_CHARGER_STATE,
 i_REG_POWER_A_CURRENT, i_REG_POWER_B_CURRENT, i_REG_MOTOR_FLIPPER_ANGLE
-//i_to_computer_REG_MOTOR_SIDE_FAN_SPEED, i_to_computer_REG_MOTOR_SLOW_SPEED
+//i_to_computer_REG_MOTOR_SIDE_FAN_SPEED, i_to_computer_REG_MOTOR_SLOW_SPEED ----WIP
 };
 
 const int ROBOT_DATA_INDEX_SLOW[] = {
-i_REG_MOTOR_FAULT_FLAG_LEFT,i_REG_MOTOR_TEMP_LEFT,
+//i_REG_MOTOR_FAULT_FLAG_LEFT, ----WIP
+i_REG_MOTOR_TEMP_LEFT,
 i_REG_MOTOR_TEMP_RIGHT, i_REG_POWER_BAT_VOLTAGE_A, i_REG_POWER_BAT_VOLTAGE_B,
 i_REG_ROBOT_REL_SOC_A, i_REG_ROBOT_REL_SOC_B, i_BUILDNO};
 
@@ -78,10 +87,12 @@ OpenRover::OpenRover( ros::NodeHandle &_nh, ros::NodeHandle &_nh_priv ) :
     fast_rate(1.0/10.0), //10Hz Total Serial data is limited to 66 msgs/second
     medium_rate(1.0/2.0), //2Hz
     slow_rate(1.0/1.0), //1Hz
-    motor_speeds_commanded{125,125,125}, //default motor commands to neutral
-    publish_encoder_vals(false),
+    motor_speeds_commanded{MOTOR_NEUTRAL,MOTOR_NEUTRAL,MOTOR_NEUTRAL}, //default motor commands to neutral
+    timeout(0.5),
+    publish_fast_rate_vals(false),
     publish_med_rate_vals(false),
-    publish_slow_rate_vals(false)
+    publish_slow_rate_vals(false),
+    low_speed_mode_on(true)
 {
     ROS_INFO( "Initializing" );
     nh_priv.param( "port", port, (std::string)"/dev/ttyUSB0" );
@@ -93,25 +104,52 @@ OpenRover::OpenRover( ros::NodeHandle &_nh, ros::NodeHandle &_nh_priv ) :
     
     //WallTimers simplify the timing of updating parameters by reloading serial buffers at specified rates.
     //without them the serial buffers will never be loaded with new commands
-    encoder_timer = nh.createWallTimer( ros::WallDuration(fast_rate), &OpenRover::encoderTimerCB, this);
+    fast_timer = nh.createWallTimer( ros::WallDuration(fast_rate), &OpenRover::robotDataFastCB, this);
     medium_timer = nh.createWallTimer( ros::WallDuration(medium_rate), &OpenRover::robotDataMediumCB, this);
     slow_timer = nh.createWallTimer( ros::WallDuration(slow_rate), &OpenRover::robotDataSlowCB, this);
+    timeout_timer = nh.createWallTimer( ros::WallDuration(timeout), &OpenRover::timeoutCB, this, true);
 }
 
 bool OpenRover::start()
 {
+	if (!(nh.getParam("/openrover_basic_node/port", port)))
+    {
+		ROS_WARN("Failed to retrieve port from parameter server.");
+	}
+	port = (std::string)port;
     openComs();
     ROS_INFO("Creating Publishers and Subscribers");
     ROS_INFO("Fast Data List: %i, Med Data List: %i, Slow Data List: %i", FAST_SIZE, MEDIUM_SIZE, SLOW_SIZE);
-    ROS_INFO("Number of messages per sec: %i", FAST_SIZE*10+MEDIUM_SIZE*2+SLOW_SIZE*1);
-    encoder_pub = nh.advertise<rr_openrover_basic::RawRrOpenroverBasicFastRateData>("raw_encoders",2);
-    medium_rate_pub = nh.advertise<rr_openrover_basic::RawRrOpenroverBasicMedRateData>("raw_med_rate_data",2);
-    slow_rate_pub = nh.advertise<rr_openrover_basic::RawRrOpenroverBasicSlowRateData>("raw_slow_rate_data",2);
+    ROS_INFO("Number of messages per sec (must be less than 66): %i", FAST_SIZE*10+MEDIUM_SIZE*2+SLOW_SIZE*1);
+    fast_rate_pub = nh.advertise<rr_openrover_basic::RawRrOpenroverBasicFastRateData>("rr_openrover_basic/raw_fast_rate_data",1);
+    medium_rate_pub = nh.advertise<rr_openrover_basic::RawRrOpenroverBasicMedRateData>("rr_openrover_basic/raw_med_rate_data",1);
+    slow_rate_pub = nh.advertise<rr_openrover_basic::RawRrOpenroverBasicSlowRateData>("rr_openrover_basic/raw_slow_rate_data",1);
     
     cmd_vel_sub = nh.subscribe("cmd_vel", 1, &OpenRover::cmdVelCB, this);
-    x_button_sub = nh.subscribe("joystick/x_button", 1, &OpenRover::toggleLowSpeedMode, this);
     
-    setParameterData(240, 1); //turn low speed on to keep robot from running away
+    if (!(nh.getParam("/openrover_basic_node/timeout", timeout)))
+    {
+		ROS_WARN("Failed to retrieve timeout from parameter server.", timeout);
+	}
+        
+    if (!(nh.getParam("/openrover_basic_node/drive_type", drive_type)))
+    {
+		ROS_WARN("Failed to retrieve drive_type from parameter server.");
+	}
+    
+    if (!(nh.getParam("/openrover_basic_node/default_low_speed_mode", low_speed_mode_on)))
+    {
+		ROS_WARN("Failed to retrieve default_low_speed_mode from parameter server.");		
+	}
+    
+    if (low_speed_mode_on)
+    {		
+		setParameterData(240, 1); //turn low speed on to keep robot from running away
+		ROS_INFO("low_speed_mode: on");
+	} else {		
+		setParameterData(240, 0); //turn low speed on to keep robot from running away
+		ROS_INFO("low_speed_mode: off");		
+	}
     return true;
 }
 
@@ -135,19 +173,47 @@ void OpenRover::robotDataMediumCB(const ros::WallTimerEvent &e)
 	publish_med_rate_vals = true;
 }
 
-void OpenRover::encoderTimerCB(const ros::WallTimerEvent &e)
-{
+void OpenRover::robotDataFastCB(const ros::WallTimerEvent &e)
+{	
 	for(int i = 0; i<FAST_SIZE; i++)
 	{
 		serial_fast_buffer.push_back(10);
 		serial_fast_buffer.push_back(ROBOT_DATA_INDEX_FAST[i]);
 	}
-	publish_encoder_vals = true;
+	publish_fast_rate_vals = true;
+}
+
+void OpenRover::timeoutCB(const ros::WallTimerEvent &e)
+{
+    updateMotorSpeedsCommanded(MOTOR_NEUTRAL, MOTOR_NEUTRAL, MOTOR_NEUTRAL);	
+}
+
+void OpenRover::cmdVelCB(const geometry_msgs::Twist::ConstPtr& msg)
+{
+	timeout_timer.stop();
+    int left_motor_speed, right_motor_speed, flipper_motor_speed;
+    right_motor_speed = (int)((msg->linear.x*MOTOR_LINEAR_SCALE_FACTOR) + (msg->angular.z*MOTOR_ANGULAR_SCALE_FACTOR) + 125);
+    left_motor_speed = (int)((msg->linear.x*MOTOR_LINEAR_SCALE_FACTOR) - (msg->angular.z*MOTOR_ANGULAR_SCALE_FACTOR) + 125);
+    flipper_motor_speed = (int)((msg->angular.y*20) + 125)%250;
+	if (right_motor_speed > MOTOR_SPEED_MAX){
+		right_motor_speed = MOTOR_SPEED_MAX;
+	}
+	if (left_motor_speed > MOTOR_SPEED_MAX){
+		left_motor_speed = MOTOR_SPEED_MAX;
+	}
+	if (right_motor_speed < MOTOR_SPEED_MIN){
+		right_motor_speed = MOTOR_SPEED_MIN;
+	}
+	if (left_motor_speed < MOTOR_SPEED_MIN){
+		left_motor_speed = MOTOR_SPEED_MIN;
+	}
+	//Add most recent motor values to motor_speeds_commanded[3] class variable
+    updateMotorSpeedsCommanded((char)left_motor_speed, (char)right_motor_speed, (char)flipper_motor_speed);
+    timeout_timer.start();
 }
 
 void OpenRover::publishFastRateData()
 {
-	int encoder_left, encoder_right, encoder_flip;
 	rr_openrover_basic::RawRrOpenroverBasicFastRateData msg;
 	
 	msg.header.stamp = ros::Time::now();
@@ -155,9 +221,9 @@ void OpenRover::publishFastRateData()
 	
 	msg.left_motor = robot_data[i_ENCODER_INTERVAL_MOTOR_LEFT];
 	msg.right_motor = robot_data[i_ENCODER_INTERVAL_MOTER_RIGHT];
-	msg.flipper_motor = -1; //robot_data[i_ENCODER_INTERVAL_MOTOR_FLIPPER] unused		
-	encoder_pub.publish(msg);
-	publish_encoder_vals = false;
+	msg.flipper_motor = robot_data[i_ENCODER_INTERVAL_MOTOR_FLIPPER];		
+	fast_rate_pub.publish(msg);
+	publish_fast_rate_vals = false;
 }
 
 void OpenRover::publishMedRateData()
@@ -264,7 +330,7 @@ void OpenRover::serialManager() //sends serial commands stored in the 3 buffers 
 		}
 		
 		//If one of the buffers are empty, publish the values
-		if ((serial_fast_buffer.size()==0) && publish_encoder_vals)
+		if ((serial_fast_buffer.size()==0) && publish_fast_rate_vals)
 		{	
 			publishFastRateData();
 		} else if ((serial_medium_buffer.size()==0) && publish_med_rate_vals) {
@@ -273,33 +339,6 @@ void OpenRover::serialManager() //sends serial commands stored in the 3 buffers 
 			publishSlowRateData();
 		}
 	}
-}
-
-void OpenRover::cmdVelCB(const geometry_msgs::Twist::ConstPtr& msg)
-{
-    int left_motor_speed, right_motor_speed, flipper_motor_speed;
-    left_motor_speed = (char)((msg->linear.x*30) + (msg->angular.z*20) + 125)%250;
-    right_motor_speed =(char)((msg->linear.x*30) - (msg->angular.z*20) + 125)%250;
-    flipper_motor_speed = (char)((msg->angular.y*20) + 125)%250;
-	
-	//Add most recent motor values to motor_speeds_commanded[3] class variable
-    updateMotorSpeedsCommanded(left_motor_speed, right_motor_speed, flipper_motor_speed);
-}
-
-void OpenRover::toggleLowSpeedMode(const std_msgs::Bool::ConstPtr& msg)
-{
-	bool mode_setting = msg->data;
-	
-	if(mode_setting==false) //turn off low speed mode
-	{
-		serial_medium_buffer.push_back(240);
-		serial_medium_buffer.push_back(0);
-	}
-	if(mode_setting==true) //turn on low speed mode
-	{
-		serial_medium_buffer.push_back(240);
-		serial_medium_buffer.push_back(1);
-	} 
 }
 
 void OpenRover::updateRobotData(int param)
@@ -322,6 +361,7 @@ void OpenRover::updateRobotData(int param)
 
 void OpenRover::updateMotorSpeedsCommanded(char left_motor, char right_motor, char flipper_motor)
 { //updates the stored motor speeds to the most recent commanded motor speeds
+	ROS_INFO("%i, %i", left_motor, right_motor);
 	motor_speeds_commanded[0] = left_motor;
 	motor_speeds_commanded[1] = right_motor;
 	motor_speeds_commanded[2] = flipper_motor;
@@ -415,6 +455,8 @@ int OpenRover::getParameterData(int param)
 		 throw (s2 + s);
 	}
 }
+
+//bool OpenRover::loadROSParams(){}
 
 bool OpenRover::openComs()
 {

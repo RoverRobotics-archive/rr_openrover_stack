@@ -1,7 +1,11 @@
 <launch>
 
     <node pkg="rr_openrover_basic"  type="openrover_basic_node" name="openrover_basic_node" output="screen">
-        <param name="port" value="/dev/ttyUSB1" />
+        <param name="port" value="/dev/ttyUSB0" />
+        <param name="drive_type" value="flippers"/> <!--Flippers | 4WD | 2WD-->
+        <param name="enable_timeout" type="bool" value="true"/>
+        <param name="timeout" type="double" value="0.3"/>
+        <param name="default_low_speed_mode" type="bool" value="true"/>
     </node>
 
     <!-- Xbox 360 Controller Button Mapping -->
