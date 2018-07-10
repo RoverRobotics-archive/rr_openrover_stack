@@ -89,10 +89,10 @@ OpenRover::OpenRover( ros::NodeHandle &_nh, ros::NodeHandle &_nh_priv ) :
     slow_rate(1.0/1.0), //1Hz
     motor_speeds_commanded{MOTOR_NEUTRAL,MOTOR_NEUTRAL,MOTOR_NEUTRAL}, //default motor commands to neutral
     timeout(0.5),
-    publish_fast_rate_vals(false),
-    publish_med_rate_vals(false),
-    publish_slow_rate_vals(false),
-    low_speed_mode_on(true)
+    publish_fast_rate_vals_(false),
+    publish_med_rate_vals_(false),
+    publish_slow_rate_vals_(false),
+    low_speed_mode_on_(true)
 {
     ROS_INFO( "Initializing" );
     nh_priv.param( "port", port, (std::string)"/dev/ttyUSB0" );
@@ -137,12 +137,12 @@ bool OpenRover::start()
 		ROS_WARN("Failed to retrieve drive_type from parameter server.");
 	}
     
-    if (!(nh.getParam("/openrover_basic_node/default_low_speed_mode", low_speed_mode_on)))
+    if (!(nh.getParam("/openrover_basic_node/default_low_speed_mode", low_speed_mode_on_)))
     {
 		ROS_WARN("Failed to retrieve default_low_speed_mode from parameter server.");		
 	}
     
-    if (low_speed_mode_on)
+    if (low_speed_mode_on_)
     {		
 		setParameterData(240, 1); //turn low speed on to keep robot from running away
 		ROS_INFO("low_speed_mode: on");
@@ -160,7 +160,7 @@ void OpenRover::robotDataSlowCB(const ros::WallTimerEvent &e)
 		serial_slow_buffer.push_back(10);
 		serial_slow_buffer.push_back(ROBOT_DATA_INDEX_SLOW[i]);
 	}
-	publish_slow_rate_vals = true;
+	publish_slow_rate_vals_ = true;
 }
 
 void OpenRover::robotDataMediumCB(const ros::WallTimerEvent &e)
@@ -170,7 +170,7 @@ void OpenRover::robotDataMediumCB(const ros::WallTimerEvent &e)
 		serial_medium_buffer.push_back(10);
 		serial_medium_buffer.push_back(ROBOT_DATA_INDEX_MEDIUM[i]);
 	}
-	publish_med_rate_vals = true;
+	publish_med_rate_vals_ = true;
 }
 
 void OpenRover::robotDataFastCB(const ros::WallTimerEvent &e)
@@ -180,7 +180,7 @@ void OpenRover::robotDataFastCB(const ros::WallTimerEvent &e)
 		serial_fast_buffer.push_back(10);
 		serial_fast_buffer.push_back(ROBOT_DATA_INDEX_FAST[i]);
 	}
-	publish_fast_rate_vals = true;
+	publish_fast_rate_vals_ = true;
 }
 
 void OpenRover::timeoutCB(const ros::WallTimerEvent &e)
@@ -223,7 +223,7 @@ void OpenRover::publishFastRateData()
 	msg.right_motor = robot_data[i_ENCODER_INTERVAL_MOTER_RIGHT];
 	msg.flipper_motor = robot_data[i_ENCODER_INTERVAL_MOTOR_FLIPPER];		
 	fast_rate_pub.publish(msg);
-	publish_fast_rate_vals = false;
+	publish_fast_rate_vals_ = false;
 }
 
 void OpenRover::publishMedRateData()
@@ -246,7 +246,7 @@ void OpenRover::publishMedRateData()
 	med_msg.reg_motor_flipper_angle = robot_data[i_REG_MOTOR_FLIPPER_ANGLE];
 	
 	medium_rate_pub.publish(med_msg);
-	publish_med_rate_vals = false;
+	publish_med_rate_vals_ = false;
 }
 
 void OpenRover::publishSlowRateData()
@@ -266,7 +266,7 @@ void OpenRover::publishSlowRateData()
 	slow_msg.buildno = robot_data[i_BUILDNO];
 	
 	slow_rate_pub.publish(slow_msg);
-	publish_slow_rate_vals = false;
+	publish_slow_rate_vals_ = false;
 }
 
 void OpenRover::serialManager() //sends serial commands stored in the 3 buffers in order of speed with fast getting highest priority
@@ -330,12 +330,12 @@ void OpenRover::serialManager() //sends serial commands stored in the 3 buffers 
 		}
 		
 		//If one of the buffers are empty, publish the values
-		if ((serial_fast_buffer.size()==0) && publish_fast_rate_vals)
+		if ((serial_fast_buffer.size()==0) && publish_fast_rate_vals_)
 		{	
 			publishFastRateData();
-		} else if ((serial_medium_buffer.size()==0) && publish_med_rate_vals) {
+		} else if ((serial_medium_buffer.size()==0) && publish_med_rate_vals_) {
 			publishMedRateData();			
-		} else if ((serial_slow_buffer.size()==0) && publish_slow_rate_vals) {
+		} else if ((serial_slow_buffer.size()==0) && publish_slow_rate_vals_) {
 			publishSlowRateData();
 		}
 	}

@@ -29,11 +29,10 @@ public:
     void robotDataSlowCB( const ros::WallTimerEvent &e);
     void timeoutCB( const ros::WallTimerEvent &e );
     
-	bool publish_fast_rate_vals;
-	bool publish_med_rate_vals;
-	bool publish_slow_rate_vals;
-	bool low_speed_mode_on;
-	bool timed_out;
+	bool publish_fast_rate_vals_;
+	bool publish_med_rate_vals_;
+	bool publish_slow_rate_vals_;
+	bool low_speed_mode_on_;
 
 private:
     //ROS Parameters
