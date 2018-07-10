@@ -36,9 +36,9 @@ public:
 
 private:
     //ROS Parameters
-    std::string port, drive_type;
+    std::string port_, drive_type_;
     
-	float timeout; //Default to neutral motor values after timeout seconds
+	float timeout_; //Default to neutral motor values after timeout seconds
 	
     //ROS node handlers
     ros::NodeHandle nh;
@@ -61,21 +61,21 @@ private:
     ros::Subscriber cmd_vel_sub;
 
     //General Class variables
-    int baud; //serial baud rate
+    int baud_; //serial baud rate
     int fd;	
-	int robot_data[50]; //stores all received data from robot
-	char motor_speeds_commanded[3]; //stores most recent commanded motor speeds
-	double fast_rate;	//update rate for encoders, 10Hz recommended
-	double medium_rate;
-	double slow_rate;
-	std::vector<char> serial_fast_buffer;
-	std::vector<char> serial_medium_buffer;
-	std::vector<char> serial_slow_buffer;
+	int robot_data_[50]; //stores all received data from robot
+	char motor_speeds_commanded_[3]; //stores most recent commanded motor speeds
+	double fast_rate_;	//update rate for encoders, 10Hz recommended
+	double medium_rate_;
+	double slow_rate_;
+	std::vector<char> serial_fast_buffer_;
+	std::vector<char> serial_medium_buffer_;
+	std::vector<char> serial_slow_buffer_;
 	
     //ROS Subscriber callback functions
     void cmdVelCB(const geometry_msgs::Twist::ConstPtr& msg);
     
-    //ROS Publish Functions (robot_data[X] to ros topics)
+    //ROS Publish Functions (robot_data_[X] to ros topics)
     void publishFastRateData();
     void publishMedRateData();
     void publishSlowRateData();
