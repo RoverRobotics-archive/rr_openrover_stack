@@ -2,8 +2,8 @@
 Changelog for package rr_openrover_basic
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.0.1 (2018-07-10)
+------------------
 * Ver 0.0.01  - subscribes to cmd_vel/managed with approximations for scaling factors. Removed joystick script and node.
 * Ver 0.0.01 with joystick code
 * added y-button toggle between analog stick control and heading control
