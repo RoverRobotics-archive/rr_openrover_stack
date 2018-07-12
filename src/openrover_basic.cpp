@@ -21,12 +21,14 @@ const int SERIAL_OUT_PACKAGE_LENGTH = 7;
 const int SERIAL_IN_PACKAGE_LENGTH = 5;
 const int LOOP_RATE = 1000; //microseconds between serial manager calls
 
+const float ENCODER_COEF = 104.12;
+const float ODOM_SMOOTHING = 50.0;
+const int MOTOR_FLIPPER_COEF = 100;
 const int MOTOR_NEUTRAL = 125;
 const int MOTOR_SPEED_MAX = 250;
 const int MOTOR_SPEED_MIN = 0;
 const int MOTOR_LINEAR_COEF = 495;
 const int MOTOR_ANGULAR_COEF = 644;
-const int MOTOR_FLIPPER_COEF = 50;
 const int MOTOR_DIFF_MAX = 200; //Max command difference between left and
 // right motors in low speed mode, prevents overcurrent
 const float MOTOR_ANGULAR_RATE_MAX = 0.155; //max turn rate in rad/s
@@ -50,7 +52,7 @@ const int i_REG_MOTOR_TEMP_RIGHT = 22; //1hz
 const int i_REG_POWER_BAT_VOLTAGE_A = 24; //1hz
 const int i_REG_POWER_BAT_VOLTAGE_B = 26; //1hz
 const int i_ENCODER_INTERVAL_MOTOR_LEFT = 28; //10hz
-const int i_ENCODER_INTERVAL_MOTER_RIGHT = 30; //10hz
+const int i_ENCODER_INTERVAL_MOTOR_RIGHT = 30; //10hz
 const int i_ENCODER_INTERVAL_MOTOR_FLIPPER = 32; //10hz ------ WIP
 
 const int i_REG_ROBOT_REL_SOC_A = 34; //1hz ------ WIP
@@ -66,7 +68,7 @@ const int i_REG_MOTOR_FLIPPER_ANGLE = 46;  //5hz
 //const int i_to_computer_REG_MOTOR_SLOW_SPEED = 50; //5hz ----WIP
 
 const int ROBOT_DATA_INDEX_FAST[] = {
-i_ENCODER_INTERVAL_MOTOR_LEFT, i_ENCODER_INTERVAL_MOTER_RIGHT}; /*,
+i_ENCODER_INTERVAL_MOTOR_LEFT, i_ENCODER_INTERVAL_MOTOR_RIGHT}; /*,
 i_ENCODER_INTERVAL_MOTOR_FLIPPER}; ----WIP //10hz*/ 
 
 const int ROBOT_DATA_INDEX_MEDIUM[] = {
@@ -237,7 +239,6 @@ void OpenRover::cmdVelCB(const geometry_msgs::Twist::ConstPtr& msg)
         right_motor_speed = average_motor_speed - MOTOR_DIFF_MAX/2;
     }
 
-    //ROS_INFO("%i, %i", left_motor_speed, right_motor_speed);
     //Add most recent motor values to motor_speeds_commanded_[3] class variable
     updateMotorSpeedsCommanded((char)left_motor_speed, (char)right_motor_speed, (char)flipper_motor_speed);
     timeout_timer.start();
@@ -245,16 +246,33 @@ void OpenRover::cmdVelCB(const geometry_msgs::Twist::ConstPtr& msg)
 
 void OpenRover::publishFastRateData()
 {
+    static float left_odom = 0;
+    static float right_odom = 0;
+    
     rr_openrover_basic::RawRrOpenroverBasicFastRateData msg;
     
     msg.header.stamp = ros::Time::now();
     msg.header.frame_id = "";
     
     msg.left_motor = robot_data_[i_ENCODER_INTERVAL_MOTOR_LEFT];
-    msg.right_motor = robot_data_[i_ENCODER_INTERVAL_MOTER_RIGHT];
+    msg.right_motor = robot_data_[i_ENCODER_INTERVAL_MOTOR_RIGHT];
     msg.flipper_motor = robot_data_[i_ENCODER_INTERVAL_MOTOR_FLIPPER];
     fast_rate_pub.publish(msg);
     publish_fast_rate_vals_ = false;
+    
+    if (robot_data_[i_ENCODER_INTERVAL_MOTOR_LEFT]>10 && robot_data_[i_ENCODER_INTERVAL_MOTOR_RIGHT]>10)
+    {    
+        left_odom = left_odom-left_odom/ODOM_SMOOTHING+(ENCODER_COEF/robot_data_[i_ENCODER_INTERVAL_MOTOR_LEFT])/ODOM_SMOOTHING;
+        right_odom = right_odom-right_odom/ODOM_SMOOTHING+(ENCODER_COEF/robot_data_[i_ENCODER_INTERVAL_MOTOR_RIGHT])/ODOM_SMOOTHING;
+    }
+    else
+    {
+        left_odom = 0;
+        right_odom = 0;
+    }
+    
+    ROS_INFO("%f, %f", left_odom, right_odom);
+    ROS_INFO("%i, %i", motor_speeds_commanded_[0], motor_speeds_commanded_[1]);
 }
 
 void OpenRover::publishMedRateData()
