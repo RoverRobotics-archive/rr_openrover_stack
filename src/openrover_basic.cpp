@@ -4,6 +4,7 @@
 #include <ctime>
 #include <vector>
 #include <string>
+#include <cmath>
 
 #include "std_msgs/Int32.h"
 #include "geometry_msgs/Twist.h"
@@ -18,12 +19,17 @@
 const int SERIAL_START_BYTE = 253;
 const int SERIAL_OUT_PACKAGE_LENGTH = 7;
 const int SERIAL_IN_PACKAGE_LENGTH = 5;
-const int LOOP_RATE = 1000; //sleep time in between serial manager calls
+const int LOOP_RATE = 1000; //microseconds between serial manager calls
+
 const int MOTOR_NEUTRAL = 125;
 const int MOTOR_SPEED_MAX = 250;
 const int MOTOR_SPEED_MIN = 0;
-const int MOTOR_LINEAR_SCALE_FACTOR = 495;
-const int MOTOR_ANGULAR_SCALE_FACTOR = 644;
+const int MOTOR_LINEAR_COEF = 495;
+const int MOTOR_ANGULAR_COEF = 644;
+const int MOTOR_FLIPPER_COEF = 50;
+const int MOTOR_DIFF_MAX = 200; //Max command difference between left and
+// right motors in low speed mode, prevents overcurrent
+const float MOTOR_ANGULAR_RATE_MAX = 0.155; //max turn rate in rad/s
 
 //Firmware parameters. Kept numbering from Firmware SDK-Protocol Documents_07-03-2018_1
 //to maintain consistency. Some parameters are still a work in progress (WIP)
@@ -190,24 +196,48 @@ void OpenRover::timeoutCB(const ros::WallTimerEvent &e)
 }
 
 void OpenRover::cmdVelCB(const geometry_msgs::Twist::ConstPtr& msg)
-{
-    timeout_timer.stop();
+{    
     int left_motor_speed, right_motor_speed, flipper_motor_speed;
-    right_motor_speed = (int)((msg->linear.x*MOTOR_LINEAR_SCALE_FACTOR) + (msg->angular.z*MOTOR_ANGULAR_SCALE_FACTOR) + 125);
-    left_motor_speed = (int)((msg->linear.x*MOTOR_LINEAR_SCALE_FACTOR) - (msg->angular.z*MOTOR_ANGULAR_SCALE_FACTOR) + 125);
-    flipper_motor_speed = (int)((msg->angular.y*20) + 125)%250;
-    if (right_motor_speed > MOTOR_SPEED_MAX){
+    float turn_rate = msg->angular.z;
+    float linear_rate = msg->linear.x;    
+    
+    timeout_timer.stop();
+    right_motor_speed = (int)((linear_rate*MOTOR_LINEAR_COEF) + (turn_rate*MOTOR_ANGULAR_COEF) + 125);
+    left_motor_speed = (int)((linear_rate*MOTOR_LINEAR_COEF) - (turn_rate*MOTOR_ANGULAR_COEF) + 125);
+    flipper_motor_speed = (int)((msg->angular.y*MOTOR_FLIPPER_COEF) + 125)%250;
+    if (right_motor_speed > MOTOR_SPEED_MAX)
+    {
         right_motor_speed = MOTOR_SPEED_MAX;
     }
-    if (left_motor_speed > MOTOR_SPEED_MAX){
+    if (left_motor_speed > MOTOR_SPEED_MAX)
+    {
         left_motor_speed = MOTOR_SPEED_MAX;
     }
-    if (right_motor_speed < MOTOR_SPEED_MIN){
+    if (right_motor_speed < MOTOR_SPEED_MIN)
+    {
         right_motor_speed = MOTOR_SPEED_MIN;
     }
-    if (left_motor_speed < MOTOR_SPEED_MIN){
+    if (left_motor_speed < MOTOR_SPEED_MIN)
+    {
         left_motor_speed = MOTOR_SPEED_MIN;
     }
+    //The following reduces max difference between motor commands to prevent over current in flippers
+    if ((right_motor_speed-left_motor_speed)>MOTOR_DIFF_MAX)
+    {
+        int average_motor_speed = (right_motor_speed + left_motor_speed)/2;
+        //ROS_INFO("R %i, %i, %i", left_motor_speed, right_motor_speed, average_motor_speed);
+        right_motor_speed = average_motor_speed + MOTOR_DIFF_MAX/2;
+        left_motor_speed = average_motor_speed - MOTOR_DIFF_MAX/2;
+    }
+    if ((left_motor_speed-right_motor_speed)>MOTOR_DIFF_MAX)
+    {
+        int average_motor_speed = (left_motor_speed-right_motor_speed)/2;
+        //ROS_INFO("L %i, %i, %i", left_motor_speed, right_motor_speed, average_motor_speed);
+        left_motor_speed = average_motor_speed + MOTOR_DIFF_MAX/2;
+        right_motor_speed = average_motor_speed - MOTOR_DIFF_MAX/2;
+    }
+
+    //ROS_INFO("%i, %i", left_motor_speed, right_motor_speed);
     //Add most recent motor values to motor_speeds_commanded_[3] class variable
     updateMotorSpeedsCommanded((char)left_motor_speed, (char)right_motor_speed, (char)flipper_motor_speed);
     timeout_timer.start();
