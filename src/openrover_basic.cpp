@@ -227,14 +227,12 @@ void OpenRover::cmdVelCB(const geometry_msgs::Twist::ConstPtr& msg)
     if ((right_motor_speed-left_motor_speed)>MOTOR_DIFF_MAX)
     {
         int average_motor_speed = (right_motor_speed + left_motor_speed)/2;
-        //ROS_INFO("R %i, %i, %i", left_motor_speed, right_motor_speed, average_motor_speed);
         right_motor_speed = average_motor_speed + MOTOR_DIFF_MAX/2;
         left_motor_speed = average_motor_speed - MOTOR_DIFF_MAX/2;
     }
     if ((left_motor_speed-right_motor_speed)>MOTOR_DIFF_MAX)
     {
         int average_motor_speed = (left_motor_speed-right_motor_speed)/2;
-        //ROS_INFO("L %i, %i, %i", left_motor_speed, right_motor_speed, average_motor_speed);
         left_motor_speed = average_motor_speed + MOTOR_DIFF_MAX/2;
         right_motor_speed = average_motor_speed - MOTOR_DIFF_MAX/2;
     }
@@ -259,20 +257,6 @@ void OpenRover::publishFastRateData()
     msg.flipper_motor = robot_data_[i_ENCODER_INTERVAL_MOTOR_FLIPPER];
     fast_rate_pub.publish(msg);
     publish_fast_rate_vals_ = false;
-    
-    if (robot_data_[i_ENCODER_INTERVAL_MOTOR_LEFT]>10 && robot_data_[i_ENCODER_INTERVAL_MOTOR_RIGHT]>10)
-    {    
-        left_odom = left_odom-left_odom/ODOM_SMOOTHING+(ENCODER_COEF/robot_data_[i_ENCODER_INTERVAL_MOTOR_LEFT])/ODOM_SMOOTHING;
-        right_odom = right_odom-right_odom/ODOM_SMOOTHING+(ENCODER_COEF/robot_data_[i_ENCODER_INTERVAL_MOTOR_RIGHT])/ODOM_SMOOTHING;
-    }
-    else
-    {
-        left_odom = 0;
-        right_odom = 0;
-    }
-    
-    ROS_INFO("%f, %f", left_odom, right_odom);
-    ROS_INFO("%i, %i", motor_speeds_commanded_[0], motor_speeds_commanded_[1]);
 }
 
 void OpenRover::publishMedRateData()
