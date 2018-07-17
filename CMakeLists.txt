@@ -6,11 +6,12 @@ find_package(catkin REQUIRED COMPONENTS
   rospy
   std_msgs
   message_generation
+  geometry_msgs
+  nav_msgs
 )
 
 add_message_files(
    FILES
-   RawRrOpenroverBasic.msg
    RawRrOpenroverBasicFastRateData.msg
    RawRrOpenroverBasicMedRateData.msg
    RawRrOpenroverBasicSlowRateData.msg
@@ -19,11 +20,13 @@ add_message_files(
 generate_messages(
    DEPENDENCIES
    std_msgs
+   geometry_msgs
+   nav_msgs
 )
 
 catkin_package(
   INCLUDE_DIRS include
-	CATKIN_DEPENDS message_runtime
+  CATKIN_DEPENDS message_runtime
 )
 
 include_directories(
@@ -33,4 +36,6 @@ include_directories(
 
 add_executable(openrover_basic_node src/openrover_basic.cpp)
 
+add_dependencies(openrover_basic_node rr_openrover_basic_generate_messages_cpp)
 target_link_libraries(openrover_basic_node ${catkin_LIBRARIES} )
+
