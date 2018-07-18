@@ -6,6 +6,7 @@
 #include <string>
 #include <cmath>
 
+#include "tf/tf.h"
 #include "std_msgs/Int32.h"
 #include "geometry_msgs/Twist.h"
 #include <std_msgs/Bool.h>
@@ -21,7 +22,14 @@ const int SERIAL_OUT_PACKAGE_LENGTH = 7;
 const int SERIAL_IN_PACKAGE_LENGTH = 5;
 const int LOOP_RATE = 1000; //microseconds between serial manager calls
 
-const float ENCODER_COEF = 104.12;
+const float ENCODER_COEF = 110.8; //r_track*2*pi*(2.54/100)/96*1e6/45
+const int ENCODER_MAX = 5000;
+const int ENCODER_MIN = 1;
+const float TRACK_SPACING  = 10.75; //distance between outer sides of inner tracks
+const float ROBOT_ANGULAR_COEF = 0.5/(TRACK_SPACING*2.54/100); //rad per meter
+const float VEL_MIN = ENCODER_COEF/ENCODER_MAX;
+const float SLIPPAGE_FACTOR = 0.75;
+
 const float ODOM_SMOOTHING = 50.0;
 const int MOTOR_FLIPPER_COEF = 100;
 const int MOTOR_NEUTRAL = 125;
@@ -131,8 +139,10 @@ bool OpenRover::start()
     fast_rate_pub = nh.advertise<rr_openrover_basic::RawRrOpenroverBasicFastRateData>("rr_openrover_basic/raw_fast_rate_data",1);
     medium_rate_pub = nh.advertise<rr_openrover_basic::RawRrOpenroverBasicMedRateData>("rr_openrover_basic/raw_med_rate_data",1);
     slow_rate_pub = nh.advertise<rr_openrover_basic::RawRrOpenroverBasicSlowRateData>("rr_openrover_basic/raw_slow_rate_data",1);
+    odom_enc_pub = nh.advertise<nav_msgs::Odometry>("rr_openrover_basic/odom_encoder", 1);
     
     cmd_vel_sub = nh.subscribe("/cmd_vel/managed", 1, &OpenRover::cmdVelCB, this);
+    odom_enc_sub = nh.subscribe("/rr_openrover_basic/raw_fast_rate_data", 1, &OpenRover::odomEncCB, this);
     
     if (!(nh.getParam("/openrover_basic_node/timeout", timeout_)))
     {
@@ -242,15 +252,105 @@ void OpenRover::cmdVelCB(const geometry_msgs::Twist::ConstPtr& msg)
     timeout_timer.start();
 }
 
+void OpenRover::odomEncCB(const rr_openrover_basic::RawRrOpenroverBasicFastRateData& msg)
+{    
+    int left_enc = msg.left_motor;
+    int right_enc = msg.right_motor;
+    
+    static double left_vel = 0;
+    static double right_vel = 0;
+    static double left_dist = 0;
+    static double right_dist = 0;
+    static double pos_x = 0;
+    static double pos_y = 0;
+    static double theta = 0;
+    double net_vel = 0;
+    double diff_vel = 0;
+    double alpha = 0;
+    double dt = 0;
+    
+    tf::Quaternion q_new;
+    
+    double now_time = msg.header.stamp.toSec();
+    static double past_time = 0;
+    
+    nav_msgs::Odometry odom_msg;
+    
+    dt = now_time-past_time;
+    
+    if((ENCODER_MIN < left_enc) && (left_enc < ENCODER_MAX))
+    {
+        if (motor_speeds_commanded_[0] > 125)
+        {            
+            left_vel = ENCODER_COEF/left_enc;
+        }
+        else
+        {
+            left_vel = -ENCODER_COEF/left_enc;
+        }
+    }
+    else
+    {
+        left_vel = 0;
+    }
+    
+    if((ENCODER_MIN < right_enc) && (right_enc < ENCODER_MAX))
+    {
+        if ( motor_speeds_commanded_[1] > 125)
+        {
+            right_vel = ENCODER_COEF/right_enc;
+        }
+        else
+        {
+            right_vel = -ENCODER_COEF/right_enc;
+        }
+    }
+    else
+    {
+        right_vel = 0;
+    }
+    
+    if(past_time!=0)
+    {
+        left_dist = left_dist + left_vel*dt;
+        right_dist = right_dist + right_vel*dt;
+            
+        net_vel = 0.5*(left_vel+right_vel);
+        diff_vel = right_vel - left_vel;
+        
+        alpha = ROBOT_ANGULAR_COEF*diff_vel;
+        
+        pos_x = pos_x + net_vel*cos(theta)*dt;
+        pos_y = pos_y + net_vel*sin(theta)*dt;
+        theta = (theta + SLIPPAGE_FACTOR*alpha*dt);
+        
+        q_new = tf::createQuaternionFromRPY(0, 0, theta);
+        ROS_INFO("Quat: %f, %f, %f, %f", q_new[0], q_new[1], q_new[2], q_new[3]);
+        quaternionTFToMsg(q_new, odom_msg.pose.pose.orientation);
+    }
+    
+    ROS_INFO("%lf, %lf, %lf, %lf", left_dist, right_dist, left_vel, right_vel);
+    
+    odom_msg.header.stamp = ros::Time::now();
+    odom_msg.header.frame_id = "base_link";
+    
+    odom_msg.twist.twist.linear.x = net_vel;
+    odom_msg.twist.twist.angular.z = alpha;
+    
+    odom_msg.pose.pose.position.x = pos_x;
+    odom_msg.pose.pose.position.y = pos_y;
+    
+    odom_enc_pub.publish(odom_msg);
+    past_time=now_time;
+}
+    
+
 void OpenRover::publishFastRateData()
 {
-    static float left_odom = 0;
-    static float right_odom = 0;
-    
     rr_openrover_basic::RawRrOpenroverBasicFastRateData msg;
     
     msg.header.stamp = ros::Time::now();
-    msg.header.frame_id = "";
+    msg.header.frame_id = "";    
     
     msg.left_motor = robot_data_[i_ENCODER_INTERVAL_MOTOR_LEFT];
     msg.right_motor = robot_data_[i_ENCODER_INTERVAL_MOTOR_RIGHT];

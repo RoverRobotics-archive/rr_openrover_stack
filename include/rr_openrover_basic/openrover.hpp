@@ -51,7 +51,7 @@ private:
     ros::WallTimer timeout_timer;
 
     //ROS Publisher and Subscribers
-    ros::Publisher odom_pub;
+    ros::Publisher odom_enc_pub;
     ros::Publisher battery_state_pub;
     
     ros::Publisher fast_rate_pub;
@@ -59,6 +59,7 @@ private:
     ros::Publisher slow_rate_pub;
     
     ros::Subscriber cmd_vel_sub;
+    ros::Subscriber odom_enc_sub;
 
     //General Class variables
     int baud_; //serial baud rate
@@ -74,6 +75,7 @@ private:
 	
     //ROS Subscriber callback functions
     void cmdVelCB(const geometry_msgs::Twist::ConstPtr& msg);
+    void odomEncCB(const rr_openrover_basic::RawRrOpenroverBasicFastRateData& msg);
     
     //ROS Publish Functions (robot_data_[X] to ros topics)
     void publishFastRateData();
