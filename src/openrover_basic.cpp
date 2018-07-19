@@ -326,11 +326,8 @@ void OpenRover::publishOdomEnc()
         theta = (theta + SLIPPAGE_FACTOR*alpha*dt);
         
         q_new = tf::createQuaternionFromRPY(0, 0, theta);
-        ROS_INFO("Quat: %f, %f, %f, %f", q_new[0], q_new[1], q_new[2], q_new[3]);
         quaternionTFToMsg(q_new, odom_msg.pose.pose.orientation);
     }
-    
-    ROS_INFO("%lf, %lf, %lf, %lf", left_dist, right_dist, left_vel, right_vel);
     
     odom_msg.header.stamp = ros_now_time;
     odom_msg.header.frame_id = "base_link";
