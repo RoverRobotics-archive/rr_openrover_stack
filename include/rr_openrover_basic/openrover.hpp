@@ -29,17 +29,17 @@ public:
     void robotDataSlowCB( const ros::WallTimerEvent &e);
     void timeoutCB( const ros::WallTimerEvent &e );
     
-	bool publish_fast_rate_vals_;
-	bool publish_med_rate_vals_;
-	bool publish_slow_rate_vals_;
-	bool low_speed_mode_on_;
+    bool publish_fast_rate_vals_;
+    bool publish_med_rate_vals_;
+    bool publish_slow_rate_vals_;
+    bool low_speed_mode_on_;
 
 private:
     //ROS Parameters
     std::string port_, drive_type_;
     
-	float timeout_; //Default to neutral motor values after timeout seconds
-	
+    float timeout_; //Default to neutral motor values after timeout seconds
+
     //ROS node handlers
     ros::NodeHandle nh;
     ros::NodeHandle nh_priv;
@@ -51,7 +51,7 @@ private:
     ros::WallTimer timeout_timer;
 
     //ROS Publisher and Subscribers
-    ros::Publisher odom_pub;
+    ros::Publisher odom_enc_pub;
     ros::Publisher battery_state_pub;
     
     ros::Publisher fast_rate_pub;
@@ -62,16 +62,16 @@ private:
 
     //General Class variables
     int baud_; //serial baud rate
-    int fd;	
-	int robot_data_[50]; //stores all received data from robot
-	char motor_speeds_commanded_[3]; //stores most recent commanded motor speeds
-	double fast_rate_;	//update rate for encoders, 10Hz recommended
-	double medium_rate_;
-	double slow_rate_;
-	std::vector<char> serial_fast_buffer_;
-	std::vector<char> serial_medium_buffer_;
-	std::vector<char> serial_slow_buffer_;
-	
+    int fd;
+    int robot_data_[50]; //stores all received data from robot
+    char motor_speeds_commanded_[3]; //stores most recent commanded motor speeds
+    double fast_rate_; //update rate for encoders, 10Hz recommended
+    double medium_rate_;
+    double slow_rate_;
+    std::vector<char> serial_fast_buffer_;
+    std::vector<char> serial_medium_buffer_;
+    std::vector<char> serial_slow_buffer_;
+
     //ROS Subscriber callback functions
     void cmdVelCB(const geometry_msgs::Twist::ConstPtr& msg);
     
@@ -79,8 +79,9 @@ private:
     void publishFastRateData();
     void publishMedRateData();
     void publishSlowRateData();
+    void publishOdomEnc();
     
-    //Serial Com Functions    
+    //Serial Com Functions
     int getParameterData(int parameter);
     bool setParameterData(int param1, int param2);
     void updateRobotData(int parameter);
