@@ -21,6 +21,7 @@ public:
     OpenRover( ros::NodeHandle &_nh, ros::NodeHandle &_nh_priv );
     bool start();
     bool openComs();
+    bool setupRobotParams();
     
     void serialManager();
     
@@ -36,7 +37,8 @@ public:
 
 private:
     //ROS Parameters
-    std::string port_, drive_type_;
+    std::string port_;
+    std::string drive_type_;
     
     float timeout_; //Default to neutral motor values after timeout seconds
 
@@ -68,6 +70,18 @@ private:
     double fast_rate_; //update rate for encoders, 10Hz recommended
     double medium_rate_;
     double slow_rate_;
+
+    //drive dependent parameters
+    float odom_encoder_coef_;
+    float odom_axle_track_;
+    float odom_angular_coef_;
+    float odom_slippage_factor_;
+
+    int motor_speed_linear_coef_;
+    int motor_speed_angular_coef_;
+    int motor_speed_flipper_coef_;
+    //int motor_speed_diff_max_; ---WIP
+
     std::vector<char> serial_fast_buffer_;
     std::vector<char> serial_medium_buffer_;
     std::vector<char> serial_slow_buffer_;
@@ -88,10 +102,6 @@ private:
     void updateMotorSpeedsCommanded(char left_motor_speed, char right_motor_speed, char flipper_motor_speed);
     bool sendCommand(int param1, int param2);
     int readCommand();
-    
-    //Odometry Mapping Functions- WIP
-    void parseWheelType();
 };
-
 
 #endif /* _openrover_hpp */
