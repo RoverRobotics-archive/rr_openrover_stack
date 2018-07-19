@@ -4,9 +4,13 @@
   <version>0.0.2</version>
   <description>The rr_openrover_basic package</description>
 
-  <maintainer email="nick@roverrobotics.com">nick fragale</maintainer>
+  <maintainer email="jack@digilabs.io">Jack Kilian</maintainer>
+  <maintainer email="fragale@digilabs.io">Nick Fragale</maintainer>
 
   <license>BSD</license>
+
+  <url>http://ros.org/wiki/rr_openrover_basic</url>
+  <author>Jack Kilian</author>
 
   <buildtool_depend>catkin</buildtool_depend>
 
@@ -14,6 +18,7 @@
   <depend>nav_msgs</depend>
   <depend>sensor_msgs</depend>
   <depend>std_msgs</depend>
+  <depend>tf</depend>
 
   <depend>roscpp</depend>
   <depend>rospy</depend>
