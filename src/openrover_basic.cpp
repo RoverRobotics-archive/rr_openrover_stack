@@ -134,8 +134,8 @@ OpenRover::OpenRover( ros::NodeHandle &_nh, ros::NodeHandle &_nh_priv ) :
     low_speed_mode_on_(true)
 {
     ROS_INFO( "Initializing" );
-    nh_priv.param( "port", port_, (std::string)"/dev/ttyUSB0" );
-    nh_priv.param( "baud", baud_, 57600 );
+    //nh_priv.param( "port", port_, (std::string)"/dev/ttyUSB0" );
+    //nh_priv.param( "baud", baud_, 57600 );
     
     serial_fast_buffer_.reserve(10*FAST_SIZE); //reserve space for 5 sets of FAST rate data
     serial_medium_buffer_.reserve(10*MEDIUM_SIZE); //reserve space for 5 sets of Medium rate data
@@ -166,6 +166,17 @@ bool OpenRover::start()
     odom_enc_pub = nh.advertise<nav_msgs::Odometry>("rr_openrover_basic/odom_encoder", 1);
 
     cmd_vel_sub = nh.subscribe("/cmd_vel/managed", 1, &OpenRover::cmdVelCB, this);
+    
+    if (low_speed_mode_on_)
+    {
+        setParameterData(240, 1); //turn low speed on to keep robot from running away
+        ROS_INFO("low_speed_mode: on");
+    }
+    else
+    {
+        setParameterData(240, 0); //turn low speed on to keep robot from running away
+        ROS_INFO("low_speed_mode: off");
+    }
 
     return true;
 }
@@ -175,11 +186,13 @@ bool OpenRover::setupRobotParams()
     if (!(nh.getParam("/openrover_basic_node/port", port_)))
     {
         ROS_WARN("Failed to retrieve port from parameter server.");
+        return false;
     }
 
     if (!(nh.getParam("/openrover_basic_node/drive_type", drive_type_)))
     {
         ROS_WARN("Failed to retrieve drive_type from parameter.");
+        return false;
     }
     else
     {
@@ -219,33 +232,27 @@ bool OpenRover::setupRobotParams()
         else
         {
             ROS_WARN("Unclear ROS param drive_type. Defaulting to flippers params.");
+            odom_encoder_coef_ = ODOM_ENCODER_COEF_F;
+            odom_axle_track_ = ODOM_AXLE_TRACK_F;
+            odom_angular_coef_ = ODOM_ANGULAR_COEF_F;
+            odom_slippage_factor_ = ODOM_SLIPPAGE_FACTOR_F;
+
+            motor_speed_linear_coef_ = MOTOR_SPEED_LINEAR_COEF_F;
+            motor_speed_angular_coef_ = MOTOR_SPEED_ANGULAR_COEF_F;
         }
     }
     if (!(nh.getParam("/openrover_basic_node/timeout", timeout_)))
     {
         ROS_WARN("Failed to retrieve timeout from parameter server.");
-    }
-
-    if (!(nh.getParam("/openrover_basic_node/drive_type", drive_type_)))
-    {
-        ROS_WARN("Failed to retrieve drive_type from parameter server.");
+        return false;
     }
     
     if (!(nh.getParam("/openrover_basic_node/default_low_speed_mode", low_speed_mode_on_)))
     {
         ROS_WARN("Failed to retrieve default_low_speed_mode from parameter server.");
+        return false;
     }
-    
-    if (low_speed_mode_on_)
-    {
-        setParameterData(240, 1); //turn low speed on to keep robot from running away
-        ROS_INFO("low_speed_mode: on");
-    }
-    else
-    {
-        setParameterData(240, 0); //turn low speed on to keep robot from running away
-        ROS_INFO("low_speed_mode: off");
-    }
+    return true;
 }
 
 void OpenRover::robotDataSlowCB(const ros::WallTimerEvent &e)
@@ -787,9 +794,6 @@ int main( int argc, char *argv[] )
         }
         if( !openrover->start( ) )
                 ROS_ERROR( "Failed to start the driver" );
-
-        if( !openrover->setupRobotParams( ) )
-                ROS_ERROR( "Failed to setup robot parameters");
 
         ros::Rate loop_rate(LOOP_RATE);
 
