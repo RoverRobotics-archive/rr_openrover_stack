@@ -47,10 +47,10 @@ const int MOTOR_SPEED_ANGULAR_COEF_4WD = 86;
 const float ODOM_ENCODER_COEF_2WD = 182.405; //r_track*2*pi*(2.54/100)/96*1e6/45
 const float ODOM_AXLE_TRACK_2WD  = 14.375; //distance between wheels
 const float ODOM_ANGULAR_COEF_2WD = 1.0/(ODOM_AXLE_TRACK_2WD*2.54/100); //rad per meter
-const float ODOM_SLIPPAGE_FACTOR_2WD = 1;
+const float ODOM_SLIPPAGE_FACTOR_2WD = 0.9877;
 //cmd_vel to motor command 2wd constants
 const int MOTOR_SPEED_LINEAR_COEF_2WD = 293;
-const int MOTOR_SPEED_ANGULAR_COEF_2WD = 86;
+const int MOTOR_SPEED_ANGULAR_COEF_2WD = 56;
 
 //general openrover_basic platform constants
 const int ENCODER_MAX = 5000;
