@@ -22,18 +22,40 @@ const int SERIAL_OUT_PACKAGE_LENGTH = 7;
 const int SERIAL_IN_PACKAGE_LENGTH = 5;
 const int LOOP_RATE = 1000; //microseconds between serial manager calls
 
-//drive_type specific constants. Current Configuration is flippers
-const float ENCODER_COEF = 110.8; //r_track*2*pi*(2.54/100)/96*1e6/45
-const float TRACK_SPACING  = 10.75; //distance between outer sides of inner tracks
-const float ROBOT_ANGULAR_COEF = 0.5/(TRACK_SPACING*2.54/100); //rad per meter
-const float SLIPPAGE_FACTOR = 0.75;
-const int MOTOR_FLIPPER_COEF = 100;
-const int MOTOR_LINEAR_COEF = 495;
-const int MOTOR_ANGULAR_COEF = 644;
+//flipper constants__________
+//odometry flipper constants
+const float ODOM_ENCODER_COEF_F = 110.8; //r_track*2*pi*(2.54/100)/96*1e6/45
+const float ODOM_AXLE_TRACK_F  = 10.75; //distance between centerlines of tracks
+const float ODOM_ANGULAR_COEF_F = 0.5/(ODOM_AXLE_TRACK_F*2.54/100); //rad per meter
+const float ODOM_SLIPPAGE_FACTOR_F = 0.75;
+//cmd_vel to motor command flipper constants
+const int MOTOR_SPEED_LINEAR_COEF_F = 495;
+const int MOTOR_SPEED_ANGULAR_COEF_F = 644;
 
+//4wd constants__________
+//odometry 4wd constants
+const float ODOM_ENCODER_COEF_4WD = 182.405; //r_wheel*2*pi*(2.54/100)/96*1e6/45
+const float ODOM_AXLE_TRACK_4WD  = 14.375; //distance between wheels
+const float ODOM_ANGULAR_COEF_4WD = 1.0/(ODOM_AXLE_TRACK_4WD*2.54/100); //rad per meter
+const float ODOM_SLIPPAGE_FACTOR_4WD = 0.610;
+//cmd_vel to motor command 4wd constants
+const int MOTOR_SPEED_LINEAR_COEF_4WD = 293;
+const int MOTOR_SPEED_ANGULAR_COEF_4WD = 86;
+
+//2wd constants__________
+//odometry 2wd constants
+const float ODOM_ENCODER_COEF_2WD = 182.405; //r_track*2*pi*(2.54/100)/96*1e6/45
+const float ODOM_AXLE_TRACK_2WD  = 14.375; //distance between wheels
+const float ODOM_ANGULAR_COEF_2WD = 1.0/(ODOM_AXLE_TRACK_2WD*2.54/100); //rad per meter
+const float ODOM_SLIPPAGE_FACTOR_2WD = 0.9877;
+//cmd_vel to motor command 2wd constants
+const int MOTOR_SPEED_LINEAR_COEF_2WD = 293;
+const int MOTOR_SPEED_ANGULAR_COEF_2WD = 56;
+
+//general openrover_basic platform constants
 const int ENCODER_MAX = 5000;
 const int ENCODER_MIN = 1;
-const float VEL_MIN = ENCODER_COEF/ENCODER_MAX;
+const int MOTOR_FLIPPER_COEF = 100;
 
 const float ODOM_SMOOTHING = 50.0;
 const int MOTOR_NEUTRAL = 125;
@@ -41,7 +63,6 @@ const int MOTOR_SPEED_MAX = 250;
 const int MOTOR_SPEED_MIN = 0;
 const int MOTOR_DIFF_MAX = 200; //Max command difference between left and
 // right motors in low speed mode, prevents overcurrent
-const float MOTOR_ANGULAR_RATE_MAX = 0.155; //max turn rate in rad/s
 
 //Firmware parameters. Kept numbering from Firmware SDK-Protocol Documents_07-03-2018_1
 //to maintain consistency. Some parameters are still a work in progress (WIP)
@@ -113,8 +134,8 @@ OpenRover::OpenRover( ros::NodeHandle &_nh, ros::NodeHandle &_nh_priv ) :
     low_speed_mode_on_(true)
 {
     ROS_INFO( "Initializing" );
-    nh_priv.param( "port", port_, (std::string)"/dev/ttyUSB0" );
-    nh_priv.param( "baud", baud_, 57600 );
+    //nh_priv.param( "port", port_, (std::string)"/dev/ttyUSB0" );
+    //nh_priv.param( "baud", baud_, 57600 );
     
     serial_fast_buffer_.reserve(10*FAST_SIZE); //reserve space for 5 sets of FAST rate data
     serial_medium_buffer_.reserve(10*MEDIUM_SIZE); //reserve space for 5 sets of Medium rate data
@@ -130,10 +151,11 @@ OpenRover::OpenRover( ros::NodeHandle &_nh, ros::NodeHandle &_nh_priv ) :
 
 bool OpenRover::start()
 {
-    if (!(nh.getParam("/openrover_basic_node/port", port_)))
+    if(!setupRobotParams())
     {
-        ROS_WARN("Failed to retrieve port from parameter server.");
+        ROS_WARN("Failed to setup Robot parameters.");
     }
+
     openComs();
     ROS_INFO("Creating Publishers and Subscribers");
     ROS_INFO("Fast Data List: %i, Med Data List: %i, Slow Data List: %i", FAST_SIZE, MEDIUM_SIZE, SLOW_SIZE);
@@ -144,21 +166,6 @@ bool OpenRover::start()
     odom_enc_pub = nh.advertise<nav_msgs::Odometry>("rr_openrover_basic/odom_encoder", 1);
 
     cmd_vel_sub = nh.subscribe("/cmd_vel/managed", 1, &OpenRover::cmdVelCB, this);
-
-    if (!(nh.getParam("/openrover_basic_node/timeout", timeout_)))
-    {
-        ROS_WARN("Failed to retrieve timeout from parameter server.");
-    }
-
-    if (!(nh.getParam("/openrover_basic_node/drive_type", drive_type_)))
-    {
-        ROS_WARN("Failed to retrieve drive_type from parameter server.");
-    }
-    
-    if (!(nh.getParam("/openrover_basic_node/default_low_speed_mode", low_speed_mode_on_)))
-    {
-        ROS_WARN("Failed to retrieve default_low_speed_mode from parameter server.");
-    }
     
     if (low_speed_mode_on_)
     {
@@ -168,7 +175,82 @@ bool OpenRover::start()
     else
     {
         setParameterData(240, 0); //turn low speed on to keep robot from running away
-        ROS_INFO("low_speed_mode: off");        
+        ROS_INFO("low_speed_mode: off");
+    }
+
+    return true;
+}
+
+bool OpenRover::setupRobotParams()
+{//Get ROS params and save them to class variables
+    if (!(nh.getParam("/openrover_basic_node/port", port_)))
+    {
+        ROS_WARN("Failed to retrieve port from parameter server.");
+        return false;
+    }
+
+    if (!(nh.getParam("/openrover_basic_node/drive_type", drive_type_)))
+    {
+        ROS_WARN("Failed to retrieve drive_type from parameter.");
+        return false;
+    }
+    else
+    {
+        if(drive_type_==(std::string) "2wd")
+        {
+            ROS_INFO("2wd parameters loaded.");
+            odom_encoder_coef_ = ODOM_ENCODER_COEF_2WD;
+            odom_axle_track_ = ODOM_AXLE_TRACK_2WD;
+            odom_angular_coef_ = ODOM_ANGULAR_COEF_2WD;
+            odom_slippage_factor_ = ODOM_SLIPPAGE_FACTOR_2WD;
+
+            motor_speed_linear_coef_ = MOTOR_SPEED_LINEAR_COEF_2WD;
+            motor_speed_angular_coef_ = MOTOR_SPEED_ANGULAR_COEF_2WD;
+        }
+        else if (drive_type_==(std::string) "4wd")
+        {
+            ROS_INFO("4wd parameters loaded.");
+            odom_encoder_coef_ = ODOM_ENCODER_COEF_4WD;
+            odom_axle_track_ = ODOM_AXLE_TRACK_4WD;
+            odom_angular_coef_ = ODOM_ANGULAR_COEF_4WD;
+            odom_slippage_factor_ = ODOM_SLIPPAGE_FACTOR_4WD;
+
+            motor_speed_linear_coef_ = MOTOR_SPEED_LINEAR_COEF_4WD;
+            motor_speed_angular_coef_ = MOTOR_SPEED_ANGULAR_COEF_4WD;
+        }
+        else if (drive_type_==(std::string) "flippers")
+        {
+            ROS_INFO("flipper parameters loaded.");
+            odom_encoder_coef_ = ODOM_ENCODER_COEF_F;
+            odom_axle_track_ = ODOM_AXLE_TRACK_F;
+            odom_angular_coef_ = ODOM_ANGULAR_COEF_F;
+            odom_slippage_factor_ = ODOM_SLIPPAGE_FACTOR_F;
+
+            motor_speed_linear_coef_ = MOTOR_SPEED_LINEAR_COEF_F;
+            motor_speed_angular_coef_ = MOTOR_SPEED_ANGULAR_COEF_F;
+        }
+        else
+        {
+            ROS_WARN("Unclear ROS param drive_type. Defaulting to flippers params.");
+            odom_encoder_coef_ = ODOM_ENCODER_COEF_F;
+            odom_axle_track_ = ODOM_AXLE_TRACK_F;
+            odom_angular_coef_ = ODOM_ANGULAR_COEF_F;
+            odom_slippage_factor_ = ODOM_SLIPPAGE_FACTOR_F;
+
+            motor_speed_linear_coef_ = MOTOR_SPEED_LINEAR_COEF_F;
+            motor_speed_angular_coef_ = MOTOR_SPEED_ANGULAR_COEF_F;
+        }
+    }
+    if (!(nh.getParam("/openrover_basic_node/timeout", timeout_)))
+    {
+        ROS_WARN("Failed to retrieve timeout from parameter server.");
+        return false;
+    }
+    
+    if (!(nh.getParam("/openrover_basic_node/default_low_speed_mode", low_speed_mode_on_)))
+    {
+        ROS_WARN("Failed to retrieve default_low_speed_mode from parameter server.");
+        return false;
     }
     return true;
 }
@@ -204,20 +286,20 @@ void OpenRover::robotDataFastCB(const ros::WallTimerEvent &e)
 }
 
 void OpenRover::timeoutCB(const ros::WallTimerEvent &e)
-{
+{//Timer goes off when a command isn't received soon enough. Sets motors to stop values
     updateMotorSpeedsCommanded(MOTOR_NEUTRAL, MOTOR_NEUTRAL, MOTOR_NEUTRAL);
 }
 
 void OpenRover::cmdVelCB(const geometry_msgs::Twist::ConstPtr& msg)
-{    
+{//converts from cmd_vel (m/s and radians/s) into motor speed commands
     int left_motor_speed, right_motor_speed, flipper_motor_speed;
     float turn_rate = msg->angular.z;
     float linear_rate = msg->linear.x;
 
     timeout_timer.stop();
-    right_motor_speed = (int)((linear_rate*MOTOR_LINEAR_COEF) + (turn_rate*MOTOR_ANGULAR_COEF) + 125);
-    left_motor_speed = (int)((linear_rate*MOTOR_LINEAR_COEF) - (turn_rate*MOTOR_ANGULAR_COEF) + 125);
-    flipper_motor_speed = (int)((msg->angular.y*MOTOR_FLIPPER_COEF) + 125)%250;
+    right_motor_speed = (int)((linear_rate*motor_speed_linear_coef_) + (turn_rate*motor_speed_angular_coef_) + 125);
+    left_motor_speed = (int)((linear_rate*motor_speed_linear_coef_) - (turn_rate*motor_speed_angular_coef_) + 125);
+    flipper_motor_speed = (int)((msg->angular.y*motor_speed_flipper_coef_) + 125)%250;
     if (right_motor_speed > MOTOR_SPEED_MAX)
     {
         right_motor_speed = MOTOR_SPEED_MAX;
@@ -283,11 +365,11 @@ void OpenRover::publishOdomEnc()
     {
         if (motor_speeds_commanded_[0] > 125)
         {            
-            left_vel = ENCODER_COEF/left_enc;
+            left_vel = odom_encoder_coef_/left_enc;
         }
         else
         {
-            left_vel = -ENCODER_COEF/left_enc;
+            left_vel = -odom_encoder_coef_/left_enc;
         }
     }
     else
@@ -299,11 +381,11 @@ void OpenRover::publishOdomEnc()
     {
         if ( motor_speeds_commanded_[1] > 125)
         {
-            right_vel = ENCODER_COEF/right_enc;
+            right_vel = odom_encoder_coef_/right_enc;
         }
         else
         {
-            right_vel = -ENCODER_COEF/right_enc;
+            right_vel = -odom_encoder_coef_/right_enc;
         }
     }
     else
@@ -319,11 +401,11 @@ void OpenRover::publishOdomEnc()
         net_vel = 0.5*(left_vel+right_vel);
         diff_vel = right_vel - left_vel;
         
-        alpha = ROBOT_ANGULAR_COEF*diff_vel;
+        alpha = odom_angular_coef_*diff_vel;
         
         pos_x = pos_x + net_vel*cos(theta)*dt;
         pos_y = pos_y + net_vel*sin(theta)*dt;
-        theta = (theta + SLIPPAGE_FACTOR*alpha*dt);
+        theta = (theta + odom_slippage_factor_*alpha*dt);
         
         q_new = tf::createQuaternionFromRPY(0, 0, theta);
         quaternionTFToMsg(q_new, odom_msg.pose.pose.orientation);
