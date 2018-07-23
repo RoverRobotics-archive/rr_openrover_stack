@@ -1,6 +1,10 @@
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Changelog for package rr_openrover_basic
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+0.0.4 (2018-07-23)
+------------------
+* Added drive_type ROS param to switch odometry between 4wd, 2wd, and flipper robots
+
 0.0.3 (2018-07-19)
 ------------------
 * Added Flipper encoder odometry publishing topic /rr_openrover_basic/odom_encoder
