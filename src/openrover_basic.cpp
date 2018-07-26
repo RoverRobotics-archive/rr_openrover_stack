@@ -412,7 +412,8 @@ void OpenRover::publishOdomEnc()
     }
     
     odom_msg.header.stamp = ros_now_time;
-    odom_msg.header.frame_id = "base_link";
+    odom_msg.header.frame_id = "odom";
+    odom_msg.child_frame_id = "base_link";
     
     odom_msg.twist.twist.linear.x = net_vel;
     odom_msg.twist.twist.angular.z = alpha;
