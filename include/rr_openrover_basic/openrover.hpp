@@ -55,6 +55,7 @@ private:
     //ROS Publisher and Subscribers
     ros::Publisher odom_enc_pub;
     ros::Publisher battery_state_pub;
+    ros::Publisher is_charging_pub;
     
     ros::Publisher fast_rate_pub;
     ros::Publisher medium_rate_pub;
@@ -66,6 +67,7 @@ private:
     int baud_; //serial baud rate
     int fd;
     int robot_data_[50]; //stores all received data from robot
+    int is_charging_;
     char motor_speeds_commanded_[3]; //stores most recent commanded motor speeds
     double fast_rate_; //update rate for encoders, 10Hz recommended
     double medium_rate_;

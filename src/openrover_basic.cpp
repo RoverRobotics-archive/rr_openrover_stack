@@ -164,6 +164,7 @@ bool OpenRover::start()
     medium_rate_pub = nh.advertise<rr_openrover_basic::RawRrOpenroverBasicMedRateData>("rr_openrover_basic/raw_med_rate_data",1);
     slow_rate_pub = nh.advertise<rr_openrover_basic::RawRrOpenroverBasicSlowRateData>("rr_openrover_basic/raw_slow_rate_data",1);
     odom_enc_pub = nh.advertise<nav_msgs::Odometry>("rr_openrover_basic/odom_encoder", 1);
+    is_charging_pub = nh.advertise<std_msgs::Bool>("rr_openrover_basic/charging", 1);
 
     cmd_vel_sub = nh.subscribe("/cmd_vel/managed", 1, &OpenRover::cmdVelCB, this);
     
@@ -442,6 +443,7 @@ void OpenRover::publishFastRateData()
 void OpenRover::publishMedRateData()
 {
     rr_openrover_basic::RawRrOpenroverBasicMedRateData med_msg;
+    std_msgs::Bool is_charging_msg;
     
     med_msg.header.stamp = ros::Time::now();
     med_msg.header.frame_id = "";
@@ -457,6 +459,18 @@ void OpenRover::publishMedRateData()
     med_msg.reg_power_a_current = robot_data_[i_REG_POWER_A_CURRENT];   
     med_msg.reg_power_b_current = robot_data_[i_REG_POWER_B_CURRENT];
     med_msg.reg_motor_flipper_angle = robot_data_[i_REG_MOTOR_FLIPPER_ANGLE];
+
+    if ( robot_data_[i_REG_MOTOR_CHARGER_STATE] == 0xDADA) {
+        is_charging_= true;
+        is_charging_msg.data = true;
+        is_charging_pub.publish(is_charging_msg);
+    } 
+    else
+    {
+        is_charging_ = false;
+        is_charging_msg.data = false;
+        is_charging_pub.publish(is_charging_msg);
+    }
     
     medium_rate_pub.publish(med_msg);
     publish_med_rate_vals_ = false;

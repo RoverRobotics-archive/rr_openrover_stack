@@ -2,10 +2,12 @@
 
     <node pkg="rr_openrover_basic"  type="openrover_basic_node" name="openrover_basic_node" output="screen">
         <param name="port" value="/dev/ttyUSB0" />
-        <param name="drive_type" value="flippers"/> <!--flippers | 4wd | 2wd-->
+        <param name="drive_type" value="4wd"/> <!--flippers | 4wd | 2wd-->
         <param name="enable_timeout" type="bool" value="true"/>
         <param name="timeout" type="double" value="0.3"/>
         <param name="default_low_speed_mode" type="bool" value="true"/>
     </node>
+
+    <include file="$(find rr_cmd_vel_manager)/launch/example.launch" />
 
 </launch>
