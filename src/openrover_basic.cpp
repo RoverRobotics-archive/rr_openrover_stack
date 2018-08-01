@@ -28,9 +28,12 @@ const float ODOM_ENCODER_COEF_F = 110.8; //r_track*2*pi*(2.54/100)/96*1e6/45
 const float ODOM_AXLE_TRACK_F  = 10.75; //distance between centerlines of tracks
 const float ODOM_ANGULAR_COEF_F = 0.5/(ODOM_AXLE_TRACK_F*2.54/100); //rad per meter
 const float ODOM_SLIPPAGE_FACTOR_F = 0.75;
-//cmd_vel to motor command flipper constants
-const int MOTOR_SPEED_LINEAR_COEF_F = 495;
-const int MOTOR_SPEED_ANGULAR_COEF_F = 644;
+//low speed mode cmd_vel to motor command flipper constants
+const int MOTOR_SPEED_LINEAR_COEF_F_LS = 495;
+const int MOTOR_SPEED_ANGULAR_COEF_F_LS = 644;
+//high speed mode cmd_vel to motor command flipper constants
+const int MOTOR_SPEED_LINEAR_COEF_F_HS = 495;
+const int MOTOR_SPEED_ANGULAR_COEF_F_HS = 644;
 
 //4wd constants__________
 //odometry 4wd constants
@@ -38,9 +41,13 @@ const float ODOM_ENCODER_COEF_4WD = 182.405; //r_wheel*2*pi*(2.54/100)/96*1e6/45
 const float ODOM_AXLE_TRACK_4WD  = 14.375; //distance between wheels
 const float ODOM_ANGULAR_COEF_4WD = 1.0/(ODOM_AXLE_TRACK_4WD*2.54/100); //rad per meter
 const float ODOM_SLIPPAGE_FACTOR_4WD = 0.610;
-//cmd_vel to motor command 4wd constants
-const int MOTOR_SPEED_LINEAR_COEF_4WD = 293;
-const int MOTOR_SPEED_ANGULAR_COEF_4WD = 86;
+// low speed mode cmd_vel to motor command 4wd constants
+const int MOTOR_SPEED_LINEAR_COEF_4WD_LS = 293;
+const int MOTOR_SPEED_ANGULAR_COEF_4WD_LS = 86;
+//high speed cmd_vel to motor command 4wd constants
+const int MOTOR_SPEED_LINEAR_COEF_4WD_HS = 293;
+const int MOTOR_SPEED_ANGULAR_COEF_4WD_HS = 86;
+
 
 //2wd constants__________
 //odometry 2wd constants
@@ -48,9 +55,12 @@ const float ODOM_ENCODER_COEF_2WD = 182.405; //r_track*2*pi*(2.54/100)/96*1e6/45
 const float ODOM_AXLE_TRACK_2WD  = 14.375; //distance between wheels
 const float ODOM_ANGULAR_COEF_2WD = 1.0/(ODOM_AXLE_TRACK_2WD*2.54/100); //rad per meter
 const float ODOM_SLIPPAGE_FACTOR_2WD = 0.9877;
-//cmd_vel to motor command 2wd constants
-const int MOTOR_SPEED_LINEAR_COEF_2WD = 293;
-const int MOTOR_SPEED_ANGULAR_COEF_2WD = 56;
+//low speed mode cmd_vel to motor command 2wd constants
+const int MOTOR_SPEED_LINEAR_COEF_2WD_LS = 293;
+const int MOTOR_SPEED_ANGULAR_COEF_2WD_LS = 56;
+//high speed cmd_vel to motor command 2wd constants
+const int MOTOR_SPEED_LINEAR_COEF_2WD_HS = 293;
+const int MOTOR_SPEED_ANGULAR_COEF_2WD_HS = 56;
 
 //general openrover_basic platform constants
 const int ENCODER_MAX = 5000;
@@ -205,8 +215,16 @@ bool OpenRover::setupRobotParams()
             odom_angular_coef_ = ODOM_ANGULAR_COEF_2WD;
             odom_slippage_factor_ = ODOM_SLIPPAGE_FACTOR_2WD;
 
-            motor_speed_linear_coef_ = MOTOR_SPEED_LINEAR_COEF_2WD;
-            motor_speed_angular_coef_ = MOTOR_SPEED_ANGULAR_COEF_2WD;
+            if (low_speed_mode_on_)
+            {
+                motor_speed_linear_coef_ = MOTOR_SPEED_LINEAR_COEF_2WD_LS;
+                motor_speed_angular_coef_ = MOTOR_SPEED_ANGULAR_COEF_2WD_LS;
+            }
+            else
+            {
+                motor_speed_linear_coef_ = MOTOR_SPEED_LINEAR_COEF_2WD_HS;
+                motor_speed_angular_coef_ = MOTOR_SPEED_ANGULAR_COEF_2WD_HS;
+            }
         }
         else if (drive_type_==(std::string) "4wd")
         {
@@ -216,8 +234,17 @@ bool OpenRover::setupRobotParams()
             odom_angular_coef_ = ODOM_ANGULAR_COEF_4WD;
             odom_slippage_factor_ = ODOM_SLIPPAGE_FACTOR_4WD;
 
-            motor_speed_linear_coef_ = MOTOR_SPEED_LINEAR_COEF_4WD;
-            motor_speed_angular_coef_ = MOTOR_SPEED_ANGULAR_COEF_4WD;
+            if (low_speed_mode_on_)
+            {
+                motor_speed_linear_coef_ = MOTOR_SPEED_LINEAR_COEF_4WD_LS;
+                motor_speed_angular_coef_ = MOTOR_SPEED_ANGULAR_COEF_4WD_LS;
+            }
+            else
+            {
+                motor_speed_linear_coef_ = MOTOR_SPEED_LINEAR_COEF_4WD_HS;
+                motor_speed_angular_coef_ = MOTOR_SPEED_ANGULAR_COEF_4WD_HS;
+            }
+
         }
         else if (drive_type_==(std::string) "flippers")
         {
@@ -227,8 +254,16 @@ bool OpenRover::setupRobotParams()
             odom_angular_coef_ = ODOM_ANGULAR_COEF_F;
             odom_slippage_factor_ = ODOM_SLIPPAGE_FACTOR_F;
 
-            motor_speed_linear_coef_ = MOTOR_SPEED_LINEAR_COEF_F;
-            motor_speed_angular_coef_ = MOTOR_SPEED_ANGULAR_COEF_F;
+            if (low_speed_mode_on_)
+            {
+                motor_speed_linear_coef_ = MOTOR_SPEED_LINEAR_COEF_F_LS;
+                motor_speed_angular_coef_ = MOTOR_SPEED_ANGULAR_COEF_F_LS;
+            }
+            else
+            {
+                motor_speed_linear_coef_ = MOTOR_SPEED_LINEAR_COEF_F_HS;
+                motor_speed_angular_coef_ = MOTOR_SPEED_ANGULAR_COEF_F_HS;
+            }
         }
         else
         {
@@ -237,9 +272,17 @@ bool OpenRover::setupRobotParams()
             odom_axle_track_ = ODOM_AXLE_TRACK_F;
             odom_angular_coef_ = ODOM_ANGULAR_COEF_F;
             odom_slippage_factor_ = ODOM_SLIPPAGE_FACTOR_F;
-
-            motor_speed_linear_coef_ = MOTOR_SPEED_LINEAR_COEF_F;
-            motor_speed_angular_coef_ = MOTOR_SPEED_ANGULAR_COEF_F;
+            
+            if (low_speed_mode_on_)
+            {
+                motor_speed_linear_coef_ = MOTOR_SPEED_LINEAR_COEF_F_LS;
+                motor_speed_angular_coef_ = MOTOR_SPEED_ANGULAR_COEF_F_LS;
+            }
+            else
+            {
+                motor_speed_linear_coef_ = MOTOR_SPEED_LINEAR_COEF_F_HS;
+                motor_speed_angular_coef_ = MOTOR_SPEED_ANGULAR_COEF_F_HS;
+            }
         }
     }
     if (!(nh.getParam("/openrover_basic_node/timeout", timeout_)))
