@@ -45,8 +45,8 @@ const float ODOM_SLIPPAGE_FACTOR_4WD = 0.610;
 const int MOTOR_SPEED_LINEAR_COEF_4WD_LS = 293;
 const int MOTOR_SPEED_ANGULAR_COEF_4WD_LS = 86;
 //high speed cmd_vel to motor command 4wd constants
-const int MOTOR_SPEED_LINEAR_COEF_4WD_HS = 293;
-const int MOTOR_SPEED_ANGULAR_COEF_4WD_HS = 86;
+const int MOTOR_SPEED_LINEAR_COEF_4WD_HS = 48;
+const int MOTOR_SPEED_ANGULAR_COEF_4WD_HS = 10;
 
 
 //2wd constants__________
@@ -143,7 +143,7 @@ OpenRover::OpenRover( ros::NodeHandle &_nh, ros::NodeHandle &_nh_priv ) :
     publish_slow_rate_vals_(false),
     low_speed_mode_on_(true)
 {
-    ROS_INFO( "Initializing" );
+    ROS_INFO( "Initializing openrover driver." );
     //nh_priv.param( "port", port_, (std::string)"/dev/ttyUSB0" );
     //nh_priv.param( "baud", baud_, 57600 );
     
@@ -161,12 +161,30 @@ OpenRover::OpenRover( ros::NodeHandle &_nh, ros::NodeHandle &_nh_priv ) :
 
 bool OpenRover::start()
 {
+    openComs();
+
+    if (!(nh.getParam("/openrover_basic_node/default_low_speed_mode", low_speed_mode_on_)))
+    {
+        ROS_WARN("Failed to retrieve default_low_speed_mode from parameter server.");
+        return false;
+    }
+
+    if (low_speed_mode_on_)
+    {
+        setParameterData(240, 1); //turn low speed on to keep robot from running away
+        ROS_INFO("low_speed_mode: on");
+    }
+    else
+    {
+        setParameterData(240, 0);
+        ROS_INFO("low_speed_mode: off");
+    }
+
     if(!setupRobotParams())
     {
         ROS_WARN("Failed to setup Robot parameters.");
     }
 
-    openComs();
     ROS_INFO("Creating Publishers and Subscribers");
     ROS_INFO("Fast Data List: %i, Med Data List: %i, Slow Data List: %i", FAST_SIZE, MEDIUM_SIZE, SLOW_SIZE);
     ROS_INFO("Number of messages per sec (must be less than 66): %i", FAST_SIZE*10+MEDIUM_SIZE*2+SLOW_SIZE*1);
@@ -178,17 +196,6 @@ bool OpenRover::start()
 
     cmd_vel_sub = nh.subscribe("/cmd_vel/managed", 1, &OpenRover::cmdVelCB, this);
     
-    if (low_speed_mode_on_)
-    {
-        setParameterData(240, 1); //turn low speed on to keep robot from running away
-        ROS_INFO("low_speed_mode: on");
-    }
-    else
-    {
-        setParameterData(240, 0); //turn low speed on to keep robot from running away
-        ROS_INFO("low_speed_mode: off");
-    }
-
     return true;
 }
 
