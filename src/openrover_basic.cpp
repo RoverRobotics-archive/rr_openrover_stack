@@ -162,25 +162,6 @@ OpenRover::OpenRover( ros::NodeHandle &_nh, ros::NodeHandle &_nh_priv ) :
 
 bool OpenRover::start()
 {
-    openComs();
-
-    if (!(nh.getParam("/openrover_basic_node/default_low_speed_mode", low_speed_mode_on_)))
-    {
-        ROS_WARN("Failed to retrieve default_low_speed_mode from parameter server.");
-        return false;
-    }
-
-    if (low_speed_mode_on_)
-    {
-        setParameterData(240, 1); //turn low speed on to keep robot from running away
-        ROS_INFO("low_speed_mode: on");
-    }
-    else
-    {
-        setParameterData(240, 0);
-        ROS_INFO("low_speed_mode: off");
-    }
-
     if(!setupRobotParams())
     {
         ROS_WARN("Failed to setup Robot parameters.");
@@ -206,6 +187,28 @@ bool OpenRover::setupRobotParams()
     {
         ROS_WARN("Failed to retrieve port from parameter server.");
         return false;
+    }
+
+    if (!(openComs()))
+    {
+        ROS_WARN("Failed to start serial comunication.");
+    }
+
+    if (!(nh.getParam("/openrover_basic_node/default_low_speed_mode", low_speed_mode_on_)))
+    {
+        ROS_WARN("Failed to retrieve default_low_speed_mode from parameter server.");
+        return false;
+    }
+
+    if (low_speed_mode_on_)
+    {
+        setParameterData(240, 1); //turn low speed on to keep robot from running away
+        ROS_INFO("low_speed_mode: on");
+    }
+    else
+    {
+        setParameterData(240, 0);
+        ROS_INFO("low_speed_mode: off");
     }
 
     if (!(nh.getParam("/openrover_basic_node/drive_type", drive_type_)))
