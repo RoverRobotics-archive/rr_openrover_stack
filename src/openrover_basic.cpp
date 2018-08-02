@@ -8,6 +8,7 @@
 
 #include "tf/tf.h"
 #include "std_msgs/Int32.h"
+#include "std_msgs/Int32MultiArray.h"
 #include "geometry_msgs/Twist.h"
 #include <std_msgs/Bool.h>
 #include "nav_msgs/Odometry.h"
@@ -294,13 +295,13 @@ bool OpenRover::setupRobotParams()
     }
     if (!(nh.getParam("/openrover_basic_node/timeout", timeout_)))
     {
-        ROS_WARN("Failed to retrieve timeout from parameter server.");
+        ROS_WARN("Failed to retrieve timeout from parameter server. Defaulting to ");
         return false;
     }
     
-    if (!(nh.getParam("/openrover_basic_node/default_low_speed_mode", low_speed_mode_on_)))
+    if (!(nh.getParam("/openrover_basic_node/total_weight", total_weight_)))
     {
-        ROS_WARN("Failed to retrieve default_low_speed_mode from parameter server.");
+        ROS_WARN("Failed to retrieve total_weight_ from parameter server. ");
         return false;
     }
     return true;
@@ -545,7 +546,14 @@ void OpenRover::publishSlowRateData()
     slow_rate_pub.publish(slow_msg);
     publish_slow_rate_vals_ = false;
 }
-
+void OpenRover::publishTestOdomCmdVel()
+{
+    std_msgs::Int32MultiArray motor_speeds_msg;
+    motor_speeds_msg.data[0] = motor_speeds_commanded_[0]; //left
+    motor_speeds_msg.data[1] = motor_speeds_commanded_[1]; //right
+    motor_speeds_msg.data[2] = motor_speeds_commanded_[2]; //flipper
+    test_odom_cmd_vel_pub.publish(motor_speeds_msg);
+}
 void OpenRover::serialManager()
 {//sends serial commands stored in the 3 buffers in order of speed with fast getting highest priority
     char param1;
@@ -626,6 +634,7 @@ void OpenRover::serialManager()
         {   
             publishFastRateData();
             publishOdomEnc();
+            publishTestOdomCmdVel();
         }
         else if ((serial_medium_buffer_.size()==0) && publish_med_rate_vals_)
         {

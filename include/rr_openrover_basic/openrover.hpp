@@ -56,6 +56,7 @@ private:
     ros::Publisher odom_enc_pub;
     ros::Publisher battery_state_pub;
     ros::Publisher is_charging_pub;
+    ros::Publisher test_odom_cmd_vel_pub;
     
     ros::Publisher fast_rate_pub;
     ros::Publisher medium_rate_pub;
@@ -82,6 +83,8 @@ private:
     int motor_speed_linear_coef_;
     int motor_speed_angular_coef_;
     int motor_speed_flipper_coef_;
+
+    float total_weight_;
     //int motor_speed_diff_max_; ---WIP
 
     std::vector<char> serial_fast_buffer_;
@@ -96,6 +99,7 @@ private:
     void publishMedRateData();
     void publishSlowRateData();
     void publishOdomEnc();
+    void publishTestOdomCmdVel();
     
     //Serial Com Functions
     int getParameterData(int parameter);
