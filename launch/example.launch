@@ -1,0 +1,14 @@
+<launch>
+
+  <!-- ROS Joystick driver -->
+  <node pkg="joy" type="joy" name="joy_node" />
+
+
+  <!-- Map joystick to more useful commands -->
+  <node pkg="rr_control_input_manager" type="xbox_mapper.py" name="xbox_mapper_node" />
+
+
+  <!-- Managed control inputs -->
+  <node pkg="rr_control_input_manager" type="control_input_manager.py" name="control_input_manager_node" />
+
+</launch>

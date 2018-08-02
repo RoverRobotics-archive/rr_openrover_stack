@@ -68,7 +68,6 @@ class CmdVelManager(object):
         if data == True:
             self.soft_estop = True
             cancel_msg=GoalID()
-            cancel_msg.id=""
             self.move_base_cancel.Publish(cancel_msg)
             self.soft_estop_enable_debounce.Publish(self.debounce_msg)
     def soft_estop_reset_cb(self, data):
