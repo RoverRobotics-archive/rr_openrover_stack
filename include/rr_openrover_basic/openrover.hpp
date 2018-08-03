@@ -9,7 +9,6 @@
 #include <stdint.h>
 #include <string>
 
-#include <geometry_msgs/Twist.h>
 #include <geometry_msgs/TwistStamped.h>
 #include <std_msgs/Bool.h>
 #include <rr_openrover_basic/RawRrOpenroverBasicFastRateData.h>
