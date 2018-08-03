@@ -83,8 +83,12 @@ private:
     int motor_speed_linear_coef_;
     int motor_speed_angular_coef_;
     int motor_speed_flipper_coef_;
+    int motor_speed_deadband_;
+    int motor_speed_angular_deadband_;
+    float weight_coef_; //(weight_coef_>1)
+    float cw_turn_coef_;
 
-    float total_weight_;
+    float total_weight_; //in kg
     //int motor_speed_diff_max_; ---WIP
 
     std::vector<char> serial_fast_buffer_;
