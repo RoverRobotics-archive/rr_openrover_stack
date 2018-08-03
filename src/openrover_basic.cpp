@@ -10,6 +10,7 @@
 #include "std_msgs/Int32.h"
 #include "std_msgs/Int32MultiArray.h"
 #include "geometry_msgs/Twist.h"
+#include "geometry_msgs/TwistStamped.h"
 #include <std_msgs/Bool.h>
 #include "nav_msgs/Odometry.h"
 #include <rr_openrover_basic/RawRrOpenroverBasicFastRateData.h>
@@ -47,11 +48,11 @@ const int MOTOR_SPEED_LINEAR_COEF_4WD_LS = 293;
 const int MOTOR_SPEED_ANGULAR_COEF_4WD_LS = 86;
 //high speed cmd_vel to motor command 4wd constants
 const int MOTOR_SPEED_LINEAR_COEF_4WD_HS = 31;
-const int MOTOR_SPEED_ANGULAR_COEF_4WD_HS = 8;
+const int MOTOR_SPEED_ANGULAR_COEF_4WD_HS = 6;
 const float MOTOR_SPEED_WEIGHT_COEF_A = 0.0034383;
 const float MOTOR_SPEED_WEIGHT_COEF_B = -0.011618;
 const float MOTOR_SPEED_WEIGHT_COEF_C = 0.99181;
-const float MOTOR_SPEED_CW_TURN_COEF = 1.5;
+const float MOTOR_SPEED_CW_TURN_COEF = 1.0;
 
 
 //2wd constants__________
@@ -279,17 +280,18 @@ bool OpenRover::setupRobotParams()
         }
         else
         {
-            int a = MOTOR_SPEED_WEIGHT_COEF_A;
-            int b = MOTOR_SPEED_WEIGHT_COEF_B;
-            int c = MOTOR_SPEED_WEIGHT_COEF_C;
+            float a = MOTOR_SPEED_WEIGHT_COEF_A;
+            float b = MOTOR_SPEED_WEIGHT_COEF_B;
+            float c = MOTOR_SPEED_WEIGHT_COEF_C;
 
             weight_coef_ = a * total_weight_*total_weight_ + b * total_weight_ + c;
-            motor_speed_linear_coef_ = (int) MOTOR_SPEED_LINEAR_COEF_4WD_HS*weight_coef_;
+            ROS_INFO("%f, %f, %f", (a * total_weight_*total_weight_), (b * total_weight_), c);
+            motor_speed_linear_coef_ = (int) MOTOR_SPEED_LINEAR_COEF_4WD_HS;
             motor_speed_angular_coef_ = (int) MOTOR_SPEED_ANGULAR_COEF_4WD_HS*weight_coef_;
             motor_speed_deadband_ = (int) MOTOR_DEADBAND;
             motor_speed_angular_deadband_ = (int) MOTOR_DEADBAND*weight_coef_;
             cw_turn_coef_ = MOTOR_SPEED_CW_TURN_COEF;
-            //ROS_INFO("%i,%i,%i", motor_speed_linear_coef_, motor_speed_angular_coef_, motor_speed_deadband_);
+            ROS_INFO("%i,%i,%i, %f, %f", motor_speed_linear_coef_, motor_speed_angular_coef_, motor_speed_deadband_, weight_coef_, total_weight_);
         }
 
     }
@@ -382,20 +384,24 @@ void OpenRover::timeoutCB(const ros::WallTimerEvent &e)
     updateMotorSpeedsCommanded(MOTOR_NEUTRAL, MOTOR_NEUTRAL, MOTOR_NEUTRAL);
 }
 
-void OpenRover::cmdVelCB(const geometry_msgs::Twist::ConstPtr& msg)
+void OpenRover::cmdVelCB(const geometry_msgs::TwistStamped::ConstPtr& msg)
 {//converts from cmd_vel (m/s and radians/s) into motor speed commands
     float left_motor_speed, right_motor_speed;
     int flipper_motor_speed;
-    int angular_motor_speed_deadband;
-    float turn_rate = msg->angular.z;
-    float linear_rate = msg->linear.x;
-    float flipper_rate = msg->angular.y;
+    int motor_speed_deadband_scaled;
+    float turn_rate = msg->twist.angular.z;
+    float linear_rate = msg->twist.linear.x;
+    float flipper_rate = msg->twist.angular.y;
     bool is_moving_forward, is_turning_cw, is_stationary, is_zero_point_turn;
 
     timeout_timer.stop();
     if ((linear_rate == 0) && (turn_rate != 0))
     {
         is_zero_point_turn = true;
+    }
+    else
+    {
+        is_zero_point_turn = false;
     }
     if (turn_rate > 0){
         is_turning_cw = true;
@@ -407,34 +413,41 @@ void OpenRover::cmdVelCB(const geometry_msgs::Twist::ConstPtr& msg)
 
     if (is_zero_point_turn)
     {
-        motor_speed_deadband_ = motor_speed_deadband_ * weight_coef_;
+        motor_speed_deadband_scaled = motor_speed_deadband_ * weight_coef_;
+        ROS_INFO("Is is_zero_point_turn");
+        if (is_turning_cw)
+        {
+            motor_speed_deadband_scaled = motor_speed_deadband_ * weight_coef_ * cw_turn_coef_;
+            ROS_INFO("is_turning_cw");
+        }
     }
-    if (is_turning_cw)
+    else
     {
-        motor_speed_deadband_ = motor_speed_deadband_ * weight_coef_ * cw_turn_coef_;
+        motor_speed_deadband_scaled = motor_speed_deadband_;
+        ROS_INFO("Normal Deadband");
     }
     right_motor_speed = round((linear_rate*motor_speed_linear_coef_) + (turn_rate*motor_speed_angular_coef_)) + 125;
     left_motor_speed = round((linear_rate*motor_speed_linear_coef_) - (turn_rate*motor_speed_angular_coef_)) + 125;
-    ROS_INFO("%f, %f", left_motor_speed, right_motor_speed);
+    ROS_INFO("%f, %f, %i", left_motor_speed, right_motor_speed, motor_speed_deadband_scaled); //, motor_speed_angular_deadband_);
     flipper_motor_speed = ((int)round(flipper_rate*motor_speed_flipper_coef_) + 125) % 250;
 
     //Compensate for deadband
     if (right_motor_speed > 125)
     {
-        right_motor_speed += motor_speed_deadband_;
+        right_motor_speed += motor_speed_deadband_scaled;
     }
     else if (right_motor_speed < 125 )
     {
-        right_motor_speed -= motor_speed_deadband_;
+        right_motor_speed -= motor_speed_deadband_scaled;
     }
 
     if (left_motor_speed > 125)
     {
-        left_motor_speed += motor_speed_deadband_;
+        left_motor_speed += motor_speed_deadband_scaled;
     }
     else if (left_motor_speed < 125 )
     {
-        left_motor_speed -= motor_speed_deadband_;
+        left_motor_speed -= motor_speed_deadband_scaled;
     }
 
     //Bound motor speeds to be between 0-250

@@ -9,6 +9,6 @@
         <param name="total_weight" type="double" value="20.41"/>
     </node>
 
-    <include file="$(find rr_cmd_vel_manager)/launch/example.launch" />
+    <include file="$(find rr_control_input_manager)/launch/example.launch" />
 
 </launch>
