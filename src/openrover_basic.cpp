@@ -9,7 +9,6 @@
 #include "tf/tf.h"
 #include "std_msgs/Int32.h"
 #include "std_msgs/Int32MultiArray.h"
-#include "geometry_msgs/Twist.h"
 #include "geometry_msgs/TwistStamped.h"
 #include <std_msgs/Bool.h>
 #include "nav_msgs/Odometry.h"
@@ -285,13 +284,13 @@ bool OpenRover::setupRobotParams()
             float c = MOTOR_SPEED_WEIGHT_COEF_C;
 
             weight_coef_ = a * total_weight_*total_weight_ + b * total_weight_ + c;
-            ROS_INFO("%f, %f, %f", (a * total_weight_*total_weight_), (b * total_weight_), c);
+            //ROS_INFO("%f, %f, %f", (a * total_weight_*total_weight_), (b * total_weight_), c);
             motor_speed_linear_coef_ = (int) MOTOR_SPEED_LINEAR_COEF_4WD_HS;
             motor_speed_angular_coef_ = (int) MOTOR_SPEED_ANGULAR_COEF_4WD_HS*weight_coef_;
             motor_speed_deadband_ = (int) MOTOR_DEADBAND;
             motor_speed_angular_deadband_ = (int) MOTOR_DEADBAND*weight_coef_;
             cw_turn_coef_ = MOTOR_SPEED_CW_TURN_COEF;
-            ROS_INFO("%i,%i,%i, %f, %f", motor_speed_linear_coef_, motor_speed_angular_coef_, motor_speed_deadband_, weight_coef_, total_weight_);
+            //ROS_INFO("%i,%i,%i, %f, %f", motor_speed_linear_coef_, motor_speed_angular_coef_, motor_speed_deadband_, weight_coef_, total_weight_);
         }
 
     }
@@ -414,17 +413,17 @@ void OpenRover::cmdVelCB(const geometry_msgs::TwistStamped::ConstPtr& msg)
     if (is_zero_point_turn)
     {
         motor_speed_deadband_scaled = motor_speed_deadband_ * weight_coef_;
-        ROS_INFO("Is is_zero_point_turn");
+        //ROS_INFO("Is is_zero_point_turn");
         if (is_turning_cw)
         {
             motor_speed_deadband_scaled = motor_speed_deadband_ * weight_coef_ * cw_turn_coef_;
-            ROS_INFO("is_turning_cw");
+            //ROS_INFO("is_turning_cw");
         }
     }
     else
     {
         motor_speed_deadband_scaled = motor_speed_deadband_;
-        ROS_INFO("Normal Deadband");
+        //ROS_INFO("Normal Deadband");
     }
     right_motor_speed = round((linear_rate*motor_speed_linear_coef_) + (turn_rate*motor_speed_angular_coef_)) + 125;
     left_motor_speed = round((linear_rate*motor_speed_linear_coef_) - (turn_rate*motor_speed_angular_coef_)) + 125;
