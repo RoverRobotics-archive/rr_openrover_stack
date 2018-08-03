@@ -34,8 +34,15 @@ button_msg = String()
 # 1) xboxdrv has only 11 indices
 # 2) U/D_PAD_BUTTON is the 7th axis
 # 3) xpad module uses 2, xboxdrv uses 3
-driver = rospy.get_param('~driver', 'xpad')
-wired_or_wireless = rospy.get_param('~wired_or_wireless', 'wireless')
+#driver_rosparam = rospy.get_param('driver')
+#driver_namespace = rospy.search_param('driver')
+#driver = rospy.get_param(driver_namespace, 'xpad')
+#wired_or_wireless_namespace = rospy.search_param('wired_or_wireless')
+#wired_or_wireless = rospy.get_param(wired_or_wireless_namespace, 'wireless')
+
+driver = rospy.get_param('/xbox_mapper_node/driver', 'xpad')
+wired_or_wireless = rospy.get_param('/xbox_mapper_node/wired_or_wireless', 'wireless')
+
 
 #TODO
 if wired_or_wireless == "wired" and driver == "xpad":
@@ -85,15 +92,14 @@ elif wired_or_wireless == "wireless" and driver =="xpad":
 
 #TODO
 elif wired_or_wireless == "wired" and driver == "xboxdrv":
-    rospy.info
     L_STICK_H_AXES = 0
     L_STICK_V_AXES = 1
     L_TRIG_AXES = 5
     R_STICK_H_AXES = 2 
     R_STICK_V_AXES = 3
     R_TRIG_AXES = 4
-    D_PAD_H_AXES = 6
-    D_PAD_V_AXES = 7
+    DPAD_H_AXES = 6
+    DPAD_V_AXES = 7
 
     A_BUTTON = 0
     B_BUTTON = 1
@@ -115,8 +121,8 @@ elif wired_or_wireless == "wireless" and driver =="xboxdrv":
     R_STICK_H_AXES = 2 
     R_STICK_V_AXES = 3
     R_TRIG_AXES = 4
-    D_PAD_H_AXES = 6
-    D_PAD_V_AXES = 7
+    DPAD_H_AXES = 6
+    DPAD_V_AXES = 7
 
     A_BUTTON = 0
     B_BUTTON = 1
@@ -206,7 +212,6 @@ def joy_cb(Joy):
     global a_button_pub, a_button_msg, b_button_pub, b_button_msg
     global x_button_pub, x_button_msg, y_button_pub, y_button_msg
     
-
     cmd_time = float(Joy.header.stamp.secs) + (float(Joy.header.stamp.nsecs)/1000000000)
     rbt_time = time.time()
     signal_delay = rbt_time - cmd_time
@@ -278,10 +283,10 @@ def joy_cb(Joy):
                 DRIVE_THROTTLE -= (1 / DRIVE_INCREMENTS)
                 rospy.loginfo(DRIVE_THROTTLE)
         elif (driver == "xboxdrv"):
-            if Joy.buttons[DPAD_U] == 1:
+            if int(Joy.axes[DPAD_V_AXES]) == 1:
                 DRIVE_THROTTLE += (1 / DRIVE_INCREMENTS)
                 rospy.loginfo("Drive Throttle: %i", DRIVE_THROTTLE)
-            if Joy.buttons[DPAD_D] == 1:
+            if int(Joy.axes[DPAD_V_AXES]) == 1:
                 DRIVE_THROTTLE -= (1 / DRIVE_INCREMENTS)
                 rospy.loginfo("Drive Throttle: %i", DRIVE_THROTTLE)
 
@@ -347,7 +352,7 @@ def joy_cb(Joy):
 def joystick_main():
 
     # Initialize driver node
-    rospy.init_node('joystick_node', anonymous=True)
+    rospy.init_node('xbox_mapper_node', anonymous=True)
     r = rospy.Rate(10) # 10hz
     # publish the latched button initializations
     a_button_pub.publish(a_button_msg)

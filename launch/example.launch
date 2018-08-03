@@ -8,13 +8,14 @@
 
 
   <!-- Map joystick to more useful commands -->
-  <node pkg="rr_control_input_manager" type="xbox_mapper.py" name="xbox_mapper_node" />
+  <node pkg="rr_control_input_manager" type="xbox_mapper.py" name="xbox_mapper_node" output="screen">
+    <param name="driver" value="xboxdrv"/>
+    <param name="wired_or_wireless" value="wireless"/>
+  </node>
 
 
   <!-- Managed control inputs -->
   <node pkg="rr_control_input_manager" type="control_input_manager.py" name="control_input_manager_node">
-    <param name="driver" value="xboxdrv"/>
-    <param name="wired_or_wireless" value="wireless"/>
   </node>
 
 </launch>
