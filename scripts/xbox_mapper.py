@@ -142,11 +142,11 @@ MAX_VEL_FLIPPER = rospy.get_param('~max_vel_flipper', 1.4)
 DRIVE_THROTTLE = rospy.get_param('~default_drive_throttle', 0.1)
 FLIPPER_THROTTLE = rospy.get_param('~default_flipper_throttle', 0.6)
 ADJ_THROTTLE = rospy.get_param('~adjustable_throttle', True)
-DRIVE_INCREMENTS = 20
-FLIPPER_INCREMENTS = 20
+DRIVE_INCREMENTS = float(20) 
+FLIPPER_INCREMENTS = float(20) 
 DEADBAND = 0.2
-FWD_ACC_LIM = 0.01
-TRN_ACC_LIM = 0.01
+FWD_ACC_LIM = 0.2 
+TRN_ACC_LIM = 0.4 
 
 a_button_msg = Bool()
 a_button_msg.data=False
@@ -166,8 +166,9 @@ y_button_pub = rospy.Publisher('/joystick/y_button', Bool, queue_size=1, latch=T
 pub_delay = rospy.Publisher('/joystick/delay', Float32, queue_size=3)
 pub_cancel_move_base = rospy.Publisher('/move_base/cancel', GoalID, queue_size=10)
 
-# Function deprecated, accel limiting is done in firmware now.
 def limit_acc(fwd,trn):
+    #TODO calculate delta t and times acc limits by that so that acc_limits are correct units
+    global prev_fwd, prev_trn
 
     fwd_acc = fwd - prev_fwd
     if fwd_acc > FWD_ACC_LIM:
@@ -175,7 +176,7 @@ def limit_acc(fwd,trn):
     elif fwd_acc < -FWD_ACC_LIM:
         fwd = prev_fwd - FWD_ACC_LIM
 
-    turn_acc = trn - prev_trn
+    trn_acc = trn - prev_trn
     if trn_acc > TRN_ACC_LIM:
         trn = prev_trn + TRN_ACC_LIM
     elif trn_acc < -TRN_ACC_LIM:
@@ -328,7 +329,7 @@ def joy_cb(Joy):
         flipper_cmd = 0
 
     #Limit acceleration
-    #drive_cmd, turn_cmd = limit_acc(drive_cmd, turn_cmd)
+    drive_cmd, turn_cmd = limit_acc(drive_cmd, turn_cmd)
 
     # update the last time joy_cb was called
     if (drive_cmd != 0) or (turn_cmd != 0):
