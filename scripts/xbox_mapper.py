@@ -85,12 +85,15 @@ elif wired_or_wireless == "wireless" and driver =="xpad":
 
 #TODO
 elif wired_or_wireless == "wired" and driver == "xboxdrv":
+    rospy.info
     L_STICK_H_AXES = 0
     L_STICK_V_AXES = 1
-    L_TRIG_AXES = 2
-    R_STICK_H_AXES = 3 
-    R_STICK_V_AXES = 4
-    R_TRIG_AXES = 5
+    L_TRIG_AXES = 5
+    R_STICK_H_AXES = 2 
+    R_STICK_V_AXES = 3
+    R_TRIG_AXES = 4
+    D_PAD_H_AXES = 6
+    D_PAD_V_AXES = 7
 
     A_BUTTON = 0
     B_BUTTON = 1
@@ -103,19 +106,17 @@ elif wired_or_wireless == "wired" and driver == "xboxdrv":
     POWER_BUTTON = 8
     L_STICK_BUTTON = 9
     R_STICK_BUTTON = 10
-    DPAD_L = 11
-    DPAD_R = 12
-    DPAD_U = 13
-    DPAD_D = 14
 
 #TODO
 elif wired_or_wireless == "wireless" and driver =="xboxdrv":
     L_STICK_H_AXES = 0
     L_STICK_V_AXES = 1
-    L_TRIG_AXES = 2
-    R_STICK_H_AXES = 3 
-    R_STICK_V_AXES = 4
-    R_TRIG_AXES = 5
+    L_TRIG_AXES = 5
+    R_STICK_H_AXES = 2 
+    R_STICK_V_AXES = 3
+    R_TRIG_AXES = 4
+    D_PAD_H_AXES = 6
+    D_PAD_V_AXES = 7
 
     A_BUTTON = 0
     B_BUTTON = 1
@@ -128,11 +129,6 @@ elif wired_or_wireless == "wireless" and driver =="xboxdrv":
     POWER_BUTTON = 8
     L_STICK_BUTTON = 9
     R_STICK_BUTTON = 10
-    DPAD_L = 11
-    DPAD_R = 12
-    DPAD_U = 13
-    DPAD_D = 14
-
 
 prev_fwd = 0
 prev_trn = 0
