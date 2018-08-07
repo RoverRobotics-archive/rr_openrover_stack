@@ -51,18 +51,15 @@ class CmdVelManager(object):
 
     def joystick_cb(self, joy_cmd_vel):
         if not self.remote_control_lock:
-            self.managed_control_input = joy_cmd_vel
             # If a user starts to command the robot with a joystick, set local lock
-            if joy_cmd_vel.twist.linear.x != 0 or joy_cmd_vel.twist.angular.y != 0 or joy_cmd_vel.twist.angular.z != 0:
+            if joy_cmd_vel.twist.linear.x != 0 or joy_cmd_vel.twist.angular.y != 0 or joy_cmd_vel.twist.angular.z != 0:    
                 self.local_control_lock = True
+            if self.local_control_lock:
+                self.managed_control_input = joy_cmd_vel
              
     def move_base_cb(self, move_base_cmd_vel):
-        rospy.logwarn("Move base is reporting")
-        rospy.logwarn(self.local_control_lock)
-        rospy.logwarn(self.remote_control_lock)
         if not self.local_control_lock:
             if not self.remote_control_lock:
-                rospy.logwarn("I'm listening to move base")
                 self.managed_control_input.twist = move_base_cmd_vel 
 
     def auto_dock_cb(self, auto_dock_cmd_vel):
