@@ -34,11 +34,12 @@ button_msg = String()
 # 1) xboxdrv has only 11 indices
 # 2) U/D_PAD_BUTTON is the 7th axis
 # 3) xpad module uses 2, xboxdrv uses 3
-driver = rospy.get_param('~driver', 'xpad')
-wired_or_wireless = rospy.get_param('~wired_or_wireless', 'wireless')
+driver = rospy.get_param('/xob_mapper_node/driver', 'xpad')
+wired_or_wireless = rospy.get_param('/xbox_mapper_node/wired_or_wireless', 'wireless')
 
 #TODO
 if wired_or_wireless == "wired" and driver == "xpad":
+    rospy.loginfo("XBOX CONFIG: wired & xpad")
     L_STICK_H_AXES = 0
     L_STICK_V_AXES = 1
     L_TRIG_AXES = 2
@@ -62,6 +63,7 @@ if wired_or_wireless == "wired" and driver == "xpad":
 
 #TODO
 elif wired_or_wireless == "wireless" and driver =="xpad":
+    rospy.loginfo("XBOX CONFIG: wireless & xpad")
     L_STICK_H_AXES = 0
     L_STICK_V_AXES = 1
     L_TRIG_AXES = 2
@@ -85,13 +87,14 @@ elif wired_or_wireless == "wireless" and driver =="xpad":
 
 #TODO
 elif wired_or_wireless == "wired" and driver == "xboxdrv":
+    rospy.loginfo("XBOX CONFIG: wired & xboxdrv")
     rospy.info
     L_STICK_H_AXES = 0
     L_STICK_V_AXES = 1
-    L_TRIG_AXES = 5
-    R_STICK_H_AXES = 2 
-    R_STICK_V_AXES = 3
-    R_TRIG_AXES = 4
+    L_TRIG_AXES = 2
+    R_STICK_H_AXES = 3 
+    R_STICK_V_AXES = 4
+    R_TRIG_AXES = 5
     D_PAD_H_AXES = 6
     D_PAD_V_AXES = 7
 
@@ -109,12 +112,13 @@ elif wired_or_wireless == "wired" and driver == "xboxdrv":
 
 #TODO
 elif wired_or_wireless == "wireless" and driver =="xboxdrv":
+    rospy.loginfo("XBOX CONFIG: wireless & xboxdrv")
     L_STICK_H_AXES = 0
     L_STICK_V_AXES = 1
-    L_TRIG_AXES = 5
-    R_STICK_H_AXES = 2 
-    R_STICK_V_AXES = 3
-    R_TRIG_AXES = 4
+    L_TRIG_AXES = 2
+    R_STICK_H_AXES = 3 
+    R_STICK_V_AXES = 4
+    R_TRIG_AXES = 5
     D_PAD_H_AXES = 6
     D_PAD_V_AXES = 7
 
@@ -329,7 +333,7 @@ def joy_cb(Joy):
         flipper_cmd = 0
 
     #Limit acceleration
-    drive_cmd, turn_cmd = limit_acc(drive_cmd, turn_cmd)
+    #drive_cmd, turn_cmd = limit_acc(drive_cmd, turn_cmd)
 
     # update the last time joy_cb was called
     if (drive_cmd != 0) or (turn_cmd != 0):
