@@ -804,7 +804,7 @@ bool OpenRover::sendCommand(int param1, int param2)
 
 int OpenRover::readCommand()
 {//only used after a send command with param1==10
-    char read_buffer[SERIAL_IN_PACKAGE_LENGTH];
+    unsigned char read_buffer[SERIAL_IN_PACKAGE_LENGTH];
     int data, checksum;
     int bits_read = read(fd, read_buffer, SERIAL_IN_PACKAGE_LENGTH);
     
