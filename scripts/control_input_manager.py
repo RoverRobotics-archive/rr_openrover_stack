@@ -30,7 +30,7 @@ class CmdVelManager(object):
         # ROS Publishers
         self.managed_pub = rospy.Publisher('/cmd_vel/managed', TwistStamped, queue_size=1)
         self.move_base_cancel = rospy.Publisher('/move_base/cancel', GoalID,  queue_size=1)
-        self.auto_dock_cancel = rospy.Publisher('/autodock/cancel', Bool, queue_size = 10)
+        self.auto_dock_cancel = rospy.Publisher('/auto_dock/cancel', Bool, queue_size = 10)
 
         self.lock_release_timer = rospy.Timer(rospy.Duration(2), self.lock_release_cb)
         self.cmd_managed_timer = rospy.Timer(rospy.Duration(0.1), self.control_input_pub)
@@ -42,6 +42,8 @@ class CmdVelManager(object):
             self.managed_control_input.twist.linear.x=0
             self.managed_control_input.twist.angular.y=0
             self.managed_control_input.twist.angular.z=0
+        else:
+            rospy.logwarn_throttle(60, "[CONTROL_INPUT_MANAGER_NODE] Soft Estop is still enabled which will prevent any motion")
         self.managed_pub.publish(self.managed_control_input)
         self.seq += 1
 
@@ -71,12 +73,12 @@ class CmdVelManager(object):
             stop_msg = Bool()
             stop_msg.data = True
             self.auto_dock_cancel.publish(stop_msg)
-            rospy.logwarn("Soft E-Stop Enabled")
+            rospy.logwarn("[CONTROL_INPUT_MANAGER_NODE] Soft E-Stop Enabled")
 
     def soft_estop_reset_cb(self, data):
         if data.data == True:    
             self.soft_estop = False
-            rospy.logwarn("Soft E-Stop reset")
+            rospy.logwarn("[CONTROL_INPUT_MANAGER_NODE] Soft E-Stop reset")
 
     def lock_release_cb(self, data):
         self.local_control_lock = False
