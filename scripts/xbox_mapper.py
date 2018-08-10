@@ -226,49 +226,34 @@ def joy_cb(Joy):
     # check for other two user-defined buttons. We only debounce them and monitor on/off status on a latched pub
     # (green/A)
     if Joy.buttons[A_BUTTON] == 1:
-        if (time.time()-last_a_button > 0.1):
+        if (time.time()-last_a_button > 0.5):
             last_a_button=time.time()
             rospy.loginfo('User button A')
-            # toggle button
-            if (a_button_msg.data):
-                a_button_msg.data = False
-            else:
-                a_button_msg.data = True
+            a_button_msg.data = True
             a_button_pub.publish(a_button_msg)
 
     # (red/B)
     if Joy.buttons[B_BUTTON] == 1:
-        if (time.time()-last_b_button > 0.1):
+        if (time.time()-last_b_button > 0.5):
             last_b_button=time.time()
             rospy.loginfo('User button B')
-            # toggle button
-            if (b_button_msg.data):
-                b_button_msg.data = False
-            else:
-                b_button_msg.data = True
+            b_button_msg.data = True
             b_button_pub.publish(b_button_msg)
 
     # (blue/X)
     if Joy.buttons[X_BUTTON] == 1:
-        if (time.time()-last_x_button > 0.1):
+        if (time.time()-last_x_button > 0.5):
             last_x_button=time.time()
             rospy.loginfo('User button X')
-            # toggle button
-            if (x_button_msg.data):
-                x_button_msg.data = False
-            else:
-                x_button_msg.data = True
+            x_button_msg.data = True
             x_button_pub.publish(x_button_msg)
 
     # (yellow/Y)
     if Joy.buttons[Y_BUTTON] == 1:
-        if (time.time()-last_y_button > 0.1):
+        if (time.time()-last_y_button > 0.5):
             last_y_button=time.time()
             rospy.loginfo('User button Y')
-            if (y_button_msg.data):
-                y_button_msg.data = False
-            else:
-                y_button_msg.data = True
+            y_button_msg.data = True
             y_button_pub.publish(y_button_msg)
     
     if ADJ_THROTTLE:

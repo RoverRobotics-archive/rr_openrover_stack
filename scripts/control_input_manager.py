@@ -30,14 +30,10 @@ class CmdVelManager(object):
         # ROS Publishers
         self.managed_pub = rospy.Publisher('/cmd_vel/managed', TwistStamped, queue_size=1)
         self.move_base_cancel = rospy.Publisher('/move_base/cancel', GoalID,  queue_size=1)
-        self.soft_estop_enable_debounce = rospy.Publisher('/soft_estop/enable', Bool,  queue_size=1)
-        self.soft_estop_reset_debounce = rospy.Publisher('/soft_estop/reset', Bool,  queue_size=1)
+        self.auto_dock_cancel = rospy.Publisher('/autodock/cancel', Bool, queue_size = 10)
 
         self.lock_release_timer = rospy.Timer(rospy.Duration(2), self.lock_release_cb)
         self.cmd_managed_timer = rospy.Timer(rospy.Duration(0.1), self.control_input_pub)
-
-        self.debounce_msg = Bool()
-        self.debounce_msg.data = False
 
     def control_input_pub(self, data):
         self.managed_control_input.header.seq = self.seq
@@ -72,13 +68,14 @@ class CmdVelManager(object):
             self.soft_estop = True
             cancel_msg=GoalID()
             self.move_base_cancel.publish(cancel_msg)
-            self.soft_estop_enable_debounce.publish(self.debounce_msg)
+            stop_msg = Bool()
+            stop_msg.data = True
+            self.auto_dock_cancel.publish(stop_msg)
             rospy.logwarn("Soft E-Stop Enabled")
 
     def soft_estop_reset_cb(self, data):
         if data.data == True:    
             self.soft_estop = False
-            self.soft_estop_enable_debounce.publish(self.debounce_msg)
             rospy.logwarn("Soft E-Stop reset")
 
     def lock_release_cb(self, data):
