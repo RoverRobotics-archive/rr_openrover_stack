@@ -54,8 +54,8 @@ class CmdVelManager(object):
         self.managed_control_input.twist.angular.z=0
         current_time = rospy.Time.now()
 
-        rospy.logwarn(self.local_control_lock)
-        rospy.logwarn(self.remote_control_lock)
+        #rospy.logwarn(self.local_control_lock)
+        #rospy.logwarn(self.remote_control_lock)
         active_controller = String()
         active_controller.data = 'None'
         
@@ -87,20 +87,20 @@ class CmdVelManager(object):
         if not self.local_control_lock:
             if fleet_manager_time_elapsed.to_sec() < self.command_timeout:
                 active_controller.data = 'fleet_manager'
-                #self.managed_control_input.twist = self.fleet_manager_control_input_request
+                self.managed_control_input.twist = self.fleet_manager_control_input_request
  
 
         # Process joystick requests
-        rospy.logwarn(joy_time_elapsed.to_sec())
-        rospy.logwarn(self.command_timeout)
+        #rospy.logwarn(joy_time_elapsed.to_sec())
+        #rospy.logwarn(self.command_timeout)
         if joy_time_elapsed.to_sec() < self.command_timeout:
             active_controller.data = 'joystick'
             self.managed_control_input = self.joy_control_input_request
 
-        rospy.logwarn("move_base: %f", move_base_time_elapsed.to_sec())
-        rospy.logwarn("auto_dock: %f", auto_dock_time_elapsed.to_sec())
-        rospy.logwarn("fleet_manager: %f", fleet_manager_time_elapsed.to_sec())
-        rospy.logwarn("joy: %f", joy_time_elapsed.to_sec())
+        #rospy.logwarn("move_base: %f", move_base_time_elapsed.to_sec())
+        #rospy.logwarn("auto_dock: %f", auto_dock_time_elapsed.to_sec())
+        #rospy.logwarn("fleet_manager: %f", fleet_manager_time_elapsed.to_sec())
+        #rospy.logwarn("joy: %f", joy_time_elapsed.to_sec())
 
 
         # Check for estop 
