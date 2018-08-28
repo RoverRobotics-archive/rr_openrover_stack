@@ -10,6 +10,7 @@ from std_msgs.msg import Bool, String
 from sensor_msgs.msg import Joy
 from geometry_msgs.msg import Twist, TwistStamped
 from actionlib_msgs.msg import GoalID
+from copy import deepcopy
 
 class CmdVelManager(object):
 
@@ -26,6 +27,7 @@ class CmdVelManager(object):
     seq = 0
     def __init__(self):
 
+        # ROS Subscribers
         self.joystick_sub = rospy.Subscriber("/cmd_vel/joystick", TwistStamped, self.joystick_cb)
         self.move_base_sub = rospy.Subscriber("/cmd_vel/move_base", Twist, self.move_base_cb)
         self.fleet_manager_sub = rospy.Subscriber("/cmd_vel/fleet_manager", Twist, self.fleet_manager_cb)
@@ -36,10 +38,9 @@ class CmdVelManager(object):
         # ROS Publishers
         self.managed_pub = rospy.Publisher('/cmd_vel/managed', TwistStamped, queue_size=1)
         self.move_base_cancel = rospy.Publisher('/move_base/cancel', GoalID,  queue_size=1)
-        self.active_controller_pub = rospy.Publisher('/active_controller', String, queue_size=1)
+        self.active_controller_pub = rospy.Publisher('/rr_control_input_manager/active_controller', String, queue_size=1)
         self.auto_dock_cancel = rospy.Publisher('/auto_dock/cancel', Bool, queue_size = 10)
 
-        self.cmd_managed_timer = rospy.Timer(rospy.Duration(0.1), self.control_input_pub)
 
         self.last_move_base_command_time = rospy.Time.now()
         self.last_auto_dock_command_time = rospy.Time.now()
@@ -47,18 +48,16 @@ class CmdVelManager(object):
         self.last_joy_command_time = rospy.Time.now()
 
     def control_input_pub(self, data):
-        self.managed_control_input.header.seq = self.seq
-        self.managed_control_input.header.stamp = rospy.Time.now()
-        self.managed_control_input.twist.linear.x=0
-        self.managed_control_input.twist.angular.y=0
-        self.managed_control_input.twist.angular.z=0
+
+        my_managed_control_input = deepcopy(self.managed_control_input)
+        my_managed_control_input.header.seq = self.seq
+        my_managed_control_input.header.stamp = rospy.Time.now()
+        my_managed_control_input.header.frame_id = 'none'
+        my_managed_control_input.twist.linear.x=0.0
+        my_managed_control_input.twist.angular.y=0.0
+        my_managed_control_input.twist.angular.z=0.0
         current_time = rospy.Time.now()
 
-        #rospy.logwarn(self.local_control_lock)
-        #rospy.logwarn(self.remote_control_lock)
-        active_controller = String()
-        active_controller.data = 'None'
-        
         move_base_time_elapsed = current_time - self.last_move_base_command_time
         auto_dock_time_elapsed = current_time - self.last_auto_dock_command_time
         fleet_manager_time_elapsed = current_time - self.last_fleet_manager_command_time
@@ -67,78 +66,66 @@ class CmdVelManager(object):
         if joy_time_elapsed.to_sec > 2:
             self.lock_release_cb()
 
-        # Process move_base requests
+
+        # Process non-human-local commands
         if not self.local_control_lock:
-            if not self.remote_control_lock:
-                if move_base_time_elapsed.to_sec() < self.command_timeout:
-                    active_controller.data = 'move_base'
-                    self.managed_control_input.twist = self.move_base_control_input_request
-
-
-        # Process auto_dock requests
-        if not self.local_control_lock:
-            if not self.remote_control_lock:
-                if auto_dock_time_elapsed.to_sec() < self.command_timeout:
-                    active_controller.data = 'auto_dock'
-                    self.managed_control_input = self.auto_dock_control_input_request
-
-
-        # Process fleet_manager requests
-        if not self.local_control_lock:
+            # auto_dock requests (Lowest Priority 4)
+            if auto_dock_time_elapsed.to_sec() < self.command_timeout:
+                my_managed_control_input = self.auto_dock_control_input_request
+                my_managed_control_input.header.frame_id = 'auto_dock'
+            # move_base requests (Priority 3)
+            if move_base_time_elapsed.to_sec() < self.command_timeout:
+                my_managed_control_input.twist = self.move_base_control_input_request
+                my_managed_control_input.header.frame_id = 'move_base'
+            # fleet_manager requests (Priority 2)
             if fleet_manager_time_elapsed.to_sec() < self.command_timeout:
-                active_controller.data = 'fleet_manager'
-                self.managed_control_input.twist = self.fleet_manager_control_input_request
+                my_managed_control_input.twist = self.fleet_manager_control_input_request
+                my_managed_control_input.header.frame_id = 'fleet_manager'
  
 
-        # Process joystick requests
-        #rospy.logwarn(joy_time_elapsed.to_sec())
-        #rospy.logwarn(self.command_timeout)
+        # Process joystick requests (Highest Priority 1)
         if joy_time_elapsed.to_sec() < self.command_timeout:
-            active_controller.data = 'joystick'
-            self.managed_control_input = self.joy_control_input_request
-
-        #rospy.logwarn("move_base: %f", move_base_time_elapsed.to_sec())
-        #rospy.logwarn("auto_dock: %f", auto_dock_time_elapsed.to_sec())
-        #rospy.logwarn("fleet_manager: %f", fleet_manager_time_elapsed.to_sec())
-        #rospy.logwarn("joy: %f", joy_time_elapsed.to_sec())
+            my_managed_control_input = self.joy_control_input_request
+            my_managed_control_input.header.frame_id = 'joystick'
 
 
         # Check for estop 
         if self.soft_estop:
-            self.managed_control_input.twist.linear.x=0
-            self.managed_control_input.twist.angular.y=0
-            self.managed_control_input.twist.angular.z=0
+            my_managed_control_input.header.frame_id = 'soft e-stopped'
+            my_managed_control_input.twist.linear.x=0
+            my_managed_control_input.twist.angular.y=0
+            my_managed_control_input.twist.angular.z=0
             rospy.logwarn_throttle(60, "[CONTROL_INPUT_MANAGER_NODE] Soft Estop is still enabled which will prevent any motion")
-        self.managed_pub.publish(self.managed_control_input)
-        self.active_controller_pub.publish(active_controller)
+        self.managed_pub.publish(my_managed_control_input)
 
         self.seq += 1
 
          
     def move_base_cb(self, move_base_cmd_vel):
-        #rospy.logwarn(move_base_cmd_vel)
-        self.last_move_base_command_time = rospy.Time.now()
-        self.move_base_control_input_request = move_base_cmd_vel 
+        if (move_base_cmd_vel.linear.x, move_base_cmd_vel.angular.y, move_base_cmd_vel.angular.z) != (0,0,0):
+            self.last_move_base_command_time = rospy.Time.now()
+            self.move_base_control_input_request = move_base_cmd_vel 
 
 
     def auto_dock_cb(self, auto_dock_cmd_vel):
-        self.last_auto_dock_command_time = rospy.Time.now()
-        self.auto_dock_control_input_request = auto_dock_cmd_vel
+        if (auto_dock_cmd_vel.twist.linear.x, auto_dock_cmd_vel.twist.angular.y, auto_dock_cmd_vel.twist.angular.z) != (0,0,0):
+            self.last_auto_dock_command_time = rospy.Time.now()
+            self.auto_dock_control_input_request = auto_dock_cmd_vel
 
 
     def fleet_manager_cb(self, fleet_manager_cmd_vel):
         self.last_fleet_manager_command_time = rospy.Time.now()
-        if fleet_manager_cmd_vel.linear.x != 0 or fleet_manager_cmd_vel.angular.y != 0 or fleet_manager_cmd_vel.angular.z != 0:
+        if (fleet_manager_cmd_vel.linear.x, fleet_manager_cmd_vel.angular.y, fleet_manager_cmd_vel.angular.z) != (0,0,0):
             self.remote_control_lock = True
-        self.fleet_manager_control_input_request = fleet_manager_cmd_vel
+            self.fleet_manager_control_input_request = fleet_manager_cmd_vel
 
 
     def joystick_cb(self, joy_cmd_vel):
         # If a user starts to command the robot with a joystick, set local lock
-        if joy_cmd_vel.twist.linear.x != 0 or joy_cmd_vel.twist.angular.y != 0 or joy_cmd_vel.twist.angular.z != 0:    
+        if (joy_cmd_vel.twist.linear.x, joy_cmd_vel.twist.angular.y, joy_cmd_vel.twist.angular.z) != (0,0,0):    
             self.last_joy_command_time = joy_cmd_vel.header.stamp
             self.local_control_lock = True
-        self.joy_control_input_request = joy_cmd_vel
+            self.joy_control_input_request = joy_cmd_vel
 
 
     def soft_estop_enable_cb(self, data):
@@ -164,4 +151,5 @@ class CmdVelManager(object):
 if __name__ == '__main__':
     rospy.init_node("control_input_manager_node")
     my_manager = CmdVelManager()
+    cmd_managed_timer = rospy.Timer(rospy.Duration(0.2), my_manager.control_input_pub)
     rospy.spin()
