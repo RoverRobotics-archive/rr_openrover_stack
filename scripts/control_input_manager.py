@@ -151,5 +151,5 @@ class CmdVelManager(object):
 if __name__ == '__main__':
     rospy.init_node("control_input_manager_node")
     my_manager = CmdVelManager()
-    cmd_managed_timer = rospy.Timer(rospy.Duration(0.2), my_manager.control_input_pub)
+    cmd_managed_timer = rospy.Timer(rospy.Duration(0.1), my_manager.control_input_pub)
     rospy.spin()
