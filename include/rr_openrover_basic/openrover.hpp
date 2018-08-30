@@ -79,6 +79,8 @@ private:
     float odom_axle_track_;
     float odom_angular_coef_;
     float odom_slippage_factor_;
+    float odom_covariance_0_;
+    float odom_covariance_35_;
 
     int motor_speed_linear_coef_;
     int motor_speed_angular_coef_;

@@ -345,6 +345,36 @@ bool OpenRover::setupRobotParams()
         }
     }
 
+    if (!(nh.getParam("/openrover_basic_node/slippage_factor", odom_slippage_factor_)))
+    {
+        ROS_ERROR("Failed to retrieve odom_slippage_factor_ from parameter.Defaulting to drive_type_ slippage_factor");
+        return false;
+    }
+
+    if (!(nh.getParam("/openrover_basic_node/odom_covariance_0", odom_covariance_0_)))
+    {
+        ROS_ERROR("Failed to retrieve odom_covariance_0 from parameter. Defaulting to 0.01");
+        odom_covariance_0_ = 0.01;
+        return false;
+    }
+
+    if (!(nh.getParam("/openrover_basic_node/odom_covariance_35", odom_covariance_35_)))
+    {
+        ROS_ERROR("Failed to retrieve odom_covariance_35 from parameter. Defaulting to 0.03");
+        odom_covariance_35_ = 0.03;
+        return false;
+    }
+
+    ROS_INFO("Openrover parameters loaded:");
+    ROS_INFO("port: %s", port_.c_str());
+    ROS_INFO("drive_type: %s", drive_type_.c_str());
+    ROS_INFO("timeout: %f s", timeout_);
+    ROS_INFO("default_low_speed_mode: %i", low_speed_mode_on_);
+    ROS_INFO("total_weight: %f kg", total_weight_);
+    ROS_INFO("slippage_factor: %f", odom_slippage_factor_);
+    ROS_INFO("odom_covariance_0: %f", odom_covariance_0_);
+    ROS_INFO("odom_covariance_35: %f", odom_covariance_35_);
+    //ROS_INFO("enable_timeout: %i", enable_timeout)
     return true;
 }
 
@@ -568,6 +598,9 @@ void OpenRover::publishOdomEnc()
     odom_msg.twist.twist.linear.x = net_vel;
     odom_msg.twist.twist.angular.z = alpha;
     
+    odom_msg.twist.covariance[0] = odom_covariance_0_;
+    odom_msg.twist.covariance[35] = odom_covariance_35_;
+
     odom_msg.pose.pose.position.x = pos_x;
     odom_msg.pose.pose.position.y = pos_y;
     
