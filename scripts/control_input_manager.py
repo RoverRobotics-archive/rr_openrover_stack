@@ -110,7 +110,7 @@ class CmdVelManager(object):
     def auto_dock_cb(self, auto_dock_cmd_vel):
         if (auto_dock_cmd_vel.twist.linear.x, auto_dock_cmd_vel.twist.angular.y, auto_dock_cmd_vel.twist.angular.z) != (0,0,0):
             self.last_auto_dock_command_time = rospy.Time.now()
-            self.auto_dock_control_input_request = auto_dock_cmd_vel
+        self.auto_dock_control_input_request = auto_dock_cmd_vel
 
 
     def fleet_manager_cb(self, fleet_manager_cmd_vel):
@@ -125,7 +125,7 @@ class CmdVelManager(object):
         if (joy_cmd_vel.twist.linear.x, joy_cmd_vel.twist.angular.y, joy_cmd_vel.twist.angular.z) != (0,0,0):    
             self.last_joy_command_time = joy_cmd_vel.header.stamp
             self.local_control_lock = True
-            self.joy_control_input_request = joy_cmd_vel
+        self.joy_control_input_request = joy_cmd_vel
 
 
     def soft_estop_enable_cb(self, data):
