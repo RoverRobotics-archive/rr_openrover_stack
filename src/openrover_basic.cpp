@@ -598,8 +598,19 @@ void OpenRover::publishOdomEnc()
     odom_msg.twist.twist.linear.x = net_vel;
     odom_msg.twist.twist.angular.z = alpha;
     
-    odom_msg.twist.covariance[0] = odom_covariance_0_;
-    odom_msg.twist.covariance[35] = odom_covariance_35_;
+
+    //If not moving, trust the encoders completely
+    //otherwise set them to the ROS param 
+    if(net_vel==0 && alpha==0)
+    {
+        odom_msg.twist.covariance[0] = 0.0;
+        odom_msg.twist.covariance[35] = 0.0;
+    }
+    else
+    {    
+        odom_msg.twist.covariance[0] = odom_covariance_0_;
+        odom_msg.twist.covariance[35] = odom_covariance_35_;
+    }
 
     odom_msg.pose.pose.position.x = pos_x;
     odom_msg.pose.pose.position.y = pos_y;
