@@ -9,7 +9,7 @@
 #include <stdint.h>
 #include <string>
 
-#include <geometry_msgs/Twist.h>
+#include <geometry_msgs/TwistStamped.h>
 #include <std_msgs/Bool.h>
 #include <rr_openrover_basic/RawRrOpenroverBasicFastRateData.h>
 #include <rr_openrover_basic/RawRrOpenroverBasicMedRateData.h>
@@ -55,6 +55,8 @@ private:
     //ROS Publisher and Subscribers
     ros::Publisher odom_enc_pub;
     ros::Publisher battery_state_pub;
+    ros::Publisher is_charging_pub;
+    ros::Publisher test_odom_cmd_vel_pub;
     
     ros::Publisher fast_rate_pub;
     ros::Publisher medium_rate_pub;
@@ -66,6 +68,7 @@ private:
     int baud_; //serial baud rate
     int fd;
     int robot_data_[50]; //stores all received data from robot
+    int is_charging_;
     char motor_speeds_commanded_[3]; //stores most recent commanded motor speeds
     double fast_rate_; //update rate for encoders, 10Hz recommended
     double medium_rate_;
@@ -76,10 +79,18 @@ private:
     float odom_axle_track_;
     float odom_angular_coef_;
     float odom_slippage_factor_;
+    float odom_covariance_0_;
+    float odom_covariance_35_;
 
     int motor_speed_linear_coef_;
     int motor_speed_angular_coef_;
     int motor_speed_flipper_coef_;
+    int motor_speed_deadband_;
+    int motor_speed_angular_deadband_;
+    float weight_coef_; //(weight_coef_>1)
+    float cw_turn_coef_;
+
+    float total_weight_; //in kg
     //int motor_speed_diff_max_; ---WIP
 
     std::vector<char> serial_fast_buffer_;
@@ -87,13 +98,14 @@ private:
     std::vector<char> serial_slow_buffer_;
 
     //ROS Subscriber callback functions
-    void cmdVelCB(const geometry_msgs::Twist::ConstPtr& msg);
+    void cmdVelCB(const geometry_msgs::TwistStamped::ConstPtr& msg);
     
     //ROS Publish Functions (robot_data_[X] to ros topics)
     void publishFastRateData();
     void publishMedRateData();
     void publishSlowRateData();
     void publishOdomEnc();
+    void publishTestOdomCmdVel();
     
     //Serial Com Functions
     int getParameterData(int parameter);
