@@ -152,12 +152,14 @@ OpenRover::OpenRover( ros::NodeHandle &_nh, ros::NodeHandle &_nh_priv ) :
     publish_slow_rate_vals_(false),
     low_speed_mode_on_(true),
     velocity_control_on_(true),
-    K_P_L_(40.0),
-    K_I_L_(1.0),
-    K_P_R_(40.0),
-    K_I_R_(1.0),
+    K_P_L_(20.0),
+    K_I_L_(5.0),
+    K_P_R_(20.0),
+    K_I_R_(5.0),
     left_err_(0),
-    right_err_(0)
+    right_err_(0),
+    left_vel_commanded_(0),
+    right_vel_commanded_(0)
 {
     ROS_INFO( "Initializing openrover driver." );
     //nh_priv.param( "port", port_, (std::string)"/dev/ttyUSB0" );
