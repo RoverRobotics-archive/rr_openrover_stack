@@ -153,9 +153,9 @@ OpenRover::OpenRover( ros::NodeHandle &_nh, ros::NodeHandle &_nh_priv ) :
     low_speed_mode_on_(true),
     velocity_control_on_(true),
     K_P_L_(20.0),
-    K_I_L_(0.1),
+    K_I_L_(0.01),
     K_P_R_(20.0),
-    K_I_R_(0.1),
+    K_I_R_(0.01),
     left_err_(0),
     right_err_(0),
     left_vel_commanded_(0),
@@ -782,6 +782,7 @@ void OpenRover::velocityController()
 
     if (velocity_control_on_)
     {
+        ROS_INFO("%1.2f | %3.3f %3.3f", dt, left_i_err, right_i_err)
         ROS_INFO("%1.3f %1.3f | %1.3f %1.3f", left_vel_commanded_, left_vel_measured_, right_vel_commanded_, right_vel_measured_);
         ROS_INFO("%3.3f %3.3f", left_err_, right_err_);
         ROS_INFO("%3.3f | %3.3f", left_motor_speed, right_motor_speed);
