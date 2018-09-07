@@ -736,14 +736,39 @@ void OpenRover::publishMotorSpeeds()
 
 void OpenRover::velocityController()
 {
+    double dt = 0;
+    
+    tf::Quaternion q_new;
+    ros::Time ros_now_time = ros::Time::now();
+    double now_time = ros_now_time.toSec();
+    static double past_time = 0;
+    static left_i_err = 0;
+    static right_i_err = 0;
+    nav_msgs::Odometry odom_msg;
+    
+    dt = now_time-past_time;
+
     float last_left_err = left_err_;
     float last_right_err = right_err_;
 
     left_err_ = left_vel_commanded_ - left_vel_measured_;
     right_err_ = right_vel_commanded_ - right_vel_measured_;
+    
+    left_i_error = K_I_L*left_err_*dt + left_i_error;
+    right_i_error = K_I_L*right_err_*dt + left_i_error;
 
-    float left_motor_speed = K_P_L_ * left_err_ + K_I_L_ * (left_err_ - last_left_err) + 125;
-    float right_motor_speed = K_P_L_ * right_err_ + K_I_L_ * (right_err_ - last_right_err) + 125;
+    float left_motor_speed = K_P_L_ * left_err_ + left_i_error + 125;
+    float right_motor_speed = K_P_L_ * right_err_ + left_i_error + 125;
+    double dt = 0;
+    
+    tf::Quaternion q_new;
+    ros::Time ros_now_time = ros::Time::now();
+    double now_time = ros_now_time.toSec();
+    static double past_time = 0;
+    
+    nav_msgs::Odometry odom_msg;
+    
+    dt = now_time-past_time;
 
     /*float left_motor_speed = (K_P_L_ * left_err_ ) + 125;
     float right_motor_speed = (K_P_R_ * right_err_) + 125;*/
