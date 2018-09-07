@@ -83,6 +83,19 @@ private:
     float odom_covariance_0_;
     float odom_covariance_35_;
 
+    //velocity feedback
+    float left_vel_commanded_;
+    float right_vel_commanded_;
+    float left_vel_measured_;
+    float right_vel_measured_;
+    bool velocity_control_on_;
+    float K_P_L_;
+    float K_I_L_;
+    float K_P_R_;
+    float K_I_R_;
+    float left_err_;
+    float right_err_;
+
     int motor_speed_linear_coef_;
     int motor_speed_angular_coef_;
     int motor_speed_flipper_coef_;
@@ -108,7 +121,8 @@ private:
     void publishSlowRateData();
     void publishOdomEnc();
     void publishMotorSpeeds();
-    void publishWheelVels(float left_vel, float right_vel);
+    void publishWheelVels();
+    void velocityController();
     
     //Serial Com Functions
     int getParameterData(int parameter);

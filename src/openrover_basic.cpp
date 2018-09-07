@@ -150,7 +150,14 @@ OpenRover::OpenRover( ros::NodeHandle &_nh, ros::NodeHandle &_nh_priv ) :
     publish_fast_rate_vals_(false),
     publish_med_rate_vals_(false),
     publish_slow_rate_vals_(false),
-    low_speed_mode_on_(true)
+    low_speed_mode_on_(true),
+    velocity_control_on_(true),
+    K_P_L_(20.0),
+    K_I_L_(2.0),
+    K_P_R_(20.0),
+    K_I_R_(2.0),
+    left_err_(0),
+    right_err_(0)
 {
     ROS_INFO( "Initializing openrover driver." );
     //nh_priv.param( "port", port_, (std::string)"/dev/ttyUSB0" );
@@ -427,6 +434,11 @@ void OpenRover::cmdVelCB(const geometry_msgs::TwistStamped::ConstPtr& msg)
     float flipper_rate = msg->twist.angular.y;
     bool is_moving_forward, is_turning_cw, is_stationary, is_zero_point_turn;
 
+    float diff_vel_commanded = turn_rate/odom_angular_coef_;
+
+    right_vel_commanded_ = linear_rate + 0.5*diff_vel_commanded;
+    left_vel_commanded_ = linear_rate - 0.5*diff_vel_commanded;
+
     timeout_timer.stop();
     if ((linear_rate == 0) && (turn_rate != 0))
     {
@@ -514,8 +526,12 @@ void OpenRover::cmdVelCB(const geometry_msgs::TwistStamped::ConstPtr& msg)
         right_motor_speed = average_motor_speed - MOTOR_DIFF_MAX/2;
     }
 
-    //Add most recent motor values to motor_speeds_commanded_[3] class variable
-    updateMotorSpeedsCommanded((char)round(left_motor_speed), (char)round(right_motor_speed), (char)(flipper_motor_speed));
+    //Add most recent motor values to motor_speeds_commanded_[3] class variable if velocity_control_on_ is not true (open loop)
+    motor_speeds_commanded_[2] = (char)flipper_motor_speed;
+    if (!velocity_control_on_)
+    {
+        updateMotorSpeedsCommanded((char)round(left_motor_speed), (char)round(right_motor_speed), (char)(flipper_motor_speed));
+    }
     timeout_timer.start();
 }
 
@@ -549,41 +565,41 @@ void OpenRover::publishOdomEnc()
     {
         if (motor_speeds_commanded_[0] > 125)
         {            
-            left_vel = odom_encoder_coef_/left_enc;
+            left_vel_measured_ = odom_encoder_coef_/left_enc;
         }
         else
         {
-            left_vel = -odom_encoder_coef_/left_enc;
+            left_vel_measured_ = -odom_encoder_coef_/left_enc;
         }
     }
     else
     {
-        left_vel = 0;
+        left_vel_measured_ = 0;
     }
     
     if((ENCODER_MIN < right_enc) && (right_enc < ENCODER_MAX))
     {
         if ( motor_speeds_commanded_[1] > 125)
         {
-            right_vel = odom_encoder_coef_/right_enc;
+            right_vel_measured_ = odom_encoder_coef_/right_enc;
         }
         else
         {
-            right_vel = -odom_encoder_coef_/right_enc;
+            right_vel_measured_ = -odom_encoder_coef_/right_enc;
         }
     }
     else
     {
-        right_vel = 0;
+        right_vel_measured_ = 0;
     }
     
     if(past_time!=0)
     {
-        left_dist = left_dist + left_vel*dt;
-        right_dist = right_dist + right_vel*dt;
+        left_dist = left_dist + left_vel_measured_*dt;
+        right_dist = right_dist + right_vel_measured_*dt;
             
-        net_vel = 0.5*(left_vel+right_vel);
-        diff_vel = right_vel - left_vel;
+        net_vel = 0.5*(left_vel_measured_+right_vel_measured_);
+        diff_vel = right_vel_measured_ - left_vel_measured_;
         
         alpha = odom_angular_coef_*diff_vel;
         
@@ -594,8 +610,6 @@ void OpenRover::publishOdomEnc()
         q_new = tf::createQuaternionFromRPY(0, 0, theta);
         quaternionTFToMsg(q_new, odom_msg.pose.pose.orientation);
     }
-    
-    publishWheelVels(left_vel, right_vel);
 
     odom_msg.header.stamp = ros_now_time;
     odom_msg.header.frame_id = "odom";
@@ -625,27 +639,14 @@ void OpenRover::publishOdomEnc()
     past_time=now_time;
 }
 
-void OpenRover::publishWheelVels(float left_vel, float right_vel)
+void OpenRover::publishWheelVels()
 {
-        /*net_vel = 0.5*(left_vel+right_vel);
-        diff_vel = right_vel - left_vel;
-        
-        alpha = odom_angular_coef_*diff_vel;*/
-    float right_vel_commanded;
-    float left_vel_commanded;
-    float turn_rate = cmd_vel_commanded_.angular.z;
-    float linear_vel_commanded = cmd_vel_commanded_.linear.x;
     std_msgs::Float32MultiArray vel_vec;
 
-    float diff_vel_commanded = turn_rate/odom_angular_coef_;
-
-    right_vel_commanded = linear_vel_commanded + 0.5*diff_vel_commanded;
-    left_vel_commanded = linear_vel_commanded - 0.5*diff_vel_commanded;
-
-    vel_vec.data.push_back(left_vel);
-    vel_vec.data.push_back(left_vel_commanded);
-    vel_vec.data.push_back(right_vel);
-    vel_vec.data.push_back(right_vel_commanded);
+    vel_vec.data.push_back(left_vel_measured_);
+    vel_vec.data.push_back(left_vel_commanded_);
+    vel_vec.data.push_back(right_vel_measured_);
+    vel_vec.data.push_back(right_vel_commanded_);
 
     vel_calc_pub.publish(vel_vec);
 }
@@ -735,6 +736,25 @@ void OpenRover::publishMotorSpeeds()
     //motor_speeds_msg.data = motor_speeds_vec;
     motor_speeds_pub.publish(motor_speeds_msg);
 }
+
+void OpenRover::velocityController()
+{
+    float last_left_err = left_err_;
+    float last_right_err = right_err_;
+
+    left_err_ = left_vel_commanded_ - left_vel_measured_;
+    right_err_ = right_vel_commanded_ - right_vel_measured_;
+
+    float left_motor_speed = K_P_L_ * left_err_;
+    float right_motor_speed = K_P_R_ * right_err_;
+    ROS_INFO("%3.3f | %3.3f", left_motor_speed, right_motor_speed);
+
+    if (velocity_control_on_)
+    {
+        updateMotorSpeedsCommanded((char)round(left_motor_speed), (char)round(right_motor_speed), (char)(motor_speeds_commanded_[2]));
+    }
+}
+
 void OpenRover::serialManager()
 {//sends serial commands stored in the 3 buffers in order of speed with fast getting highest priority
     char param1;
@@ -816,6 +836,8 @@ void OpenRover::serialManager()
             publishFastRateData();
             publishOdomEnc();
             publishMotorSpeeds();
+            publishWheelVels(); //call after publishOdomEnc()
+            velocityController(); //call after publishOdomEnc() and after publishWheelVels
         }
         else if ((serial_medium_buffer_.size()==0) && publish_med_rate_vals_)
         {
