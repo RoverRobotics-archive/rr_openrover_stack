@@ -747,7 +747,7 @@ void OpenRover::velocityController()
     nav_msgs::Odometry odom_msg;
     
     dt = now_time-past_time;
-    past_time = now_time
+    past_time = now_time;
     float last_left_err = left_err_;
     float last_right_err = right_err_;
 
