@@ -152,8 +152,8 @@ OpenRover::OpenRover( ros::NodeHandle &_nh, ros::NodeHandle &_nh_priv ) :
     publish_slow_rate_vals_(false),
     low_speed_mode_on_(true),
     velocity_control_on_(true),
-    K_P_L_(100.0),
-    K_I_L_(50),
+    K_P_L_(40.0),
+    K_I_L_(10),
     K_P_R_(40.0),
     K_I_R_(10),
     left_err_(0),
@@ -744,6 +744,12 @@ void OpenRover::velocityController()
     static double past_time = 0;
     static float left_i_err = 0;
     static float right_i_err = 0;
+    static float left_vel_measured_avg = 0;
+    static float right_vel_measured_avg = 0;
+
+    left_vel_measured_avg = left_vel_measured_ / 2 + left_vel_measured_avg / 2;
+    right_vel_measured_avg = right_vel_measured_ / 2 + right_vel_measured_avg / 2;
+
     nav_msgs::Odometry odom_msg;
     
     dt = now_time-past_time;
@@ -751,8 +757,8 @@ void OpenRover::velocityController()
     float last_left_err = left_err_;
     float last_right_err = right_err_;
 
-    left_err_ = left_vel_commanded_ - left_vel_measured_;
-    right_err_ = right_vel_commanded_ - right_vel_measured_;
+    left_err_ = left_vel_commanded_ - left_vel_measured_avg;
+    right_err_ = right_vel_commanded_ - right_vel_measured_avg;
     
     left_i_err = K_I_L_*left_err_*dt + left_i_err;
     right_i_err = K_I_L_*right_err_*dt + right_i_err;
