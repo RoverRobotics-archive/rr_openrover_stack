@@ -724,16 +724,10 @@ void OpenRover::publishMotorSpeeds()
 {
     std_msgs::Int32MultiArray motor_speeds_msg;
     motor_speeds_msg.data.clear();
-    //std::vector<int8_t> motor_speeds_vec (motor_speeds_commanded_, motor_speeds_commanded_ + sizeof(motor_speeds_commanded_)/sizeof(motor_speeds_commanded_[0]));
-        //vector<int> vec (arr, arr + sizeof(arr) / sizeof(arr[0]) );
-    /*motor_speeds_vec[0] = motor_speeds_commanded_[0]; //left
-    motor_speeds_vec[1] = motor_speeds_commanded_[1]; //right
-    motor_speeds_vec[2] = motor_speeds_commanded_[2]; //flipper*/
-    //std::vector<int8_t> motor_speeds_vec (motor_speeds_commanded_
     motor_speeds_msg.data.push_back(motor_speeds_commanded_[0]);
     motor_speeds_msg.data.push_back(motor_speeds_commanded_[1]);
     motor_speeds_msg.data.push_back(motor_speeds_commanded_[2]);
-    //motor_speeds_msg.data = motor_speeds_vec;
+
     motor_speeds_pub.publish(motor_speeds_msg);
 }
 
@@ -745,8 +739,8 @@ void OpenRover::velocityController()
     left_err_ = left_vel_commanded_ - left_vel_measured_;
     right_err_ = right_vel_commanded_ - right_vel_measured_;
 
-    float left_motor_speed = K_P_L_ * left_err_;
-    float right_motor_speed = K_P_R_ * right_err_;
+    float left_motor_speed = K_P_L_ * left_err_ + K_I_L_ * left_err_ - last_left_err;
+    float right_motor_speed = K_P_R_ * right_err_ + K_I_R_ * right_err_ - last_right_err;
     ROS_INFO("%3.3f | %3.3f", left_motor_speed, right_motor_speed);
 
     if (velocity_control_on_)
@@ -835,9 +829,9 @@ void OpenRover::serialManager()
         {   
             publishFastRateData();
             publishOdomEnc();
-            publishMotorSpeeds();
             publishWheelVels(); //call after publishOdomEnc()
             velocityController(); //call after publishOdomEnc() and after publishWheelVels
+            publishMotorSpeeds();
         }
         else if ((serial_medium_buffer_.size()==0) && publish_med_rate_vals_)
         {
