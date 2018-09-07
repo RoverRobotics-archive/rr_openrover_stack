@@ -152,10 +152,10 @@ OpenRover::OpenRover( ros::NodeHandle &_nh, ros::NodeHandle &_nh_priv ) :
     publish_slow_rate_vals_(false),
     low_speed_mode_on_(true),
     velocity_control_on_(true),
-    K_P_L_(20.0),
-    K_I_L_(2.0),
-    K_P_R_(20.0),
-    K_I_R_(2.0),
+    K_P_L_(40.0),
+    K_I_L_(15.0),
+    K_P_R_(40.0),
+    K_I_R_(15.0),
     left_err_(0),
     right_err_(0)
 {
@@ -530,6 +530,7 @@ void OpenRover::cmdVelCB(const geometry_msgs::TwistStamped::ConstPtr& msg)
     motor_speeds_commanded_[2] = (char)flipper_motor_speed;
     if (!velocity_control_on_)
     {
+        ROS_INFO("shouldnt see this");
         updateMotorSpeedsCommanded((char)round(left_motor_speed), (char)round(right_motor_speed), (char)(flipper_motor_speed));
     }
     timeout_timer.start();
@@ -746,10 +747,10 @@ void OpenRover::velocityController()
     float right_motor_speed = (K_P_R_ * right_err_) + 125;
 
 
-    ROS_INFO("%3.3f | %3.3f", left_motor_speed, right_motor_speed);
 
     if (velocity_control_on_)
     {
+        ROS_INFO("%3.3f | %3.3f", left_motor_speed, right_motor_speed);
         updateMotorSpeedsCommanded((char)round(left_motor_speed), (char)round(right_motor_speed), (char)(motor_speeds_commanded_[2]));
     }
 }
