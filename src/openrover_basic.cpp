@@ -746,7 +746,22 @@ void OpenRover::velocityController()
     /*float left_motor_speed = (K_P_L_ * left_err_ ) + 125;
     float right_motor_speed = (K_P_R_ * right_err_) + 125;*/
 
-
+    if (right_motor_speed > MOTOR_SPEED_MAX)
+    {
+        right_motor_speed = MOTOR_SPEED_MAX;
+    }
+    if (left_motor_speed > MOTOR_SPEED_MAX)
+    {
+        left_motor_speed = MOTOR_SPEED_MAX;
+    }
+    if (right_motor_speed < MOTOR_SPEED_MIN)
+    {
+        right_motor_speed = MOTOR_SPEED_MIN;
+    }
+    if (left_motor_speed < MOTOR_SPEED_MIN)
+    {
+        left_motor_speed = MOTOR_SPEED_MIN;
+    }
 
     if (velocity_control_on_)
     {
