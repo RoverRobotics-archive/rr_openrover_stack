@@ -739,12 +739,12 @@ void OpenRover::velocityController()
 
     left_err_ = left_vel_commanded_ - left_vel_measured_;
     right_err_ = right_vel_commanded_ - right_vel_measured_;
-/*
-    float left_motor_speed = (K_P_L_ * left_err_ + K_I_L_ * left_err_ - last_left_err) + 125;
-    float right_motor_speed = (K_P_R_ * right_err_ + K_I_R_ * right_err_ - last_right_err) + 125;*/
 
-    float left_motor_speed = (K_P_L_ * left_err_ ) + 125;
-    float right_motor_speed = (K_P_R_ * right_err_) + 125;
+    float left_motor_speed = K_P_L_ * left_err_ + K_I_L_ * (left_err_ - last_left_err) + 125;
+    float right_motor_speed = K_P_R_ * right_err_ + K_I_R_ * (right_err_ - last_right_err) + 125;
+
+    /*float left_motor_speed = (K_P_L_ * left_err_ ) + 125;
+    float right_motor_speed = (K_P_R_ * right_err_) + 125;*/
 
 
 
