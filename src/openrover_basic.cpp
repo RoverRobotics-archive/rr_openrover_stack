@@ -750,8 +750,10 @@ void OpenRover::velocityController()
 
     if (velocity_control_on_)
     {
+        ROS_INFO("%1.3f %1.3f | %1.3f %1.3f", left_vel_commanded_, left_vel_measured_, right_vel_commanded_, right_vel_measured_);
+        ROS_INFO("%3.3f %3.3f", left_err_, right_err_);
         ROS_INFO("%3.3f | %3.3f", left_motor_speed, right_motor_speed);
-        updateMotorSpeedsCommanded((char)round(left_motor_speed), (char)round(right_motor_speed), (char)(motor_speeds_commanded_[2]));
+        updateMotorSpeedsCommanded((char)round(left_motor_speed), (char)round(right_motor_speed), (char)round(motor_speeds_commanded_[2]));
     }
 }
 
