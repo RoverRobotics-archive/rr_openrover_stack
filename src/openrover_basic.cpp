@@ -9,6 +9,7 @@
 #include "tf/tf.h"
 #include "std_msgs/Int32.h"
 #include "std_msgs/Int32MultiArray.h"
+#include "std_msgs/Float32MultiArray.h"
 #include "geometry_msgs/TwistStamped.h"
 #include <std_msgs/Bool.h>
 #include "nav_msgs/Odometry.h"
@@ -183,7 +184,9 @@ bool OpenRover::start()
     odom_enc_pub = nh.advertise<nav_msgs::Odometry>("rr_openrover_basic/odom_encoder", 1);
     is_charging_pub = nh.advertise<std_msgs::Bool>("rr_openrover_basic/charging", 1);
 
-    test_odom_cmd_vel_pub = nh.advertise<std_msgs::Int32MultiArray>("rr_openrover_basic/motor_speeds_commanded", 1);
+    motor_speeds_pub = nh.advertise<std_msgs::Int32MultiArray>("rr_openrover_basic/motor_speeds_commanded", 1);
+    vel_calc_pub = nh.advertise<std_msgs::Float32MultiArray>("rr_openrover_basic/vel_calc_pub", 1);
+
 
     cmd_vel_sub = nh.subscribe("/cmd_vel/managed", 1, &OpenRover::cmdVelCB, this);
     
@@ -415,6 +418,7 @@ void OpenRover::timeoutCB(const ros::WallTimerEvent &e)
 
 void OpenRover::cmdVelCB(const geometry_msgs::TwistStamped::ConstPtr& msg)
 {//converts from cmd_vel (m/s and radians/s) into motor speed commands
+    cmd_vel_commanded_ = msg->twist;
     float left_motor_speed, right_motor_speed;
     int flipper_motor_speed;
     int motor_speed_deadband_scaled;
@@ -591,6 +595,8 @@ void OpenRover::publishOdomEnc()
         quaternionTFToMsg(q_new, odom_msg.pose.pose.orientation);
     }
     
+    publishWheelVels(left_vel, right_vel);
+
     odom_msg.header.stamp = ros_now_time;
     odom_msg.header.frame_id = "odom";
     odom_msg.child_frame_id = "base_link";
@@ -617,6 +623,29 @@ void OpenRover::publishOdomEnc()
     
     odom_enc_pub.publish(odom_msg);
     past_time=now_time;
+}
+
+void OpenRover::publishWheelVels(float left_vel, float right_vel)
+{
+        /*net_vel = 0.5*(left_vel+right_vel);
+        diff_vel = right_vel - left_vel;
+        
+        alpha = odom_angular_coef_*diff_vel;*/
+    float right_vel_commanded;
+    float left_vel_commanded;
+    float turn_rate = cmd_vel_commanded_.angular.z;
+    float linear_vel_commanded = cmd_vel_commanded_.linear.x;
+    std_msgs::Float32MultiArray vel_vec;
+
+    float diff_vel_commanded = turn_rate/odom_angular_coef_;
+
+    right_vel_commanded = linear_vel_commanded + 0.5*diff_vel_commanded;
+    left_vel_commanded = linear_vel_commanded - 0.5*diff_vel_commanded;
+
+    vel_vec.data.push_back(left_vel);
+    vel_vec.data.push_back(left_vel_commanded);
+    vel_vec.data.push_back(right_vel);
+    vel_vec.data.push_back(right_vel_commanded);
 }
 
 void OpenRover::publishFastRateData()
@@ -688,7 +717,7 @@ void OpenRover::publishSlowRateData()
     slow_rate_pub.publish(slow_msg);
     publish_slow_rate_vals_ = false;
 }
-void OpenRover::publishTestOdomCmdVel()
+void OpenRover::publishMotorSpeeds()
 {
     std_msgs::Int32MultiArray motor_speeds_msg;
     motor_speeds_msg.data.clear();
@@ -702,7 +731,7 @@ void OpenRover::publishTestOdomCmdVel()
     motor_speeds_msg.data.push_back(motor_speeds_commanded_[1]);
     motor_speeds_msg.data.push_back(motor_speeds_commanded_[2]);
     //motor_speeds_msg.data = motor_speeds_vec;
-    test_odom_cmd_vel_pub.publish(motor_speeds_msg);
+    motor_speeds_pub.publish(motor_speeds_msg);
 }
 void OpenRover::serialManager()
 {//sends serial commands stored in the 3 buffers in order of speed with fast getting highest priority
@@ -784,7 +813,7 @@ void OpenRover::serialManager()
         {   
             publishFastRateData();
             publishOdomEnc();
-            publishTestOdomCmdVel();
+            publishMotorSpeeds();
         }
         else if ((serial_medium_buffer_.size()==0) && publish_med_rate_vals_)
         {

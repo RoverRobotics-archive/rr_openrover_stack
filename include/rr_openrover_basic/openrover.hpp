@@ -56,7 +56,8 @@ private:
     ros::Publisher odom_enc_pub;
     ros::Publisher battery_state_pub;
     ros::Publisher is_charging_pub;
-    ros::Publisher test_odom_cmd_vel_pub;
+    ros::Publisher motor_speeds_pub;
+    ros::Publisher vel_calc_pub;
     
     ros::Publisher fast_rate_pub;
     ros::Publisher medium_rate_pub;
@@ -92,6 +93,7 @@ private:
 
     float total_weight_; //in kg
     //int motor_speed_diff_max_; ---WIP
+    geometry_msgs::Twist cmd_vel_commanded_;
 
     std::vector<char> serial_fast_buffer_;
     std::vector<char> serial_medium_buffer_;
@@ -105,13 +107,15 @@ private:
     void publishMedRateData();
     void publishSlowRateData();
     void publishOdomEnc();
-    void publishTestOdomCmdVel();
+    void publishMotorSpeeds();
+    void publishWheelVels(float left_vel, float right_vel);
     
     //Serial Com Functions
     int getParameterData(int parameter);
     bool setParameterData(int param1, int param2);
     void updateRobotData(int parameter);
     void updateMotorSpeedsCommanded(char left_motor_speed, char right_motor_speed, char flipper_motor_speed);
+    void updateCmdVelCommanded(const geometry_msgs::TwistStamped::ConstPtr& msg);
     bool sendCommand(int param1, int param2);
     int readCommand();
 };
