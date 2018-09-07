@@ -646,6 +646,8 @@ void OpenRover::publishWheelVels(float left_vel, float right_vel)
     vel_vec.data.push_back(left_vel_commanded);
     vel_vec.data.push_back(right_vel);
     vel_vec.data.push_back(right_vel_commanded);
+
+    vel_calc_pub.publish(vel_vec);
 }
 
 void OpenRover::publishFastRateData()
