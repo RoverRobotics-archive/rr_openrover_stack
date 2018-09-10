@@ -155,8 +155,8 @@ OpenRover::OpenRover( ros::NodeHandle &_nh, ros::NodeHandle &_nh_priv ) :
     publish_slow_rate_vals_(false),
     low_speed_mode_on_(true),
     velocity_control_on_(true),
-    K_P_L_(30.0),
-    K_I_L_(20),
+    K_P_L_(40.5),
+    K_I_L_(97.2),
     K_P_R_(40.0),
     K_I_R_(10),
     left_err_(0),
@@ -743,7 +743,7 @@ void OpenRover::publishMotorSpeeds()
     motor_speeds_pub.publish(motor_speeds_msg);
 }
 
-void OpenRover::filterMeasurements(float left_vel_measured_, float right_vel_measured_)
+void OpenRover::filterMeasurements(float left_vel, float right_vel)
 {
 
     //dumb low pass filter
@@ -751,13 +751,22 @@ void OpenRover::filterMeasurements(float left_vel_measured_, float right_vel_mea
     right_vel_filtered_ = right_vel_measured_ / 2 + right_vel_filtered_ / 2;*/
 
     //Hanning filter
-    left_vel_filtered_ = 0.25 * left_vel_history_[0] + 0.5 * left_vel_history_[1] + 0.25 * left_vel_history_[2];
-    right_vel_filtered_ = 0.25 * right_vel_history_[0] + 0.5 * right_vel_history_[1] + 0.25 * right_vel_history_[2];
-
+    left_vel_filtered_ = 0.25 * left_vel + 0.5 * left_vel_history_[0] + 0.25 * left_vel_history_[1];
+    right_vel_filtered_ = 0.25 * right_vel + 0.5 * right_vel_history_[0] + 0.25 * right_vel_history_[1];
+    ROS_INFO("%1.3f || %1.3f %1.3f %1.3f", left_vel_filtered_, left_vel, left_vel_history_[0], left_vel_history_[1]);
     left_vel_history_.insert(left_vel_history_.begin(), left_vel_filtered_);
     left_vel_history_.pop_back();
+    ROS_INFO("%1.3f ||| %1.3f %1.3f %1.3f", left_vel_filtered_, left_vel, left_vel_history_[0], left_vel_history_[1]);
     right_vel_history_.insert(right_vel_history_.begin(), right_vel_filtered_);
     right_vel_history_.pop_back();
+}
+
+bool OpenRover::hasZeroHistory(const std::vector<float>& vel_history)
+{
+    if ((vel_history[0] + vel_history[1] + vel_history[2]) < 0.001)
+        return true;
+    else
+        return false;
 }
 
 void OpenRover::velocityController()
@@ -794,6 +803,15 @@ void OpenRover::velocityController()
 
     /*float left_motor_speed = (K_P_L_ * left_err_ ) + 125;
     float right_motor_speed = (K_P_R_ * right_err_) + 125;*/
+    if (hasZeroHistory(left_vel_history_))
+    {
+        left_i_err = 0;
+    }
+    if (hasZeroHistory(right_vel_history_))
+    {
+        right_i_err = 0;
+    }
+
     //Compensate for deadband
     if (right_motor_speed > 125)
     {

@@ -128,6 +128,7 @@ private:
     void publishWheelVels();
     void velocityController();
     void filterMeasurements(float left_motor_speed, float right_motor_speed);
+    bool hasZeroHistory(const std::vector<float>& vel_history);
     
     //Serial Com Functions
     int getParameterData(int parameter);
