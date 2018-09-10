@@ -88,6 +88,9 @@ private:
     float right_vel_commanded_;
     float left_vel_measured_;
     float right_vel_measured_;
+    float left_vel_filtered_;
+    float right_vel_filtered_;
+
     bool velocity_control_on_;
     float K_P_L_;
     float K_I_L_;

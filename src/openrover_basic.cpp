@@ -68,6 +68,9 @@ const int MOTOR_SPEED_ANGULAR_COEF_2WD_LS = 56;
 const int MOTOR_SPEED_LINEAR_COEF_2WD_HS = 293;
 const int MOTOR_SPEED_ANGULAR_COEF_2WD_HS = 56;
 
+// Velocity Controller Constants
+const int CONTROLLER_DEADBAND_COMP = 3; //reduce MOTOR_DEADBAND by this amount
+
 //general openrover_basic platform constants
 const int ENCODER_MAX = 5000;
 const int ENCODER_MIN = 1;
@@ -152,8 +155,8 @@ OpenRover::OpenRover( ros::NodeHandle &_nh, ros::NodeHandle &_nh_priv ) :
     publish_slow_rate_vals_(false),
     low_speed_mode_on_(true),
     velocity_control_on_(true),
-    K_P_L_(40.0),
-    K_I_L_(10),
+    K_P_L_(30.0),
+    K_I_L_(20),
     K_P_R_(40.0),
     K_I_R_(10),
     left_err_(0),
@@ -421,7 +424,7 @@ void OpenRover::robotDataFastCB(const ros::WallTimerEvent &e)
 }
 
 void OpenRover::timeoutCB(const ros::WallTimerEvent &e)
-{//Timer goes off when a command isn't received soon enough. Sets motors to stop values
+{//Timer goes off when a command isn't received soon enough. Sets motors to neutral values
     updateMotorSpeedsCommanded(MOTOR_NEUTRAL, MOTOR_NEUTRAL, MOTOR_NEUTRAL);
 }
 
@@ -646,8 +649,10 @@ void OpenRover::publishWheelVels()
 {
     std_msgs::Float32MultiArray vel_vec;
 
+    vel_vec.data.push_back(left_vel_filtered_);
     vel_vec.data.push_back(left_vel_measured_);
     vel_vec.data.push_back(left_vel_commanded_);
+    vel_vec.data.push_back(right_vel_filtered_);
     vel_vec.data.push_back(right_vel_measured_);
     vel_vec.data.push_back(right_vel_commanded_);
 
@@ -747,8 +752,8 @@ void OpenRover::velocityController()
     static float left_vel_measured_avg = 0;
     static float right_vel_measured_avg = 0;
 
-    left_vel_measured_avg = left_vel_measured_ / 2 + left_vel_measured_avg / 2;
-    right_vel_measured_avg = right_vel_measured_ / 2 + right_vel_measured_avg / 2;
+    left_vel_filtered_ = left_vel_measured_ / 2 + left_vel_filtered_ / 2;
+    right_vel_filtered_ = right_vel_measured_ / 2 + right_vel_filtered_ / 2;
 
     nav_msgs::Odometry odom_msg;
     
@@ -757,17 +762,37 @@ void OpenRover::velocityController()
     float last_left_err = left_err_;
     float last_right_err = right_err_;
 
-    left_err_ = left_vel_commanded_ - left_vel_measured_avg;
-    right_err_ = right_vel_commanded_ - right_vel_measured_avg;
+    left_err_ = left_vel_commanded_ - left_vel_filtered_;
+    right_err_ = right_vel_commanded_ - right_vel_filtered_;
     
-    left_i_err = K_I_L_*left_err_*dt + left_i_err;
-    right_i_err = K_I_L_*right_err_*dt + right_i_err;
+    left_i_err += (K_I_L_*left_err_)*dt;
+    right_i_err += (K_I_L_*right_err_)*dt;
+    float K_P_L_gain = K_P_L_ * left_err_;
+    float K_P_R_gain = K_P_L_ * right_err_;
 
-    float left_motor_speed = K_P_L_ * left_err_ + left_i_err + 125;
-    float right_motor_speed = K_P_L_ * right_err_ + right_i_err + 125;
+    float left_motor_speed = K_P_L_gain + left_i_err + 125;
+    float right_motor_speed = K_P_R_gain + right_i_err + 125;
 
     /*float left_motor_speed = (K_P_L_ * left_err_ ) + 125;
     float right_motor_speed = (K_P_R_ * right_err_) + 125;*/
+    //Compensate for deadband
+    if (right_motor_speed > 125)
+    {
+        right_motor_speed += (motor_speed_deadband_ - CONTROLLER_DEADBAND_COMP);
+    }
+    else if (right_motor_speed < 125 )
+    {
+        right_motor_speed -= (motor_speed_deadband_ - CONTROLLER_DEADBAND_COMP);
+    }
+
+    if (left_motor_speed > 125)
+    {
+        left_motor_speed += (motor_speed_deadband_ - CONTROLLER_DEADBAND_COMP);
+    }
+    else if (left_motor_speed < 125 )
+    {
+        left_motor_speed -= (motor_speed_deadband_ - CONTROLLER_DEADBAND_COMP);
+    }
 
     if (right_motor_speed > MOTOR_SPEED_MAX)
     {
@@ -788,10 +813,11 @@ void OpenRover::velocityController()
 
     if (velocity_control_on_)
     {
-        ROS_INFO("%1.2f | %3.3f %3.3f", dt, left_i_err, right_i_err);
-        ROS_INFO("%1.3f %1.3f | %1.3f %1.3f", left_vel_commanded_, left_vel_measured_, right_vel_commanded_, right_vel_measured_);
+        ROS_INFO("%1.3f %1.3f %1.3f| %1.3f %1.3f %1.3f", left_vel_commanded_, left_vel_measured_, left_vel_filtered_, right_vel_commanded_, right_vel_measured_, right_vel_filtered_);
         ROS_INFO("%3.3f %3.3f", left_err_, right_err_);
+        ROS_INFO("%1.2f | %3.3f %3.3f | %3.3f %3.3f", dt, left_i_err, right_i_err, K_P_L_gain, K_P_R_gain);
         ROS_INFO("%3.3f | %3.3f", left_motor_speed, right_motor_speed);
+        ROS_INFO("___________________");
         updateMotorSpeedsCommanded((char)round(left_motor_speed), (char)round(right_motor_speed), (char)round(motor_speeds_commanded_[2]));
     }
 }
@@ -913,6 +939,8 @@ void OpenRover::updateRobotData(int param)
 
 void OpenRover::updateMotorSpeedsCommanded(char left_motor, char right_motor, char flipper_motor)
 {//updates the stored motor speeds to the most recent commanded motor speeds
+
+    ROS_INFO("%4i | %4i | %4i", left_motor, right_motor, flipper_motor);
     motor_speeds_commanded_[0] = left_motor;
     motor_speeds_commanded_[1] = right_motor;
     motor_speeds_commanded_[2] = flipper_motor;
