@@ -90,7 +90,8 @@ private:
     float right_vel_measured_;
     float left_vel_filtered_;
     float right_vel_filtered_;
-
+    std::vector<float> left_vel_history_;
+    std::vector<float> right_vel_history_;
     bool velocity_control_on_;
     float K_P_L_;
     float K_I_L_;
@@ -126,6 +127,7 @@ private:
     void publishMotorSpeeds();
     void publishWheelVels();
     void velocityController();
+    void filterMeasurements(float left_motor_speed, float right_motor_speed);
     
     //Serial Com Functions
     int getParameterData(int parameter);

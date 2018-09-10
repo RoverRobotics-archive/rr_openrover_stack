@@ -164,7 +164,9 @@ OpenRover::OpenRover( ros::NodeHandle &_nh, ros::NodeHandle &_nh_priv ) :
     left_vel_commanded_(0),
     right_vel_commanded_(0),
     left_vel_filtered_(0),
-    right_vel_filtered_(0)
+    right_vel_filtered_(0),
+    left_vel_history_(3, 0),
+    right_vel_history_(3,0)
 {
     ROS_INFO( "Initializing openrover driver." );
     //nh_priv.param( "port", port_, (std::string)"/dev/ttyUSB0" );
@@ -741,6 +743,23 @@ void OpenRover::publishMotorSpeeds()
     motor_speeds_pub.publish(motor_speeds_msg);
 }
 
+void OpenRover::filterMeasurements(float left_vel_measured_, float right_vel_measured_)
+{
+
+    //dumb low pass filter
+/*    left_vel_filtered_ = left_vel_measured_ / 2 + left_vel_filtered_ / 2;
+    right_vel_filtered_ = right_vel_measured_ / 2 + right_vel_filtered_ / 2;*/
+
+    //Hanning filter
+    left_vel_filtered_ = 0.25 * left_vel_history_[0] + 0.5 * left_vel_history_[1] + 0.25 * left_vel_history_[2];
+    right_vel_filtered_ = 0.25 * right_vel_history_[0] + 0.5 * right_vel_history_[1] + 0.25 * right_vel_history_[2];
+
+    left_vel_history_.insert(left_vel_history_.begin(), left_vel_filtered_);
+    left_vel_history_.pop_back();
+    right_vel_history_.insert(right_vel_history_.begin(), right_vel_filtered_);
+    right_vel_history_.pop_back();
+}
+
 void OpenRover::velocityController()
 {
     double dt = 0;
@@ -751,11 +770,9 @@ void OpenRover::velocityController()
     static double past_time = 0;
     static float left_i_err = 0;
     static float right_i_err = 0;
-    static float left_vel_measured_avg = 0;
-    static float right_vel_measured_avg = 0;
 
-    left_vel_filtered_ = left_vel_measured_ / 2 + left_vel_filtered_ / 2;
-    right_vel_filtered_ = right_vel_measured_ / 2 + right_vel_filtered_ / 2;
+    //loads the filters and loads the filtered measurements into the class members
+    filterMeasurements(left_vel_measured_, right_vel_measured_);
 
     nav_msgs::Odometry odom_msg;
     
