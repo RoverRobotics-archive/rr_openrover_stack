@@ -763,7 +763,9 @@ void OpenRover::filterMeasurements(float left_vel, float right_vel)
 
 bool OpenRover::hasZeroHistory(const std::vector<float>& vel_history)
 {
-    if ((vel_history[0] + vel_history[1] + vel_history[2]) < 0.001)
+    float sum = fabs(vel_history[0] + vel_history[1] + vel_history[2]);
+    ROS_INFO("vel_history ||| %3.3f %3.3f %3.3f | %3.3f", vel_history[0], vel_history[1], vel_history[3], sum);
+    if (sum < 0.001)
         return true;
     else
         return false;
