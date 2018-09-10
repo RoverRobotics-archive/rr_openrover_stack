@@ -69,14 +69,14 @@ class CmdVelManager(object):
 
         # Process non-human-local commands
         if not self.local_control_lock:
-            # auto_dock requests (Lowest Priority 4)
-            if auto_dock_time_elapsed.to_sec() < self.command_timeout:
-                my_managed_control_input = self.auto_dock_control_input_request
-                my_managed_control_input.header.frame_id = 'auto_dock'
-            # move_base requests (Priority 3)
+            # move_base requests (Priority 4)
             if move_base_time_elapsed.to_sec() < self.command_timeout:
                 my_managed_control_input.twist = self.move_base_control_input_request
                 my_managed_control_input.header.frame_id = 'move_base'
+            # auto_dock requests (Lowest Priority 3)
+            if auto_dock_time_elapsed.to_sec() < self.command_timeout:
+                my_managed_control_input = self.auto_dock_control_input_request
+                my_managed_control_input.header.frame_id = 'auto_dock'
             # fleet_manager requests (Priority 2)
             if fleet_manager_time_elapsed.to_sec() < self.command_timeout:
                 my_managed_control_input.twist = self.fleet_manager_control_input_request
@@ -104,7 +104,9 @@ class CmdVelManager(object):
     def move_base_cb(self, move_base_cmd_vel):
         if (move_base_cmd_vel.linear.x, move_base_cmd_vel.angular.y, move_base_cmd_vel.angular.z) != (0,0,0):
             self.last_move_base_command_time = rospy.Time.now()
-            self.move_base_control_input_request = move_base_cmd_vel 
+            self.move_base_control_input_request.linear.x = move_base_cmd_vel.linear.x
+            self.move_base_control_input_request.linear.y = move_base_cmd_vel.linear.y
+            self.move_base_control_input_request.angular.z = move_base_cmd_vel.angular.z * 1.4 ##Fudge factor, remove when switched to closed loop control on rr_openrover_basic
 
 
     def auto_dock_cb(self, auto_dock_cmd_vel):
