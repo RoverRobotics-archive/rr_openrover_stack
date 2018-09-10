@@ -162,7 +162,9 @@ OpenRover::OpenRover( ros::NodeHandle &_nh, ros::NodeHandle &_nh_priv ) :
     left_err_(0),
     right_err_(0),
     left_vel_commanded_(0),
-    right_vel_commanded_(0)
+    right_vel_commanded_(0),
+    left_vel_filtered_(0),
+    right_vel_filtered_(0)
 {
     ROS_INFO( "Initializing openrover driver." );
     //nh_priv.param( "port", port_, (std::string)"/dev/ttyUSB0" );
