@@ -69,7 +69,7 @@ const int MOTOR_SPEED_LINEAR_COEF_2WD_HS = 293;
 const int MOTOR_SPEED_ANGULAR_COEF_2WD_HS = 56;
 
 // Velocity Controller Constants
-const int CONTROLLER_DEADBAND_COMP = 3; //reduce MOTOR_DEADBAND by this amount
+const int CONTROLLER_DEADBAND_COMP = 1; //reduce MOTOR_DEADBAND by this amount
 
 //general openrover_basic platform constants
 const int ENCODER_MAX = 5000;
@@ -155,8 +155,8 @@ OpenRover::OpenRover( ros::NodeHandle &_nh, ros::NodeHandle &_nh_priv ) :
     publish_slow_rate_vals_(false),
     low_speed_mode_on_(true),
     velocity_control_on_(true),
-    K_P_(80), //old val 40.5
-    K_I_(0), //old val 97.2
+    K_P_(101.25), //old val 40.5
+    K_I_(1056.52), //old val 97.2
     left_err_(0),
     right_err_(0),
     left_vel_commanded_(0),
@@ -755,23 +755,21 @@ void OpenRover::filterMeasurements(float left_vel, float right_vel)
     right_vel_filtered_ = right_vel_measured_ / 2 + right_vel_filtered_ / 2;*/
 
     //Hanning filter
-/*    left_vel_filtered_ = 0.25 * left_vel + 0.5 * left_vel_history_[0] + 0.25 * left_vel_history_[1];
+    left_vel_filtered_ = 0.25 * left_vel + 0.5 * left_vel_history_[0] + 0.25 * left_vel_history_[1];
     right_vel_filtered_ = 0.25 * right_vel + 0.5 * right_vel_history_[0] + 0.25 * right_vel_history_[1];
-    ROS_INFO("%1.3f || %1.3f %1.3f %1.3f", left_vel_filtered_, left_vel, left_vel_history_[0], left_vel_history_[1]);
     left_vel_history_.insert(left_vel_history_.begin(), left_vel_filtered_);
     left_vel_history_.pop_back();
-    ROS_INFO("%1.3f ||| %1.3f %1.3f %1.3f", left_vel_filtered_, left_vel, left_vel_history_[0], left_vel_history_[1]);
     right_vel_history_.insert(right_vel_history_.begin(), right_vel_filtered_);
-    right_vel_history_.pop_back();*/
+    right_vel_history_.pop_back();
 
     //Billinear 2nd Order IIR Butterworth Filter
     //x_history is measured values
     //right_vel_history_ is filtered values
-    float a1 = 0.20657;
+/*    float a1 = 0.20657;
     float a2 = 0.41314;
     float a3 = 0.20657;
     float b1 = 0.36953;
-    float b2 = 0.19582;
+    float b2 = -0.19582;
 
     left_vel_filtered_ = a1*left_x_history[0] + a2*left_x_history[1] + a3*left_x_history[2] + 
         b1*left_vel_history_[0] + b2*left_vel_history_[1];
@@ -781,14 +779,14 @@ void OpenRover::filterMeasurements(float left_vel, float right_vel)
         b1*right_vel_history_[0] + b2*right_vel_history_[1];
     right_vel_history_.insert(right_vel_history_.begin(), right_vel_filtered_);
     right_vel_history_.pop_back();
-    ROS_INFO("%1.3f || %1.3f %1.3f %1.3f", left_vel_filtered_, left_vel, left_vel_history_[0], left_vel_history_[1]);
-    ROS_INFO("%1.3f ||| %1.3f %1.3f %1.3f", left_vel_filtered_, left_vel, left_vel_history_[0], left_vel_history_[1]);
+    //ROS_INFO("%1.3f || %1.3f %1.3f %1.3f", left_vel_filtered_, left_vel, left_vel_history_[0], left_vel_history_[1]);
+    //ROS_INFO("%1.3f ||| %1.3f %1.3f %1.3f", left_vel_filtered_, left_vel, left_vel_history_[0], left_vel_history_[1]);*/
 }
 
 bool OpenRover::hasZeroHistory(const std::vector<float>& vel_history)
 {
     float sum = fabs(vel_history[0] + vel_history[1] + vel_history[2]);
-    ROS_INFO("vel_history ||| %3.3f %3.3f %3.3f | %3.3f", vel_history[0], vel_history[1], vel_history[3], sum);
+    //ROS_INFO("vel_history ||| %3.3f %3.3f %3.3f | %3.3f", vel_history[0], vel_history[1], vel_history[3], sum);
     if (sum < 0.001)
         return true;
     else
@@ -876,11 +874,11 @@ void OpenRover::velocityController()
 
     if (velocity_control_on_)
     {
-        ROS_INFO("%1.3f %1.3f %1.3f| %1.3f %1.3f %1.3f", left_vel_commanded_, left_vel_measured_, left_vel_filtered_, right_vel_commanded_, right_vel_measured_, right_vel_filtered_);
+/*        ROS_INFO("%1.3f %1.3f %1.3f| %1.3f %1.3f %1.3f", left_vel_commanded_, left_vel_measured_, left_vel_filtered_, right_vel_commanded_, right_vel_measured_, right_vel_filtered_);
         ROS_INFO("%3.3f %3.3f", left_err_, right_err_);
         ROS_INFO("%1.2f | %3.3f %3.3f | %3.3f %3.3f", dt, left_i_err, right_i_err, K_P_L_gain, K_P_R_gain);
         ROS_INFO("%3.3f | %3.3f", left_motor_speed, right_motor_speed);
-        ROS_INFO("___________________");
+        ROS_INFO("___________________");*/
         updateMotorSpeedsCommanded((char)round(left_motor_speed), (char)round(right_motor_speed), (char)round(motor_speeds_commanded_[2]));
     }
 }
@@ -1003,7 +1001,7 @@ void OpenRover::updateRobotData(int param)
 void OpenRover::updateMotorSpeedsCommanded(char left_motor, char right_motor, char flipper_motor)
 {//updates the stored motor speeds to the most recent commanded motor speeds
 
-    ROS_INFO("%4i | %4i | %4i", left_motor, right_motor, flipper_motor);
+    //ROS_INFO("%4i | %4i | %4i", left_motor, right_motor, flipper_motor);
     motor_speeds_commanded_[0] = left_motor;
     motor_speeds_commanded_[1] = right_motor;
     motor_speeds_commanded_[2] = flipper_motor;
