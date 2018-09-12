@@ -743,20 +743,46 @@ void OpenRover::publishMotorSpeeds()
 
 void OpenRover::filterMeasurements(float left_vel, float right_vel)
 {
+    static std::vector<float>  right_x_history(3,0);
+    static std::vector<float>  left_x_history(3,0);
+    left_x_history.insert(left_x_history.begin(), left_vel);
+    left_x_history.pop_back();
+    right_x_history.insert(right_x_history.begin(), left_vel);
+    right_x_history.pop_back();
 
     //dumb low pass filter
 /*    left_vel_filtered_ = left_vel_measured_ / 2 + left_vel_filtered_ / 2;
     right_vel_filtered_ = right_vel_measured_ / 2 + right_vel_filtered_ / 2;*/
 
     //Hanning filter
-    left_vel_filtered_ = 0.25 * left_vel + 0.5 * left_vel_history_[0] + 0.25 * left_vel_history_[1];
+/*    left_vel_filtered_ = 0.25 * left_vel + 0.5 * left_vel_history_[0] + 0.25 * left_vel_history_[1];
     right_vel_filtered_ = 0.25 * right_vel + 0.5 * right_vel_history_[0] + 0.25 * right_vel_history_[1];
     ROS_INFO("%1.3f || %1.3f %1.3f %1.3f", left_vel_filtered_, left_vel, left_vel_history_[0], left_vel_history_[1]);
     left_vel_history_.insert(left_vel_history_.begin(), left_vel_filtered_);
     left_vel_history_.pop_back();
     ROS_INFO("%1.3f ||| %1.3f %1.3f %1.3f", left_vel_filtered_, left_vel, left_vel_history_[0], left_vel_history_[1]);
     right_vel_history_.insert(right_vel_history_.begin(), right_vel_filtered_);
+    right_vel_history_.pop_back();*/
+
+    //Billinear 2nd Order IIR Butterworth Filter
+    //x_history is measured values
+    //right_vel_history_ is filtered values
+    float a1 = 0.20657;
+    float a2 = 0.41314;
+    float a3 = 0.20657;
+    float b1 = 0.36953;
+    float b2 = 0.19582;
+
+    left_vel_filtered_ = a1*left_x_history[0] + a2*left_x_history[1] + a3*left_x_history[2] + 
+        b1*left_vel_history_[0] + b2*left_vel_history_[1];
+    left_vel_history_.insert(left_vel_history_.begin(), left_vel_filtered_);
+    left_vel_history_.pop_back();
+    right_vel_filtered_ = a1*right_x_history[0] + a2*right_x_history[1] + a3*right_x_history[2] + 
+        b1*right_vel_history_[0] + b2*right_vel_history_[1];
+    right_vel_history_.insert(right_vel_history_.begin(), right_vel_filtered_);
     right_vel_history_.pop_back();
+    ROS_INFO("%1.3f || %1.3f %1.3f %1.3f", left_vel_filtered_, left_vel, left_vel_history_[0], left_vel_history_[1]);
+    ROS_INFO("%1.3f ||| %1.3f %1.3f %1.3f", left_vel_filtered_, left_vel, left_vel_history_[0], left_vel_history_[1]);
 }
 
 bool OpenRover::hasZeroHistory(const std::vector<float>& vel_history)
