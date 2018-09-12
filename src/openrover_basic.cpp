@@ -155,10 +155,8 @@ OpenRover::OpenRover( ros::NodeHandle &_nh, ros::NodeHandle &_nh_priv ) :
     publish_slow_rate_vals_(false),
     low_speed_mode_on_(true),
     velocity_control_on_(true),
-    K_P_L_(40.5),
-    K_I_L_(97.2),
-    K_P_R_(40.0),
-    K_I_R_(10),
+    K_P_(80), //old val 40.5
+    K_I_(0), //old val 97.2
     left_err_(0),
     right_err_(0),
     left_vel_commanded_(0),
@@ -795,10 +793,10 @@ void OpenRover::velocityController()
     left_err_ = left_vel_commanded_ - left_vel_filtered_;
     right_err_ = right_vel_commanded_ - right_vel_filtered_;
     
-    left_i_err += (K_I_L_*left_err_)*dt;
-    right_i_err += (K_I_L_*right_err_)*dt;
-    float K_P_L_gain = K_P_L_ * left_err_;
-    float K_P_R_gain = K_P_L_ * right_err_;
+    left_i_err += (K_I_*left_err_)*dt;
+    right_i_err += (K_I_*right_err_)*dt;
+    float K_P_L_gain = K_P_ * left_err_;
+    float K_P_R_gain = K_P_ * right_err_;
 
     float left_motor_speed = K_P_L_gain + left_i_err + 125;
     float right_motor_speed = K_P_R_gain + right_i_err + 125;

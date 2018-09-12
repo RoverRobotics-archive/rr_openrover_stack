@@ -93,10 +93,8 @@ private:
     std::vector<float> left_vel_history_;
     std::vector<float> right_vel_history_;
     bool velocity_control_on_;
-    float K_P_L_;
-    float K_I_L_;
-    float K_P_R_;
-    float K_I_R_;
+    float K_P_;
+    float K_I_;
     float left_err_;
     float right_err_;
 
