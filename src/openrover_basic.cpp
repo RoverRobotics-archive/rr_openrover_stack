@@ -70,7 +70,7 @@ const int MOTOR_SPEED_ANGULAR_COEF_2WD_HS = 56;
 
 // Velocity Controller Constants
 const int CONTROLLER_DEADBAND_COMP = 0; //reduce MOTOR_DEADBAND by this amount
-const int MAX_ACCEL_CUTOFF = 10; // m/s^2
+const int MAX_ACCEL_CUTOFF = 20; // m/s^2
 
 //general openrover_basic platform constants
 const int ENCODER_MAX = 5000;
@@ -157,7 +157,7 @@ OpenRover::OpenRover( ros::NodeHandle &_nh, ros::NodeHandle &_nh_priv ) :
     low_speed_mode_on_(true),
     velocity_control_on_(true),
     K_P_(101.25), //old val 40.5
-    K_I_(1056.52), //old val 97.2
+    K_I_(500), //1056.52), //old val 97.2
     left_err_(0),
     right_err_(0),
     left_vel_commanded_(0),
@@ -165,7 +165,9 @@ OpenRover::OpenRover( ros::NodeHandle &_nh, ros::NodeHandle &_nh_priv ) :
     left_vel_filtered_(0),
     right_vel_filtered_(0),
     left_vel_history_(3, 0),
-    right_vel_history_(3,0)
+    right_vel_history_(3, 0),
+    skip_left_vel_(false),
+    skip_right_vel_(false)
 {
     ROS_INFO( "Initializing openrover driver." );
     //nh_priv.param( "port", port_, (std::string)"/dev/ttyUSB0" );
@@ -744,13 +746,36 @@ void OpenRover::publishMotorSpeeds()
 
 void OpenRover::filterMeasurements(float left_vel, float right_vel, float dt)
 {
+    static double left_time = 0;
+    static double right_time = 0;
+
+    if (skip_left_vel_)
+    {
+        left_time += dt;
+    }
+    else
+    {
+        left_time = dt;
+    }
+
+    if (skip_right_vel_)
+    {
+        right_time += dt;
+    }
+    else
+    {
+        right_time = dt;
+    }
 
     //Check for impossible acceleration
-    float left_accel = (left_vel - left_vel_history_[0]) / dt;
-    float right_accel = (right_vel - right_vel_history_[0]) / dt;
+    float left_accel = (left_vel - left_vel_history_[0]) / left_time;
+    float right_accel = (right_vel - right_vel_history_[0]) / right_time;
+    ROS_INFO("%1.4f | %1.4f", left_time, right_time);
+    ROS_INFO("%3.4f | %3.4f", left_accel, right_accel);
 
     if (fabs(left_accel) > MAX_ACCEL_CUTOFF)
     {
+        ROS_WARN("Skipping left encoder reading");
         skip_left_vel_ = true;
     }
     else
@@ -764,11 +789,12 @@ void OpenRover::filterMeasurements(float left_vel, float right_vel, float dt)
 
     if (fabs(right_accel) > MAX_ACCEL_CUTOFF)
     {
+        ROS_WARN("Skipping right encoder reading");
         skip_right_vel_ = true;
     }
     else
     {
-        skip_left_vel_ = false;
+        skip_right_vel_ = false;
         //Hanning filter
         right_vel_filtered_ = 0.25 * right_vel + 0.5 * right_vel_history_[0] + 0.25 * right_vel_history_[1];
         right_vel_history_.insert(right_vel_history_.begin(), right_vel_filtered_);
@@ -846,8 +872,8 @@ void OpenRover::velocityController()
     float K_P_L_gain = K_P_ * left_err_;
     float K_P_R_gain = K_P_ * right_err_;
 
-    int left_motor_speed = round(K_P_L_gain + left_i_err + 125);
-    int right_motor_speed = round(K_P_R_gain + right_i_err + 125);
+    int left_motor_speed = (int)round(K_P_L_gain + left_i_err + 125);
+    int right_motor_speed = (int)round(K_P_R_gain + right_i_err + 125);
 
     if (hasZeroHistory(left_vel_history_))
     {
@@ -888,7 +914,7 @@ void OpenRover::velocityController()
         ROS_INFO("%1.2f | %3.3f %3.3f | %3.3f %3.3f", dt, left_i_err, right_i_err, K_P_L_gain, K_P_R_gain);
         ROS_INFO("%3.3f | %3.3f", left_motor_speed, right_motor_speed);
         ROS_INFO("___________________");*/
-        updateMotorSpeedsCommanded((char)round(left_motor_speed), (char)round(right_motor_speed), (char)round(motor_speeds_commanded_[2]));
+        updateMotorSpeedsCommanded((char)(left_motor_speed), (char)(right_motor_speed), (char)(motor_speeds_commanded_[2]));
     }
 }
 
@@ -988,8 +1014,8 @@ void OpenRover::serialManager()
         {   
             publishFastRateData();
             publishOdomEnc();
+            velocityController(); //call after publishOdomEnc()
             publishWheelVels(); //call after publishOdomEnc()
-            velocityController(); //call after publishOdomEnc() and after publishWheelVels
             publishMotorSpeeds();
         }
         else if ((serial_medium_buffer_.size()==0) && publish_med_rate_vals_)
