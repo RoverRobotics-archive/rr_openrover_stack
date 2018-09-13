@@ -98,6 +98,7 @@ private:
     bool velocity_control_on_;
     float K_P_;
     float K_I_;
+    float K_D_;
     float left_err_;
     float right_err_;
     bool skip_left_vel_;

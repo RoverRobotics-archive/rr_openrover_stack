@@ -160,8 +160,9 @@ OpenRover::OpenRover( ros::NodeHandle &_nh, ros::NodeHandle &_nh_priv ) :
     publish_slow_rate_vals_(false),
     low_speed_mode_on_(true),
     velocity_control_on_(true),
-    K_P_(150), //old val 40.5
-    K_I_(0), //1056.52), //old val 97.2
+    K_P_(135), //old val 40.5
+    K_I_(0),//2029.617 //1056.52), //old val 97.2
+    K_D_(0), //2.2449
     left_err_(0),
     right_err_(0),
     left_vel_commanded_(0),
@@ -874,6 +875,7 @@ void OpenRover::velocityController()
     static double past_time = 0;
     static float left_i_err = 0;
     static float right_i_err = 0;
+    static int left_motor_speed, right_motor_speed = MOTOR_NEUTRAL;
     
     double dt = now_time-past_time;
     past_time = now_time;
@@ -881,25 +883,51 @@ void OpenRover::velocityController()
     //loads the filters and loads the filtered measurements into the class members
     filterMeasurements(left_vel_measured_, right_vel_measured_, dt);
 
+    //Left Motor controller________________________
 
-    float last_left_err = left_err_;
-    float last_right_err = right_err_;
+    if (!skip_left_vel_)
+    {
+        float last_left_err = left_err_;
+        left_err_ = left_vel_commanded_ - left_vel_filtered_;
 
-    left_err_ = left_vel_commanded_ - left_vel_filtered_;
-    right_err_ = right_vel_commanded_ - right_vel_filtered_;
-    
-    left_i_err += (K_I_*left_err_)*dt;
-    right_i_err += (K_I_*right_err_)*dt;
-    float K_P_L_gain = K_P_ * left_err_;
-    float K_P_R_gain = K_P_ * right_err_;
+        float K_P_L_gain = K_P_ * left_err_;
+        left_i_err += (K_I_*left_err_)*dt;
+        float K_D_L_gain = K_D_ * (left_vel_history_[0]-left_vel_history_[1]) / dt;
 
-    int left_motor_speed = (int)round(K_P_L_gain + left_i_err + 125);
-    int right_motor_speed = (int)round(K_P_R_gain + right_i_err + 125);
+        left_motor_speed = (int)round(K_P_L_gain + left_i_err + 125);
+    }
 
     if (hasZeroHistory(left_vel_history_))
     {
         left_i_err = 0;
     }
+    //Compensate for deadband
+    if (left_motor_speed > 125)
+    {
+        left_motor_speed += (motor_speed_deadband_ - CONTROLLER_DEADBAND_COMP);
+    }
+    else if (left_motor_speed < 125 )
+    {
+        left_motor_speed -= (motor_speed_deadband_ - CONTROLLER_DEADBAND_COMP);
+    }
+
+    left_motor_speed = boundMotorSpeed(left_motor_speed, MOTOR_SPEED_MAX, MOTOR_SPEED_MIN);
+
+
+    //Right motor controller______________
+
+    if (!skip_right_vel_)
+    {
+        float last_right_err = right_err_;
+        right_err_ = right_vel_commanded_ - right_vel_filtered_;
+        
+        float K_P_R_gain = K_P_ * right_err_;
+        right_i_err += (K_I_*right_err_)*dt;
+        float K_D_R_gain = K_D_ * (right_vel_history_[0]-right_vel_history_[1]) / dt;
+
+        right_motor_speed = (int)round(K_P_R_gain + right_i_err + 125);
+    }
+
     if (hasZeroHistory(right_vel_history_))
     {
         right_i_err = 0;
@@ -915,17 +943,7 @@ void OpenRover::velocityController()
         right_motor_speed -= (motor_speed_deadband_ - CONTROLLER_DEADBAND_COMP);
     }
 
-    if (left_motor_speed > 125)
-    {
-        left_motor_speed += (motor_speed_deadband_ - CONTROLLER_DEADBAND_COMP);
-    }
-    else if (left_motor_speed < 125 )
-    {
-        left_motor_speed -= (motor_speed_deadband_ - CONTROLLER_DEADBAND_COMP);
-    }
-
     right_motor_speed = boundMotorSpeed(right_motor_speed, MOTOR_SPEED_MAX, MOTOR_SPEED_MIN);
-    left_motor_speed = boundMotorSpeed(left_motor_speed, MOTOR_SPEED_MAX, MOTOR_SPEED_MIN);
 
 
     if (velocity_control_on_)
