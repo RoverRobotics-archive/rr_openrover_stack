@@ -36,6 +36,9 @@ public:
     bool low_speed_mode_on_;
 
 private:
+    //.csv Debuggin
+    std::ofstream fs_;
+
     //ROS Parameters
     std::string port_;
     std::string drive_type_;

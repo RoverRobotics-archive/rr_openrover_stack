@@ -5,6 +5,8 @@
 #include <vector>
 #include <string>
 #include <cmath>
+#include <fstream>
+#include <iostream>
 
 #include "tf/tf.h"
 #include "std_msgs/Int32.h"
@@ -172,6 +174,7 @@ OpenRover::OpenRover( ros::NodeHandle &_nh, ros::NodeHandle &_nh_priv ) :
     ROS_INFO( "Initializing openrover driver." );
     //nh_priv.param( "port", port_, (std::string)"/dev/ttyUSB0" );
     //nh_priv.param( "baud", baud_, 57600 );
+    fs_.open("data1.csv");
     
     serial_fast_buffer_.reserve(10*FAST_SIZE); //reserve space for 5 sets of FAST rate data
     serial_medium_buffer_.reserve(10*MEDIUM_SIZE); //reserve space for 5 sets of Medium rate data
@@ -662,6 +665,12 @@ void OpenRover::publishWheelVels()
     vel_vec.data.push_back(right_vel_commanded_);
 
     vel_calc_pub.publish(vel_vec);
+
+    int vsize = vel_vec.data.size();
+    for (int n=0; n<vsize; n++)
+    {
+        fs_ << vel_vec.data[n] << std::endl;
+    }
 }
 
 void OpenRover::publishFastRateData()
