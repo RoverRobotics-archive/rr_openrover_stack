@@ -145,6 +145,8 @@ const int FAST_SIZE = sizeof(ROBOT_DATA_INDEX_FAST)/sizeof(ROBOT_DATA_INDEX_FAST
 const int MEDIUM_SIZE = sizeof(ROBOT_DATA_INDEX_MEDIUM)/sizeof(ROBOT_DATA_INDEX_MEDIUM[0]);
 const int SLOW_SIZE = sizeof(ROBOT_DATA_INDEX_SLOW)/sizeof(ROBOT_DATA_INDEX_SLOW[0]);
 
+std::ofstream global_file ("tuning_data.csv");
+
 OpenRover::OpenRover( ros::NodeHandle &_nh, ros::NodeHandle &_nh_priv ) :
     port_("/dev/ttyUSB0"),
     baud_(57600),
@@ -158,8 +160,8 @@ OpenRover::OpenRover( ros::NodeHandle &_nh, ros::NodeHandle &_nh_priv ) :
     publish_slow_rate_vals_(false),
     low_speed_mode_on_(true),
     velocity_control_on_(true),
-    K_P_(101.25), //old val 40.5
-    K_I_(500), //1056.52), //old val 97.2
+    K_P_(150), //old val 40.5
+    K_I_(0), //1056.52), //old val 97.2
     left_err_(0),
     right_err_(0),
     left_vel_commanded_(0),
@@ -174,7 +176,7 @@ OpenRover::OpenRover( ros::NodeHandle &_nh, ros::NodeHandle &_nh_priv ) :
     ROS_INFO( "Initializing openrover driver." );
     //nh_priv.param( "port", port_, (std::string)"/dev/ttyUSB0" );
     //nh_priv.param( "baud", baud_, 57600 );
-    fs_.open("data1.csv");
+    global_file << "time,left_filtered,left_measured,left_commanded,right_filtered,right_measured,right_commanded" << std::endl;
     
     serial_fast_buffer_.reserve(10*FAST_SIZE); //reserve space for 5 sets of FAST rate data
     serial_medium_buffer_.reserve(10*MEDIUM_SIZE); //reserve space for 5 sets of Medium rate data
@@ -655,6 +657,9 @@ void OpenRover::publishOdomEnc()
 
 void OpenRover::publishWheelVels()
 {
+    static ros::Time ros_start_time = ros::Time::now();
+    ros::Time ros_now_time = ros::Time::now();
+    double run_time = (ros_now_time - ros_start_time).toSec();
     std_msgs::Float32MultiArray vel_vec;
 
     vel_vec.data.push_back(left_vel_filtered_);
@@ -665,11 +670,18 @@ void OpenRover::publishWheelVels()
     vel_vec.data.push_back(right_vel_commanded_);
 
     vel_calc_pub.publish(vel_vec);
-
-    int vsize = vel_vec.data.size();
-    for (int n=0; n<vsize; n++)
+    if (global_file.is_open())
     {
-        fs_ << vel_vec.data[n] << std::endl;
+        double ros_now_time = ros::Time::now().toNSec();
+        //ROS_INFO("writing to file");
+        int vsize = vel_vec.data.size();
+        global_file << run_time << ",";
+        for (int n=0; n<vsize; n++)
+        {
+            global_file << vel_vec.data[n];
+            global_file << ",";
+        }
+         global_file << std::endl;
     }
 }
 
@@ -779,9 +791,9 @@ void OpenRover::filterMeasurements(float left_vel, float right_vel, float dt)
     //Check for impossible acceleration
     float left_accel = (left_vel - left_vel_history_[0]) / left_time;
     float right_accel = (right_vel - right_vel_history_[0]) / right_time;
-    ROS_INFO("%1.4f | %1.4f", left_time, right_time);
+/*    ROS_INFO("%1.4f | %1.4f", left_time, right_time);
     ROS_INFO("%3.4f | %3.4f", left_accel, right_accel);
-
+*/
     if (fabs(left_accel) > MAX_ACCEL_CUTOFF)
     {
         ROS_WARN("Skipping left encoder reading");
