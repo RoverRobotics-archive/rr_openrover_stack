@@ -97,6 +97,8 @@ private:
     float K_I_;
     float left_err_;
     float right_err_;
+    bool skip_left_vel_;
+    bool skip_right_vel_;
 
     int motor_speed_linear_coef_;
     int motor_speed_angular_coef_;
@@ -125,8 +127,9 @@ private:
     void publishMotorSpeeds();
     void publishWheelVels();
     void velocityController();
-    void filterMeasurements(float left_motor_speed, float right_motor_speed);
+    void filterMeasurements(float left_motor_vel, float right_motor_vel, float dt);
     bool hasZeroHistory(const std::vector<float>& vel_history);
+    int boundMotorSpeed(int motor_speed, int max, int min);
     
     //Serial Com Functions
     int getParameterData(int parameter);
