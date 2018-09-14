@@ -18,17 +18,14 @@
 class OpenRover
 {
 public:
-    OpenRover( ros::NodeHandle &_nh, ros::NodeHandle &_nh_priv );
+    OpenRover(std::string port_, std::string drive_type_, bool enable_timeout_, float total_weight_,
+        float slippage_factor_, float odom_covariance_0_, float odom_covariance_35_);
     bool start();
     bool openComs();
     bool setupRobotParams();
+    bool updateOdometry();
     
     void serialManager();
-    
-    void robotDataFastCB( const ros::WallTimerEvent &e);
-    void robotDataMediumCB( const ros::WallTimerEvent &e);
-    void robotDataSlowCB( const ros::WallTimerEvent &e);
-    void timeoutCB( const ros::WallTimerEvent &e );
     
     bool publish_fast_rate_vals_;
     bool publish_med_rate_vals_;
@@ -74,9 +71,13 @@ private:
     int robot_data_[50]; //stores all received data from robot
     int is_charging_;
     char motor_speeds_commanded_[3]; //stores most recent commanded motor speeds
+    const int LEFT_MOTOR_INDEX_;
+    const int RIGHT_MOTOR_INDEX_;
+    const int FLIPPER_MOTOR_INDEX_;
     double fast_rate_; //update rate for encoders, 10Hz recommended
     double medium_rate_;
     double slow_rate_;
+
 
     //drive dependent parameters
     float odom_encoder_coef_;
@@ -127,20 +128,20 @@ private:
     void publishFastRateData();
     void publishMedRateData();
     void publishSlowRateData();
-    void publishOdomEnc();
+    void publishOdometry();
     void publishMotorSpeeds();
     void publishWheelVels();
-    void velocityController();
+
+
+/*    void velocityController();
     void filterMeasurements(float left_motor_vel, float right_motor_vel, float dt);
     bool hasZeroHistory(const std::vector<float>& vel_history);
-    int boundMotorSpeed(int motor_speed, int max, int min);
+    int boundMotorSpeed(int motor_speed, int max, int min);*/
     
     //Serial Com Functions
     int getParameterData(int parameter);
     bool setParameterData(int param1, int param2);
     void updateRobotData(int parameter);
-    void updateMotorSpeedsCommanded(char left_motor_speed, char right_motor_speed, char flipper_motor_speed);
-    void updateCmdVelCommanded(const geometry_msgs::TwistStamped::ConstPtr& msg);
     bool sendCommand(int param1, int param2);
     int readCommand();
 };
