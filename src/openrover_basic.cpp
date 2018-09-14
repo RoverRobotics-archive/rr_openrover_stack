@@ -160,8 +160,8 @@ OpenRover::OpenRover( ros::NodeHandle &_nh, ros::NodeHandle &_nh_priv ) :
     publish_slow_rate_vals_(false),
     low_speed_mode_on_(true),
     velocity_control_on_(true),
-    K_P_(135), //old val 40.5
-    K_I_(0),//2029.617 //1056.52), //old val 97.2
+    K_P_(80), //old val 40.5
+    K_I_(200),//2029.617 //1056.52), //old val 97.2
     K_D_(0), //2.2449
     left_err_(0),
     right_err_(0),
@@ -671,7 +671,7 @@ void OpenRover::publishWheelVels()
     vel_vec.data.push_back(right_vel_commanded_);
 
     vel_calc_pub.publish(vel_vec);
-    if (global_file.is_open())
+/*    if (global_file.is_open())
     {
         double ros_now_time = ros::Time::now().toNSec();
         //ROS_INFO("writing to file");
@@ -683,7 +683,7 @@ void OpenRover::publishWheelVels()
             global_file << ",";
         }
          global_file << std::endl;
-    }
+    }*/
 }
 
 void OpenRover::publishFastRateData()
