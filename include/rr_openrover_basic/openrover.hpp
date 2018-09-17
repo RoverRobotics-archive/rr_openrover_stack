@@ -15,15 +15,28 @@
 #include <rr_openrover_basic/RawRrOpenroverBasicMedRateData.h>
 #include <rr_openrover_basic/RawRrOpenroverBasicSlowRateData.h>
 
+#include <rr_openrover_basic/odom_control.hpp>
+
+namespace openrover {
+
 class OpenRover
 {
 public:
-    OpenRover(std::string port_, std::string drive_type_, bool enable_timeout_, float total_weight_,
-        float slippage_factor_, float odom_covariance_0_, float odom_covariance_35_);
+    OpenRover( ros::NodeHandle &_nh, ros::NodeHandle &_nh_priv );
+    /*OpenRover(std::string port_, std::string drive_type_, bool enable_timeout_, float total_weight_,
+        float slippage_factor_, float odom_covariance_0_, float odom_covariance_35_);*/
+    OdomControl left_controller_; //(bool use_control, double Kp, double Ki, double Kd, char max, char min); //, std::string log_filename);
+    OdomControl right_controller_; //(bool use_control, double Kp, double Ki, double Kd, char max, char min); //, std::string log_filename);
+
     bool start();
     bool openComs();
     bool setupRobotParams();
-    bool updateOdometry();
+    void updateOdometry();
+
+    void robotDataFastCB( const ros::WallTimerEvent &e); 
+    void robotDataMediumCB( const ros::WallTimerEvent &e); 
+    void robotDataSlowCB( const ros::WallTimerEvent &e); 
+    void timeoutCB( const ros::WallTimerEvent &e ); 
     
     void serialManager();
     
@@ -128,16 +141,10 @@ private:
     void publishFastRateData();
     void publishMedRateData();
     void publishSlowRateData();
-    void publishOdometry();
+    void publishOdometry(float left_vel, float right_vel);
     void publishMotorSpeeds();
     void publishWheelVels();
 
-
-/*    void velocityController();
-    void filterMeasurements(float left_motor_vel, float right_motor_vel, float dt);
-    bool hasZeroHistory(const std::vector<float>& vel_history);
-    int boundMotorSpeed(int motor_speed, int max, int min);*/
-    
     //Serial Com Functions
     int getParameterData(int parameter);
     bool setParameterData(int param1, int param2);
@@ -146,4 +153,5 @@ private:
     int readCommand();
 };
 
+}
 #endif /* _openrover_hpp */

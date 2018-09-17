@@ -5,11 +5,13 @@
 #include <fstream>
 #include <iostream>
 
-#include <rr_openrover_basic/odom_control.h>
+#include <rr_openrover_basic/odom_control.hpp>
 
 namespace openrover {
 
-OdomControl::OdomControl(bool use_control, double Kp, double Ki, double Kd, char max, char min, std::string log_filename) :
+OdomControl::OdomControl(bool use_control, double Kp, double Ki, 
+        double Kd, char max, char min, std::string log_filename) :
+
     MOTOR_NEUTRAL_(125),
     MOTOR_MAX_(250),
     MOTOR_MIN_(0),
@@ -22,7 +24,33 @@ OdomControl::OdomControl(bool use_control, double Kp, double Ki, double Kd, char
     K_P_(Kp),
     K_I_(Ki),
     K_D_(Kd),
-    use_control_(use_control)
+    velocity_history_(3, 0),
+    use_control_(use_control),
+    skip_measurement_(false),
+    at_max_motor_speed_(false),
+    at_min_motor_speed_(false)
+{
+}
+
+OdomControl::OdomControl(bool use_control, double Kp, double Ki, 
+        double Kd, char max, char min) :
+
+    MOTOR_NEUTRAL_(125),
+    MOTOR_MAX_(250),
+    MOTOR_MIN_(0),
+    MOTOR_DEADBAND_(9),
+    MAX_ACCEL_CUTOFF_(20.0),
+    MIN_VELOCITY_(0.03),
+    MAX_VELOCITY_(3),
+    enable_file_logging_(false),
+    K_P_(Kp),
+    K_I_(Ki),
+    K_D_(Kd),
+    velocity_history_(3, 0),
+    use_control_(use_control),
+    skip_measurement_(false),
+    at_max_motor_speed_(false),
+    at_min_motor_speed_(false)
 {
 }
 
@@ -30,17 +58,16 @@ char OdomControl::calculate(double commanded_vel, double measured_vel, double dt
 {
     filter(measured_vel, dt);
 
-    if (hasZeroHistory(vel_history))
+    if (hasZeroHistory(velocity_history_))
     {
         motor_speed_ = MOTOR_NEUTRAL_;
     }
-    return motor_speed_
+    return motor_speed_;
 }
 
 bool OdomControl::hasZeroHistory(const std::vector<float>& vel_history)
 {
     float sum = fabs(vel_history[0] + vel_history[1] + vel_history[2]);
-    //ROS_INFO("vel_history ||| %3.3f %3.3f %3.3f | %3.3f", vel_history[0], vel_history[1], vel_history[3], sum);
     if (sum < 0.001)
         return true;
     else
@@ -49,15 +76,18 @@ bool OdomControl::hasZeroHistory(const std::vector<float>& vel_history)
 
 int OdomControl::boundMotorSpeed(int motor_speed, int max, int min)
 {
+    at_max_motor_speed_ = false;
+    at_min_motor_speed_ = false;
+
     if (motor_speed > max)
     {
         motor_speed = max;
-        ROS_WARN("Reached full forward motor speed.");
+        at_max_motor_speed_ = true;
     }
     if (motor_speed < min)
     {
         motor_speed = min;
-        ROS_WARN("Reached full reverse motor speed.");
+        at_min_motor_speed_ = true;
     }
 
     return motor_speed;
@@ -68,7 +98,7 @@ void OdomControl::filter(float velocity, float dt)
 {
     static double time = 0;
 
-    if (skip_velocity_)
+    if (skip_measurement_)
     {
         time += dt;
     }
@@ -84,14 +114,14 @@ void OdomControl::filter(float velocity, float dt)
 */
     if (fabs(velocity) > MAX_ACCEL_CUTOFF_)
     {
+        skip_measurement_ = true;
         throw std::string("Skipping left encoder reading");
-        skip_velocity_ = true;
     }
     else
     {
-        skip_velocity_ = false;
+        skip_measurement_ = false;
         //Hanning filter
-        velocity_filtered_ = 0.25 * left_vel + 0.5 * velocity_history_[0] + 0.25 * velocity_history_[1];
+        velocity_filtered_ = 0.25 * velocity + 0.5 * velocity_history_[0] + 0.25 * velocity_history_[1];
         velocity_history_.insert(velocity_history_.begin(), velocity_filtered_);
         velocity_history_.pop_back();
     }
