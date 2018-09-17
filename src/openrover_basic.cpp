@@ -579,14 +579,15 @@ void OpenRover::publishOdometry(float left_vel, float right_vel)
     double diff_vel = 0;
     double alpha = 0;
     double dt = 0;
-    
     tf::Quaternion q_new;
+    
     ros::Time ros_now_time = ros::Time::now();
     double now_time = ros_now_time.toSec();
     
     nav_msgs::Odometry odom_msg;
     
     dt = now_time-past_time;
+    past_time = now_time;
     
     if(past_time!=0)
     {
@@ -631,7 +632,6 @@ void OpenRover::publishOdometry(float left_vel, float right_vel)
     odom_msg.pose.pose.position.y = pos_y;
     
     odom_enc_pub.publish(odom_msg);
-    past_time=now_time;
 }
 
 void OpenRover::publishWheelVels()
@@ -825,6 +825,7 @@ void OpenRover::serialManager()
             double now_time = ros_now_time.toSec();
             
             double dt = now_time-past_time;
+            past_time = now_time;
             publishFastRateData();
             updateOdometry(); //Update openrover variables based on latest encoder readings
             char left_motor_speed = left_controller_.calculate(left_vel_commanded_, left_vel_measured_, dt);

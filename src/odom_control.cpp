@@ -86,7 +86,7 @@ char OdomControl::PID(double error, double dt)
     double i_val = I(error, dt);
     double d_val = D(error, dt);
 
-    ROS_INFO("%4.4f | %4.4f | %4.4f", p_val, i_val, d_val);
+    ROS_INFO("%4.4f | %4.4f | %4.4f | err: %4.4f | dt: %4.4f", p_val, i_val, d_val, error, dt);
     return char(p_val + i_val + d_val);
 }
 
