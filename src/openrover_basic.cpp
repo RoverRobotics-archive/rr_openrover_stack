@@ -459,12 +459,12 @@ void OpenRover::cmdVelCB(const geometry_msgs::TwistStamped::ConstPtr& msg)
     float left_motor_speed, right_motor_speed;
     int flipper_motor_speed;
     int motor_speed_deadband_scaled;
-    float turn_rate = msg->twist.angular.z;
-    float linear_rate = msg->twist.linear.x;
-    float flipper_rate = msg->twist.angular.y;
+    double turn_rate = msg->twist.angular.z;
+    double linear_rate = msg->twist.linear.x;
+    double flipper_rate = msg->twist.angular.y;
     bool is_moving_forward, is_turning_cw, is_stationary, is_zero_point_turn;
 
-    float diff_vel_commanded = turn_rate/odom_angular_coef_;
+    double diff_vel_commanded = turn_rate/odom_angular_coef_;
 
     right_vel_commanded_ = linear_rate + 0.5*diff_vel_commanded;
     left_vel_commanded_ = linear_rate - 0.5*diff_vel_commanded;
@@ -733,6 +733,7 @@ void OpenRover::publishSlowRateData()
     slow_rate_pub.publish(slow_msg);
     publish_slow_rate_vals_ = false;
 }
+
 void OpenRover::publishMotorSpeeds()
 {
     std_msgs::Int32MultiArray motor_speeds_msg;

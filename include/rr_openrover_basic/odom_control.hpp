@@ -23,9 +23,9 @@ public:
     const char MOTOR_MIN_; // 0
     const char MOTOR_DEADBAND_;// = 9;
 
-    const float MAX_ACCEL_CUTOFF_; //20
-    const float MIN_VELOCITY_; //0.04
-    const float MAX_VELOCITY_; //2.5ish?
+    const double MAX_ACCEL_CUTOFF_; //20
+    const double MIN_VELOCITY_; //0.04
+    const double MAX_VELOCITY_; //2.5ish?
 
     bool enable_file_logging_;
     bool use_control_;
@@ -36,32 +36,39 @@ public:
 
     std::string log_filename;
 
-private:
     //.csv Debuggin
     std::ofstream fs_;
 
     //General Class variables
-    float K_P_;
-    float K_I_;
-    float K_D_;
+    double K_P_;
+    double K_I_;
+    double K_D_;
+    double integral_value_;
 
     //Returned value
     char motor_speed_; //char value between 0 and 250
+    char deadband_offset_;
 
     //velocity feedback
-    float velocity_commanded_;
-    float velocity_measured_;
-    float velocity_filtered_;
-    std::vector<float> velocity_history_;
+    double velocity_commanded_;
+    double velocity_measured_;
+    double velocity_filtered_;
+    std::vector<double> velocity_history_;
     bool velocity_control_on_;
-    float error_;
+    double error_;
     bool skip_measurement_;
     
+private:
     //Controller Functions
     void velocityController();
-    void filter(float left_motor_vel, float dt);
-    bool hasZeroHistory(const std::vector<float>& vel_history);
+    double filter(double left_motor_vel, double dt);
+    bool hasZeroHistory(const std::vector<double>& vel_history);
     int boundMotorSpeed(int motor_speed, int max, int min);
+    char deadbandOffset(char motor_speed, char deadband_offset);
+    double P(double error, double dt);
+    double I(double error, double dt);
+    double D(double error, double dt);
+    char PID(double error, double dt);
 };
 
 }

@@ -50,22 +50,55 @@ OdomControl::OdomControl(bool use_control, double Kp, double Ki,
     use_control_(use_control),
     skip_measurement_(false),
     at_max_motor_speed_(false),
-    at_min_motor_speed_(false)
+    at_min_motor_speed_(false),
+    error_(0),
+    integral_value_(0)
 {
 }
 
 char OdomControl::calculate(double commanded_vel, double measured_vel, double dt)
 {
-    filter(measured_vel, dt);
+    velocity_filtered_ = filter(measured_vel, dt);
+    error_ = commanded_vel - velocity_filtered_;
+
+    if (!skip_measurement_) 
+    {
+        motor_speed_ = PID(error_, dt);
+    }
 
     if (hasZeroHistory(velocity_history_))
     {
         motor_speed_ = MOTOR_NEUTRAL_;
     }
+
+    motor_speed_ = deadbandOffset(motor_speed_, MOTOR_DEADBAND_);
+    motor_speed_ = boundMotorSpeed(motor_speed_, MOTOR_MAX_, MOTOR_MIN_); 
+
     return motor_speed_;
 }
 
-bool OdomControl::hasZeroHistory(const std::vector<float>& vel_history)
+char OdomControl::PID(double error, double dt)
+{
+    return char( P(error, dt) + I(error, dt) + D(error, dt));
+}
+
+double OdomControl::D(double error, double dt)
+{
+    return K_D_ * (velocity_history_[0]-velocity_history_[1]) / dt;
+}
+
+double OdomControl::I(double error, double dt)
+{
+    integral_value_ += (K_I_*error)*dt;
+    return integral_value_;
+}
+
+double OdomControl::P(double error, double dt)
+{
+    return error*K_P_;
+}
+
+bool OdomControl::hasZeroHistory(const std::vector<double>& vel_history)
 {
     float sum = fabs(vel_history[0] + vel_history[1] + vel_history[2]);
     if (sum < 0.001)
@@ -93,8 +126,20 @@ int OdomControl::boundMotorSpeed(int motor_speed, int max, int min)
     return motor_speed;
 }
 
+char OdomControl::deadbandOffset(char motor_speed, char deadband_offset)
+{
+    //Compensate for deadband 
+    if (motor_speed > 125) 
+    { 
+        motor_speed += deadband_offset; 
+    } 
+    else if (motor_speed < 125 ) 
+    { 
+        motor_speed -= deadband_offset; 
+    } 
+}
 
-void OdomControl::filter(float velocity, float dt)
+double OdomControl::filter(double velocity, double dt)
 {
     static double time = 0;
 
@@ -109,9 +154,7 @@ void OdomControl::filter(float velocity, float dt)
 
     //Check for impossible acceleration
     float accel = (velocity - velocity_history_[0]) / time;
-/*    ROS_INFO("%1.4f | %1.4f", time, right_time);
-    ROS_INFO("%3.4f | %3.4f", left_accel, right_accel);
-*/
+    
     if (fabs(velocity) > MAX_ACCEL_CUTOFF_)
     {
         skip_measurement_ = true;
@@ -125,6 +168,7 @@ void OdomControl::filter(float velocity, float dt)
         velocity_history_.insert(velocity_history_.begin(), velocity_filtered_);
         velocity_history_.pop_back();
     }
+    return velocity_filtered_;
 
     //for billinear transform
 /*    static std::vector<float>  right_x_history(3,0);
