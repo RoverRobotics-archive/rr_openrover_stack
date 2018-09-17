@@ -827,17 +827,20 @@ void OpenRover::serialManager()
             double dt = now_time-past_time;
             publishFastRateData();
             updateOdometry(); //Update openrover variables based on latest encoder readings
-            motor_speeds_commanded_[LEFT_MOTOR_INDEX_] = left_controller_.calculate(
-                left_vel_commanded_, left_vel_measured_, dt);
-            motor_speeds_commanded_[RIGHT_MOTOR_INDEX_] = right_controller_.calculate(
-                right_vel_commanded_, right_vel_measured_, dt);
+            char left_motor_speed = left_controller_.calculate(left_vel_commanded_, left_vel_measured_, dt);
+
+            motor_speeds_commanded_[LEFT_MOTOR_INDEX_] = left_motor_speed;
+
+            char right_motor_speed = right_controller_.calculate(right_vel_commanded_, right_vel_measured_, dt);
+            motor_speeds_commanded_[RIGHT_MOTOR_INDEX_] = right_motor_speed;
+            ROS_INFO("%c | %c", left_motor_speed, right_motor_speed);
             publishOdometry(left_vel_measured_, right_vel_measured_); //Publish new calculated odometry
             publishWheelVels(); //call after publishOdomEnc()
             publishMotorSpeeds();
         }
         else if ((serial_medium_buffer_.size()==0) && publish_med_rate_vals_)
         {
-            publishMedRateData();           
+            publishMedRateData();
         }
         else if ((serial_slow_buffer_.size()==0) && publish_slow_rate_vals_)
         {

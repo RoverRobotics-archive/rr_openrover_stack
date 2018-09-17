@@ -154,7 +154,7 @@ double OdomControl::filter(double velocity, double dt)
 
     //Check for impossible acceleration
     float accel = (velocity - velocity_history_[0]) / time;
-    
+
     if (fabs(velocity) > MAX_ACCEL_CUTOFF_)
     {
         skip_measurement_ = true;
