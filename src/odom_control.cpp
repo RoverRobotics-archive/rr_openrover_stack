@@ -64,6 +64,7 @@ char OdomControl::calculate(double commanded_vel, double measured_vel, double dt
     ROS_INFO("error_ = %3.3f", error_);
     if (!skip_measurement_) 
     {
+        ROS_INFO("Running PID loop");
         motor_speed_ = PID(error_, dt);
     }
 
@@ -81,7 +82,12 @@ char OdomControl::calculate(double commanded_vel, double measured_vel, double dt
 
 char OdomControl::PID(double error, double dt)
 {
-    return char( P(error, dt) + I(error, dt) + D(error, dt));
+    double p_val = P(error, dt);
+    double i_val = I(error, dt);
+    double d_val = D(error, dt);
+
+    ROS_INFO("%4.4f | %4.4f | %4.4f", p_val, i_val, d_val);
+    return char(p_val + i_val + d_val);
 }
 
 double OdomControl::D(double error, double dt)
