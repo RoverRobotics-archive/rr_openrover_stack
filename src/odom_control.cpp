@@ -4,6 +4,7 @@
 #include <cmath>
 #include <fstream>
 #include <iostream>
+#include "ros/ros.h"
 
 #include <rr_openrover_basic/odom_control.hpp>
 
@@ -60,7 +61,7 @@ char OdomControl::calculate(double commanded_vel, double measured_vel, double dt
 {
     velocity_filtered_ = filter(measured_vel, dt);
     error_ = commanded_vel - velocity_filtered_;
-
+    ROS_INFO("error_ = %3.3f", error_);
     if (!skip_measurement_) 
     {
         motor_speed_ = PID(error_, dt);
@@ -68,6 +69,7 @@ char OdomControl::calculate(double commanded_vel, double measured_vel, double dt
 
     if (hasZeroHistory(velocity_history_))
     {
+        ROS_INFO("Has zero history");
         motor_speed_ = MOTOR_NEUTRAL_;
     }
 
