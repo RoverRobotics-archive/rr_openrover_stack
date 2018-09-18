@@ -95,6 +95,18 @@ unsigned char OdomControl::calculate(double commanded_vel, double measured_vel, 
     return (unsigned char) motor_speed_;
 }
 
+void OdomControl::reset()
+{
+    integral_value_ = 0;
+    error_ = 0;
+    velocity_commanded_ = 0;
+    velocity_measured_ = 0;
+    velocity_filtered_ = 0;
+    std::fill(velocity_history_.begin(), velocity_history_.end(), 0);
+    motor_speed_ = 0;
+    skip_measurement_ = false;
+}
+
 int OdomControl::PID(double error, double dt)
 {
     double p_val = P(error, dt);

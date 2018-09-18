@@ -860,10 +860,16 @@ void OpenRover::serialManager()
             past_time = now_time;
             publishFastRateData();
             updateOdometry(); //Update openrover variables based on latest encoder readings
-            if (!e_stop_on_)
+            
+            unsigned char left_motor_speed = left_controller_.calculate(left_vel_commanded_, left_vel_measured_, dt);
+            unsigned char right_motor_speed = right_controller_.calculate(right_vel_commanded_, right_vel_measured_, dt);
+            if (e_stop_on_)
             {
-                unsigned char left_motor_speed = left_controller_.calculate(left_vel_commanded_, left_vel_measured_, dt);
-                unsigned char right_motor_speed = right_controller_.calculate(right_vel_commanded_, right_vel_measured_, dt);
+                left_controller_.reset();
+                right_controller_.reset();
+            }
+            else
+            {
                 motor_speeds_commanded_[LEFT_MOTOR_INDEX_] = left_motor_speed;
                 motor_speeds_commanded_[RIGHT_MOTOR_INDEX_] = right_motor_speed;
             }

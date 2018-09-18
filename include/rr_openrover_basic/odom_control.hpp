@@ -15,7 +15,7 @@ public:
     //OdomControl();
 
     unsigned char calculate(double linear_velocity_, double measured_velocity_, double dt); //in m/s
-
+    void reset();
     const int MOTOR_NEUTRAL_; // 125
     const int MOTOR_MAX_; // 250
     const int MOTOR_MIN_; // 0
