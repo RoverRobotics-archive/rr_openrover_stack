@@ -11,10 +11,9 @@ namespace openrover {
 class OdomControl
 {
 public:
-    OdomControl(bool use_control, double Kp, double Ki,
-        double Kd, char max, char min, std::string log_filename); //max min values for returned value
-    OdomControl(bool use_control, double Kp, double Ki,
-        double Kd, char max, char min); //, std::string log_filename); //max min values for returned value
+    OdomControl(bool use_control, double Kp, double Ki, double Kd, char max, char min, std::string log_filename); //max min values for returned value
+    OdomControl(bool use_control, double Kp, double Ki, double Kd, char max, char min); //max min values for returned value
+    OdomControl();
 
     char calculate(double linear_velocity_, double measured_velocity_, double dt); //in m/s
 

@@ -107,16 +107,10 @@ private:
     float right_vel_measured_;
     float left_vel_filtered_;
     float right_vel_filtered_;
-    std::vector<float> left_vel_history_;
-    std::vector<float> right_vel_history_;
     bool velocity_control_on_;
-    float K_P_;
-    float K_I_;
-    float K_D_;
-    float left_err_;
-    float right_err_;
-    bool skip_left_vel_;
-    bool skip_right_vel_;
+    double K_P_;
+    double K_I_;
+    double K_D_;
 
     int motor_speed_linear_coef_;
     int motor_speed_angular_coef_;

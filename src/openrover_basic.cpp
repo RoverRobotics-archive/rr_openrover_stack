@@ -84,10 +84,10 @@ const int MOTOR_FLIPPER_COEF = 100;
 const float ODOM_SMOOTHING = 50.0;
 
 const float WEIGHT_COMPENSATION_FACTOR = 10.0;
-const int MOTOR_DEADBAND = 9;
-const int MOTOR_NEUTRAL = 125;
-const int MOTOR_SPEED_MAX = 250;
-const int MOTOR_SPEED_MIN = 0;
+const char MOTOR_DEADBAND = 9;
+const char MOTOR_NEUTRAL = 125;
+const char MOTOR_SPEED_MAX = 250;
+const char MOTOR_SPEED_MIN = 0;
 const int MOTOR_DIFF_MAX = 200; //Max command difference between left and
 // right motors in low speed mode, prevents overcurrent
 
@@ -165,8 +165,6 @@ OpenRover::OpenRover( ros::NodeHandle &_nh, ros::NodeHandle &_nh_priv ) :
     K_P_(80), //old val 40.5
     K_I_(200),//2029.617 //1056.52), //old val 97.2
     K_D_(0),
-    left_controller_(velocity_control_on_, K_P_, K_I_, K_D_, MOTOR_SPEED_MAX, MOTOR_SPEED_MIN),// std::string("tuning_dataL.csv")),
-    right_controller_(velocity_control_on_, K_P_, K_I_, K_D_, MOTOR_SPEED_MAX, MOTOR_SPEED_MIN),// std::string("tuning_dataR.csv")),
 
     /* K_P_(80), //old val 40.5
     K_I_(200),//2029.617 //1056.52), //old val 97.2
@@ -190,6 +188,8 @@ OpenRover::OpenRover( ros::NodeHandle &_nh, ros::NodeHandle &_nh_priv ) :
     //nh_priv.param( "port", port_, (std::string)"/dev/ttyUSB0" );
     //nh_priv.param( "baud", baud_, 57600 );
     global_file << "time,left_filtered,left_measured,left_commanded,right_filtered,right_measured,right_commanded" << std::endl;
+    OdomControl left_controller_ (velocity_control_on_, K_P_, K_I_, K_D_, MOTOR_SPEED_MAX, MOTOR_SPEED_MIN);// std::string("tuning_dataL.csv")),
+    OdomControl right_controller_ (velocity_control_on_, K_P_, K_I_, K_D_, MOTOR_SPEED_MAX, MOTOR_SPEED_MIN);// std::string("tuning_dataR.csv")),
     
     serial_fast_buffer_.reserve(10*FAST_SIZE); //reserve space for 5 sets of FAST rate data
     serial_medium_buffer_.reserve(10*MEDIUM_SIZE); //reserve space for 5 sets of Medium rate data
@@ -634,7 +634,7 @@ void OpenRover::publishOdometry(float left_vel, float right_vel)
     odom_enc_pub.publish(odom_msg);
 }
 
-void OpenRover::publishWheelVels()
+void OpenRover::publishWheelVels() //Update to publish from OdomControl
 {
     static ros::Time ros_start_time = ros::Time::now();
     ros::Time ros_now_time = ros::Time::now();

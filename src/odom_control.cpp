@@ -33,9 +33,7 @@ OdomControl::OdomControl(bool use_control, double Kp, double Ki,
 {
 }
 
-OdomControl::OdomControl(bool use_control, double Kp, double Ki, 
-        double Kd, char max, char min) :
-
+OdomControl::OdomControl(bool use_control, double Kp, double Ki, double Kd, char max, char min) :
     MOTOR_NEUTRAL_(125),
     MOTOR_MAX_(250),
     MOTOR_MIN_(0),
@@ -56,6 +54,17 @@ OdomControl::OdomControl(bool use_control, double Kp, double Ki,
     integral_value_(0)
 {
 }
+
+OdomControl::OdomControl() :
+    MOTOR_NEUTRAL_(125),
+    MOTOR_MAX_(250),
+    MOTOR_MIN_(0),
+    MOTOR_DEADBAND_(9),
+    MAX_ACCEL_CUTOFF_(20.0),
+    MIN_VELOCITY_(0.03),
+    MAX_VELOCITY_(3)
+    {}
+
 
 char OdomControl::calculate(double commanded_vel, double measured_vel, double dt)
 {
@@ -103,6 +112,8 @@ double OdomControl::I(double error, double dt)
 
 double OdomControl::P(double error, double dt)
 {
+    double p_val = error*K_P_;
+    ROS_INFO("P: %4.4f | e: %4.4f | Kp: %4.4f", p_val, error, K_P_);
     return error*K_P_;
 }
 
