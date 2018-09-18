@@ -149,6 +149,10 @@ const int SLOW_SIZE = sizeof(ROBOT_DATA_INDEX_SLOW)/sizeof(ROBOT_DATA_INDEX_SLOW
 
 std::ofstream global_file ("tuning_data.csv");
 
+const double K_P = 80;
+const double K_I = 200;
+const double K_D = 0;
+
 OpenRover::OpenRover( ros::NodeHandle &_nh, ros::NodeHandle &_nh_priv ) :
     port_("/dev/ttyUSB0"),
     baud_(57600),
@@ -162,11 +166,11 @@ OpenRover::OpenRover( ros::NodeHandle &_nh, ros::NodeHandle &_nh_priv ) :
     publish_slow_rate_vals_(false),
     low_speed_mode_on_(true),
     velocity_control_on_(true),
-    K_P_(80), //old val 40.5
-    K_I_(200),//2029.617 //1056.52), //old val 97.2
-    K_D_(0),
-    left_controller_ (velocity_control_on_, K_P_, K_I_, K_D_, MOTOR_SPEED_MAX, MOTOR_SPEED_MIN),
-    right_controller_ (velocity_control_on_, K_P_, K_I_, K_D_, MOTOR_SPEED_MAX, MOTOR_SPEED_MIN),
+    K_P_(K_P), //old val 40.5
+    K_I_(K_I),//2029.617 //1056.52), //old val 97.2
+    K_D_(K_D),
+    left_controller_ (velocity_control_on_, K_P, K_I, K_D, MOTOR_SPEED_MAX, MOTOR_SPEED_MIN),
+    right_controller_ (velocity_control_on_, K_P, K_I, K_D, MOTOR_SPEED_MAX, MOTOR_SPEED_MIN),
 
     /* K_P_(80), //old val 40.5
     K_I_(200),//2029.617 //1056.52), //old val 97.2
