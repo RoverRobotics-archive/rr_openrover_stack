@@ -25,8 +25,8 @@ public:
     OpenRover( ros::NodeHandle &_nh, ros::NodeHandle &_nh_priv );
     /*OpenRover(std::string port_, std::string drive_type_, bool enable_timeout_, float total_weight_,
         float slippage_factor_, float odom_covariance_0_, float odom_covariance_35_);*/
-    OdomControl left_controller_; //(bool use_control, double Kp, double Ki, double Kd, char max, char min); //, std::string log_filename);
-    OdomControl right_controller_; //(bool use_control, double Kp, double Ki, double Kd, char max, char min); //, std::string log_filename);
+    OdomControl left_controller_; //(bool use_control, double Kp, double Ki, double Kd, char max, char min);
+    OdomControl right_controller_; //(bool use_control, double Kp, double Ki, double Kd, char max, char min);
 
     bool start();
     bool openComs();

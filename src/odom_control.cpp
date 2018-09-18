@@ -55,7 +55,7 @@ OdomControl::OdomControl(bool use_control, double Kp, double Ki, double Kd, char
 {
 }
 
-OdomControl::OdomControl() :
+/*OdomControl::OdomControl() :
     MOTOR_NEUTRAL_(125),
     MOTOR_MAX_(250),
     MOTOR_MIN_(0),
@@ -64,7 +64,7 @@ OdomControl::OdomControl() :
     MIN_VELOCITY_(0.03),
     MAX_VELOCITY_(3)
     {}
-
+*/
 
 char OdomControl::calculate(double commanded_vel, double measured_vel, double dt)
 {
@@ -177,7 +177,7 @@ double OdomControl::filter(double velocity, double dt)
     if (fabs(velocity) > MAX_ACCEL_CUTOFF_)
     {
         skip_measurement_ = true;
-        throw std::string("Skipping left encoder reading");
+        //throw std::string("Skipping encoder reading");
     }
     else
     {

@@ -165,6 +165,8 @@ OpenRover::OpenRover( ros::NodeHandle &_nh, ros::NodeHandle &_nh_priv ) :
     K_P_(80), //old val 40.5
     K_I_(200),//2029.617 //1056.52), //old val 97.2
     K_D_(0),
+    left_controller_ (velocity_control_on_, K_P_, K_I_, K_D_, MOTOR_SPEED_MAX, MOTOR_SPEED_MIN),
+    right_controller_ (velocity_control_on_, K_P_, K_I_, K_D_, MOTOR_SPEED_MAX, MOTOR_SPEED_MIN),
 
     /* K_P_(80), //old val 40.5
     K_I_(200),//2029.617 //1056.52), //old val 97.2
@@ -188,8 +190,8 @@ OpenRover::OpenRover( ros::NodeHandle &_nh, ros::NodeHandle &_nh_priv ) :
     //nh_priv.param( "port", port_, (std::string)"/dev/ttyUSB0" );
     //nh_priv.param( "baud", baud_, 57600 );
     global_file << "time,left_filtered,left_measured,left_commanded,right_filtered,right_measured,right_commanded" << std::endl;
-    OdomControl left_controller_ (velocity_control_on_, K_P_, K_I_, K_D_, MOTOR_SPEED_MAX, MOTOR_SPEED_MIN);// std::string("tuning_dataL.csv")),
-    OdomControl right_controller_ (velocity_control_on_, K_P_, K_I_, K_D_, MOTOR_SPEED_MAX, MOTOR_SPEED_MIN);// std::string("tuning_dataR.csv")),
+    //OdomControl left_controller_ (velocity_control_on_, K_P_, K_I_, K_D_, MOTOR_SPEED_MAX, MOTOR_SPEED_MIN);// std::string("tuning_dataL.csv")),
+    //OdomControl right_controller_ (velocity_control_on_, K_P_, K_I_, K_D_, MOTOR_SPEED_MAX, MOTOR_SPEED_MIN);// std::string("tuning_dataR.csv")),
     
     serial_fast_buffer_.reserve(10*FAST_SIZE); //reserve space for 5 sets of FAST rate data
     serial_medium_buffer_.reserve(10*MEDIUM_SIZE); //reserve space for 5 sets of Medium rate data
