@@ -69,16 +69,16 @@ OdomControl::OdomControl(bool use_control, double Kp, double Ki, double Kd, int 
 
 unsigned char OdomControl::calculate(double commanded_vel, double measured_vel, double dt)
 {
-    // If stopping, stop now
-    if ((commanded_vel == 0) && (measured_vel<0.1))
-    {
-        return (unsigned char) MOTOR_NEUTRAL_;
-    }
 
     if (hasZeroHistory(velocity_history_))
-    {
+    {    // If stopping, stop now
         ROS_INFO("Has zero history");
         integral_value_ = 0;
+        if (commanded_vel == 0)
+        {
+            velocity_filtered_ = filter(measured_vel, dt);
+            return (unsigned char) MOTOR_NEUTRAL_;
+        }
     }
 
     velocity_filtered_ = filter(measured_vel, dt);
@@ -139,8 +139,8 @@ double OdomControl::P(double error, double dt)
 
 bool OdomControl::hasZeroHistory(const std::vector<double>& vel_history)
 {
-    float sum = fabs(vel_history[0] + vel_history[1] + vel_history[2]);
-    if (sum < 0.01)
+    double avg = (fabs(vel_history[0]) + fabs(vel_history[1]) + fabs(vel_history[2]))/3.0;
+    if (avg < 0.03)
         return true;
     else
         return false;
