@@ -430,6 +430,7 @@ void OpenRover::robotDataSlowCB(const ros::WallTimerEvent &e)
         serial_slow_buffer_.push_back(ROBOT_DATA_INDEX_SLOW[i]);
     }
     publish_slow_rate_vals_ = true;
+    return;
 }
 
 void OpenRover::robotDataMediumCB(const ros::WallTimerEvent &e)
@@ -440,6 +441,7 @@ void OpenRover::robotDataMediumCB(const ros::WallTimerEvent &e)
         serial_medium_buffer_.push_back(ROBOT_DATA_INDEX_MEDIUM[i]);
     }
     publish_med_rate_vals_ = true;
+    return;
 }
 
 void OpenRover::robotDataFastCB(const ros::WallTimerEvent &e)
@@ -450,13 +452,15 @@ void OpenRover::robotDataFastCB(const ros::WallTimerEvent &e)
         serial_fast_buffer_.push_back(ROBOT_DATA_INDEX_FAST[i]);
     }
     publish_fast_rate_vals_ = true;
+    return;
 }
 
 void OpenRover::timeoutCB(const ros::WallTimerEvent &e)
 {//Timer goes off when a command isn't received soon enough. Sets motors to neutral values
-    motor_speeds_commanded_[LEFT_MOTOR_INDEX_] = (unsigned char)MOTOR_NEUTRAL;
-    motor_speeds_commanded_[RIGHT_MOTOR_INDEX_] = (unsigned char)MOTOR_NEUTRAL;
-    motor_speeds_commanded_[FLIPPER_MOTOR_INDEX_] = (unsigned char)MOTOR_NEUTRAL;
+    motor_speeds_commanded_[LEFT_MOTOR_INDEX_] = MOTOR_NEUTRAL;
+    motor_speeds_commanded_[RIGHT_MOTOR_INDEX_] = MOTOR_NEUTRAL;
+    motor_speeds_commanded_[FLIPPER_MOTOR_INDEX_] = MOTOR_NEUTRAL;
+    return;
 }
 
 void OpenRover::cmdVelCB(const geometry_msgs::TwistStamped::ConstPtr& msg)
@@ -468,6 +472,7 @@ void OpenRover::cmdVelCB(const geometry_msgs::TwistStamped::ConstPtr& msg)
     double turn_rate = msg->twist.angular.z;
     double linear_rate = msg->twist.linear.x;
     double flipper_rate = msg->twist.angular.y;
+    std::string frame_id = msg->header.frame_id;
     bool is_moving_forward, is_turning_cw, is_stationary, is_zero_point_turn;
 
     double diff_vel_commanded = turn_rate/odom_angular_coef_;
@@ -476,6 +481,20 @@ void OpenRover::cmdVelCB(const geometry_msgs::TwistStamped::ConstPtr& msg)
     left_vel_commanded_ = linear_rate - 0.5*diff_vel_commanded;
 
     timeout_timer.stop();
+
+    if (frame_id == (std::string) "soft e-stopped")
+    {
+        e_stop_on_ = true;
+        motor_speeds_commanded_[FLIPPER_MOTOR_INDEX_] = MOTOR_NEUTRAL;
+        motor_speeds_commanded_[LEFT_MOTOR_INDEX_] = MOTOR_NEUTRAL;
+        motor_speeds_commanded_[RIGHT_MOTOR_INDEX_] = MOTOR_NEUTRAL;
+        return;
+    }
+    else
+    {
+        e_stop_on_ = false;
+    }
+
     if ((linear_rate == 0) && (turn_rate != 0))
     {
         is_zero_point_turn = true;
@@ -571,6 +590,7 @@ void OpenRover::cmdVelCB(const geometry_msgs::TwistStamped::ConstPtr& msg)
         motor_speeds_commanded_[RIGHT_MOTOR_INDEX_] = (unsigned char)right_motor_speed;
     }
     timeout_timer.start();
+    return;
 }
 
 void OpenRover::publishOdometry(float left_vel, float right_vel)
@@ -638,6 +658,7 @@ void OpenRover::publishOdometry(float left_vel, float right_vel)
     odom_msg.pose.pose.position.y = pos_y;
     
     odom_enc_pub.publish(odom_msg);
+    return;
 }
 
 void OpenRover::publishWheelVels() //Update to publish from OdomControl
@@ -668,6 +689,7 @@ void OpenRover::publishWheelVels() //Update to publish from OdomControl
         }
          global_file << std::endl;
     }*/
+    return;
 }
 
 void OpenRover::publishFastRateData()
@@ -682,6 +704,7 @@ void OpenRover::publishFastRateData()
     msg.flipper_motor = robot_data_[i_ENCODER_INTERVAL_MOTOR_FLIPPER];
     fast_rate_pub.publish(msg);
     publish_fast_rate_vals_ = false;
+    return;
 }
 
 void OpenRover::publishMedRateData()
@@ -718,6 +741,7 @@ void OpenRover::publishMedRateData()
     
     medium_rate_pub.publish(med_msg);
     publish_med_rate_vals_ = false;
+    return;
 }
 
 void OpenRover::publishSlowRateData()
@@ -738,6 +762,7 @@ void OpenRover::publishSlowRateData()
     
     slow_rate_pub.publish(slow_msg);
     publish_slow_rate_vals_ = false;
+    return;
 }
 
 void OpenRover::publishMotorSpeeds()
@@ -749,6 +774,7 @@ void OpenRover::publishMotorSpeeds()
     motor_speeds_msg.data.push_back(motor_speeds_commanded_[FLIPPER_MOTOR_INDEX_]);
 
     motor_speeds_pub.publish(motor_speeds_msg);
+    return;
 }
 
 void OpenRover::serialManager()
@@ -834,13 +860,13 @@ void OpenRover::serialManager()
             past_time = now_time;
             publishFastRateData();
             updateOdometry(); //Update openrover variables based on latest encoder readings
-            unsigned char left_motor_speed = left_controller_.calculate(left_vel_commanded_, left_vel_measured_, dt);
-
-            motor_speeds_commanded_[LEFT_MOTOR_INDEX_] = left_motor_speed;
-
-            unsigned char right_motor_speed = right_controller_.calculate(right_vel_commanded_, right_vel_measured_, dt);
-            motor_speeds_commanded_[RIGHT_MOTOR_INDEX_] = right_motor_speed;
-            //ROS_INFO("%i | %i", left_motor_speed, right_motor_speed);
+            if (!e_stop_on_)
+            {
+                unsigned char left_motor_speed = left_controller_.calculate(left_vel_commanded_, left_vel_measured_, dt);
+                unsigned char right_motor_speed = right_controller_.calculate(right_vel_commanded_, right_vel_measured_, dt);
+                motor_speeds_commanded_[LEFT_MOTOR_INDEX_] = left_motor_speed;
+                motor_speeds_commanded_[RIGHT_MOTOR_INDEX_] = right_motor_speed;
+            }
             publishOdometry(left_vel_measured_, right_vel_measured_); //Publish new calculated odometry
             publishWheelVels(); //call after publishOdomEnc()
             publishMotorSpeeds();
@@ -854,6 +880,7 @@ void OpenRover::serialManager()
             publishSlowRateData();
         }
     }
+    return;
 }
 
 void OpenRover::updateOdometry()
@@ -892,6 +919,7 @@ void OpenRover::updateOdometry()
     {
         right_vel_measured_ = 0;
     }
+    return;
 }
 
 void OpenRover::updateRobotData(int param)
@@ -912,6 +940,7 @@ void OpenRover::updateRobotData(int param)
         sprintf(str_ex, "Failed to update param %i. ", param);
         throw std::string(str_ex) + s;
     }
+    return;
 }
 
 bool OpenRover::sendCommand(int param1, int param2)

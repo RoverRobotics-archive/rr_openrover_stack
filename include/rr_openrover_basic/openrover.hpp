@@ -44,6 +44,7 @@ public:
     bool publish_med_rate_vals_;
     bool publish_slow_rate_vals_;
     bool low_speed_mode_on_;
+    bool e_stop_on_;
 
 private:
     //.csv Debuggin
@@ -83,7 +84,7 @@ private:
     int fd;
     int robot_data_[50]; //stores all received data from robot
     int is_charging_;
-    unsigned char motor_speeds_commanded_[3]; //stores most recent commanded motor speeds
+    int motor_speeds_commanded_[3]; //stores most recent commanded motor speeds
     const int LEFT_MOTOR_INDEX_;
     const int RIGHT_MOTOR_INDEX_;
     const int FLIPPER_MOTOR_INDEX_;
