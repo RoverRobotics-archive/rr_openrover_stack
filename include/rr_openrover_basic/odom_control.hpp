@@ -11,16 +11,16 @@ namespace openrover {
 class OdomControl
 {
 public:
-    OdomControl(bool use_control, double Kp, double Ki, double Kd, char max, char min, std::string log_filename); //max min values for returned value
-    OdomControl(bool use_control, double Kp, double Ki, double Kd, char max, char min); //max min values for returned value
+    OdomControl(bool use_control, double Kp, double Ki, double Kd, int max, int min, std::string log_filename); //max min values for returned value
+    OdomControl(bool use_control, double Kp, double Ki, double Kd, int max, int min); //max min values for returned value
     //OdomControl();
 
-    char calculate(double linear_velocity_, double measured_velocity_, double dt); //in m/s
+    unsigned char calculate(double linear_velocity_, double measured_velocity_, double dt); //in m/s
 
-    const char MOTOR_NEUTRAL_; // 125
-    const char MOTOR_MAX_; // 250
-    const char MOTOR_MIN_; // 0
-    const char MOTOR_DEADBAND_;// = 9;
+    const int MOTOR_NEUTRAL_; // 125
+    const int MOTOR_MAX_; // 250
+    const int MOTOR_MIN_; // 0
+    const int MOTOR_DEADBAND_;// = 9;
 
     const double MAX_ACCEL_CUTOFF_; //20
     const double MIN_VELOCITY_; //0.04
@@ -32,6 +32,7 @@ public:
     //Can poll these values to see if motor speed is saturating
     bool at_max_motor_speed_;
     bool at_min_motor_speed_;
+    bool stop_integrating_;
 
     std::string log_filename;
 
@@ -45,8 +46,8 @@ public:
     double integral_value_;
 
     //Returned value
-    char motor_speed_; //char value between 0 and 250
-    char deadband_offset_;
+    int motor_speed_; //
+    unsigned char deadband_offset_;
 
     //velocity feedback
     double velocity_commanded_;
@@ -63,11 +64,11 @@ private:
     double filter(double left_motor_vel, double dt);
     bool hasZeroHistory(const std::vector<double>& vel_history);
     int boundMotorSpeed(int motor_speed, int max, int min);
-    char deadbandOffset(char motor_speed, char deadband_offset);
+    int deadbandOffset(int motor_speed, int deadband_offset);
     double P(double error, double dt);
     double I(double error, double dt);
     double D(double error, double dt);
-    char PID(double error, double dt);
+    int PID(double error, double dt);
 };
 
 }

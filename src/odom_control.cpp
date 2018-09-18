@@ -11,7 +11,7 @@
 namespace openrover {
 
 OdomControl::OdomControl(bool use_control, double Kp, double Ki, 
-        double Kd, char max, char min, std::string log_filename) :
+        double Kd, int max, int min, std::string log_filename) :
 
     MOTOR_NEUTRAL_(125),
     MOTOR_MAX_(250),
@@ -33,7 +33,7 @@ OdomControl::OdomControl(bool use_control, double Kp, double Ki,
 {
 }
 
-OdomControl::OdomControl(bool use_control, double Kp, double Ki, double Kd, char max, char min) :
+OdomControl::OdomControl(bool use_control, double Kp, double Ki, double Kd, int max, int min) :
     MOTOR_NEUTRAL_(125),
     MOTOR_MAX_(250),
     MOTOR_MIN_(0),
@@ -50,6 +50,7 @@ OdomControl::OdomControl(bool use_control, double Kp, double Ki, double Kd, char
     skip_measurement_(false),
     at_max_motor_speed_(false),
     at_min_motor_speed_(false),
+    stop_integrating_(false),
     error_(0),
     integral_value_(0)
 {
@@ -66,37 +67,53 @@ OdomControl::OdomControl(bool use_control, double Kp, double Ki, double Kd, char
     {}
 */
 
-char OdomControl::calculate(double commanded_vel, double measured_vel, double dt)
+unsigned char OdomControl::calculate(double commanded_vel, double measured_vel, double dt)
 {
+    // If stopping, stop now
+    if ((commanded_vel == 0) && (measured_vel<0.1))
+    {
+        return (unsigned char) MOTOR_NEUTRAL_;
+    }
+
+    if (hasZeroHistory(velocity_history_))
+    {
+        ROS_INFO("Has zero history");
+        integral_value_ = 0;
+    }
+
     velocity_filtered_ = filter(measured_vel, dt);
     error_ = commanded_vel - velocity_filtered_;
-    ROS_INFO("error_ = %3.3f", error_);
+    //ROS_INFO("error_ = %3.3f", error_);
     if (!skip_measurement_) 
     {
         motor_speed_ = PID(error_, dt);
         ROS_INFO("Running PID loop. Returned %i", motor_speed_);
     }
 
-    if (hasZeroHistory(velocity_history_))
-    {
-        ROS_INFO("Has zero history");
-        motor_speed_ = MOTOR_NEUTRAL_;
-    }
-
     motor_speed_ = deadbandOffset(motor_speed_, MOTOR_DEADBAND_);
     motor_speed_ = boundMotorSpeed(motor_speed_, MOTOR_MAX_, MOTOR_MIN_); 
 
-    return motor_speed_;
+    return (unsigned char) motor_speed_;
 }
 
-char OdomControl::PID(double error, double dt)
+int OdomControl::PID(double error, double dt)
 {
     double p_val = P(error, dt);
     double i_val = I(error, dt);
     double d_val = D(error, dt);
+    double pid_val = p_val + i_val + d_val;
+
+    if (fabs(pid_val) > 125)
+    {
+        stop_integrating_ = true;
+    }
+    else
+    {
+        stop_integrating_ = false;
+    }
 
     ROS_INFO("%4.4f | %4.4f | %4.4f | err: %4.4f | dt: %4.4f", p_val, i_val, d_val, error, dt);
-    return char(p_val + i_val + d_val + 125.0);
+    return (int)round(pid_val + 125.0);
 }
 
 double OdomControl::D(double error, double dt)
@@ -106,7 +123,10 @@ double OdomControl::D(double error, double dt)
 
 double OdomControl::I(double error, double dt)
 {
-    integral_value_ += (K_I_*error)*dt;
+    if (!stop_integrating_)
+    {
+        integral_value_ += (K_I_*error)*dt;
+    }
     return integral_value_;
 }
 
@@ -120,7 +140,7 @@ double OdomControl::P(double error, double dt)
 bool OdomControl::hasZeroHistory(const std::vector<double>& vel_history)
 {
     float sum = fabs(vel_history[0] + vel_history[1] + vel_history[2]);
-    if (sum < 0.001)
+    if (sum < 0.01)
         return true;
     else
         return false;
@@ -145,7 +165,7 @@ int OdomControl::boundMotorSpeed(int motor_speed, int max, int min)
     return motor_speed;
 }
 
-char OdomControl::deadbandOffset(char motor_speed, char deadband_offset)
+int OdomControl::deadbandOffset(int motor_speed, int deadband_offset)
 {
     //Compensate for deadband 
     if (motor_speed > 125) 

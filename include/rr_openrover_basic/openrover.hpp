@@ -25,8 +25,8 @@ public:
     OpenRover( ros::NodeHandle &_nh, ros::NodeHandle &_nh_priv );
     /*OpenRover(std::string port_, std::string drive_type_, bool enable_timeout_, float total_weight_,
         float slippage_factor_, float odom_covariance_0_, float odom_covariance_35_);*/
-    OdomControl left_controller_; //(bool use_control, double Kp, double Ki, double Kd, char max, char min);
-    OdomControl right_controller_; //(bool use_control, double Kp, double Ki, double Kd, char max, char min);
+    OdomControl left_controller_; //(bool use_control, double Kp, double Ki, double Kd, unsigned char max, unsigned char min);
+    OdomControl right_controller_; //(bool use_control, double Kp, double Ki, double Kd, unsigned char max, unsigned char min);
 
     bool start();
     bool openComs();
@@ -83,7 +83,7 @@ private:
     int fd;
     int robot_data_[50]; //stores all received data from robot
     int is_charging_;
-    char motor_speeds_commanded_[3]; //stores most recent commanded motor speeds
+    unsigned char motor_speeds_commanded_[3]; //stores most recent commanded motor speeds
     const int LEFT_MOTOR_INDEX_;
     const int RIGHT_MOTOR_INDEX_;
     const int FLIPPER_MOTOR_INDEX_;
@@ -124,9 +124,9 @@ private:
     //int motor_speed_diff_max_; ---WIP
     geometry_msgs::Twist cmd_vel_commanded_;
 
-    std::vector<char> serial_fast_buffer_;
-    std::vector<char> serial_medium_buffer_;
-    std::vector<char> serial_slow_buffer_;
+    std::vector<unsigned char> serial_fast_buffer_;
+    std::vector<unsigned char> serial_medium_buffer_;
+    std::vector<unsigned char> serial_slow_buffer_;
 
     //ROS Subscriber callback functions
     void cmdVelCB(const geometry_msgs::TwistStamped::ConstPtr& msg);

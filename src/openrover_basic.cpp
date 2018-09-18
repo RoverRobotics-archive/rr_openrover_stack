@@ -23,7 +23,7 @@
 
 namespace openrover {
 
-const int SERIAL_START_BYTE = 253;
+const unsigned char SERIAL_START_BYTE = 253;
 const int SERIAL_OUT_PACKAGE_LENGTH = 7;
 const int SERIAL_IN_PACKAGE_LENGTH = 5;
 const int LOOP_RATE = 1000; //microseconds between serial manager calls
@@ -84,10 +84,10 @@ const int MOTOR_FLIPPER_COEF = 100;
 const float ODOM_SMOOTHING = 50.0;
 
 const float WEIGHT_COMPENSATION_FACTOR = 10.0;
-const char MOTOR_DEADBAND = 9;
-const char MOTOR_NEUTRAL = 125;
-const char MOTOR_SPEED_MAX = 250;
-const char MOTOR_SPEED_MIN = 0;
+const int MOTOR_DEADBAND = 9;
+const int MOTOR_NEUTRAL = 125;
+const int MOTOR_SPEED_MAX = 250;
+const int MOTOR_SPEED_MIN = 0;
 const int MOTOR_DIFF_MAX = 200; //Max command difference between left and
 // right motors in low speed mode, prevents overcurrent
 
@@ -454,9 +454,9 @@ void OpenRover::robotDataFastCB(const ros::WallTimerEvent &e)
 
 void OpenRover::timeoutCB(const ros::WallTimerEvent &e)
 {//Timer goes off when a command isn't received soon enough. Sets motors to neutral values
-    motor_speeds_commanded_[LEFT_MOTOR_INDEX_] = (char)MOTOR_NEUTRAL;
-    motor_speeds_commanded_[RIGHT_MOTOR_INDEX_] = (char)MOTOR_NEUTRAL;
-    motor_speeds_commanded_[FLIPPER_MOTOR_INDEX_] = (char)MOTOR_NEUTRAL;
+    motor_speeds_commanded_[LEFT_MOTOR_INDEX_] = (unsigned char)MOTOR_NEUTRAL;
+    motor_speeds_commanded_[RIGHT_MOTOR_INDEX_] = (unsigned char)MOTOR_NEUTRAL;
+    motor_speeds_commanded_[FLIPPER_MOTOR_INDEX_] = (unsigned char)MOTOR_NEUTRAL;
 }
 
 void OpenRover::cmdVelCB(const geometry_msgs::TwistStamped::ConstPtr& msg)
@@ -563,12 +563,12 @@ void OpenRover::cmdVelCB(const geometry_msgs::TwistStamped::ConstPtr& msg)
     }
 
     //Add most recent motor values to motor_speeds_commanded_[3] class variable if velocity_control_on_ is not true (open loop)
-    motor_speeds_commanded_[FLIPPER_MOTOR_INDEX_] = (char)flipper_motor_speed;
+    motor_speeds_commanded_[FLIPPER_MOTOR_INDEX_] = (unsigned char)flipper_motor_speed;
     if (!velocity_control_on_)
     {
         ROS_INFO("shouldnt see this");
-        motor_speeds_commanded_[LEFT_MOTOR_INDEX_] = (char)left_motor_speed;
-        motor_speeds_commanded_[RIGHT_MOTOR_INDEX_] = (char)right_motor_speed;
+        motor_speeds_commanded_[LEFT_MOTOR_INDEX_] = (unsigned char)left_motor_speed;
+        motor_speeds_commanded_[RIGHT_MOTOR_INDEX_] = (unsigned char)right_motor_speed;
     }
     timeout_timer.start();
 }
@@ -753,8 +753,8 @@ void OpenRover::publishMotorSpeeds()
 
 void OpenRover::serialManager()
 {//sends serial commands stored in the 3 buffers in order of speed with fast getting highest priority
-    char param1;
-    char param2;
+    unsigned char param1;
+    unsigned char param2;
     static double past_time = 0;
 
     while ((serial_fast_buffer_.size()>1) || (serial_medium_buffer_.size()>1) || (serial_slow_buffer_.size()>1))
@@ -834,11 +834,11 @@ void OpenRover::serialManager()
             past_time = now_time;
             publishFastRateData();
             updateOdometry(); //Update openrover variables based on latest encoder readings
-            char left_motor_speed = left_controller_.calculate(left_vel_commanded_, left_vel_measured_, dt);
+            unsigned char left_motor_speed = left_controller_.calculate(left_vel_commanded_, left_vel_measured_, dt);
 
             motor_speeds_commanded_[LEFT_MOTOR_INDEX_] = left_motor_speed;
 
-            char right_motor_speed = right_controller_.calculate(right_vel_commanded_, right_vel_measured_, dt);
+            unsigned char right_motor_speed = right_controller_.calculate(right_vel_commanded_, right_vel_measured_, dt);
             motor_speeds_commanded_[RIGHT_MOTOR_INDEX_] = right_motor_speed;
             ROS_INFO("%i | %i", left_motor_speed, right_motor_speed);
             publishOdometry(left_vel_measured_, right_vel_measured_); //Publish new calculated odometry
@@ -919,13 +919,13 @@ bool OpenRover::sendCommand(int param1, int param2)
     unsigned char write_buffer[SERIAL_OUT_PACKAGE_LENGTH];
     
     write_buffer[0] = SERIAL_START_BYTE;
-    write_buffer[1] = (char)motor_speeds_commanded_[LEFT_MOTOR_INDEX_]; //left motor
-    write_buffer[2] = (char)motor_speeds_commanded_[RIGHT_MOTOR_INDEX_]; //right motor
-    write_buffer[3] = (char)motor_speeds_commanded_[FLIPPER_MOTOR_INDEX_]; //flipper
-    write_buffer[4] = (char)param1; //Param 1: 10 to get data, 240 for low speed mode 
-    write_buffer[5] = (char)param2; //Param 2:
+    write_buffer[1] = (unsigned char)motor_speeds_commanded_[LEFT_MOTOR_INDEX_]; //left motor
+    write_buffer[2] = (unsigned char)motor_speeds_commanded_[RIGHT_MOTOR_INDEX_]; //right motor
+    write_buffer[3] = (unsigned char)motor_speeds_commanded_[FLIPPER_MOTOR_INDEX_]; //flipper
+    write_buffer[4] = (unsigned char)param1; //Param 1: 10 to get data, 240 for low speed mode 
+    write_buffer[5] = (unsigned char)param2; //Param 2:
     //Calculate Checksum
-    write_buffer[6] = (char) 255-(write_buffer[1]+write_buffer[2]+write_buffer[3]+write_buffer[4]+write_buffer[5])%255;
+    write_buffer[6] = (unsigned char) 255-(write_buffer[1]+write_buffer[2]+write_buffer[3]+write_buffer[4]+write_buffer[5])%255;
     
     if (write(fd, write_buffer, SERIAL_OUT_PACKAGE_LENGTH)<SERIAL_OUT_PACKAGE_LENGTH)
     {
