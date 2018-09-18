@@ -566,7 +566,7 @@ void OpenRover::cmdVelCB(const geometry_msgs::TwistStamped::ConstPtr& msg)
     motor_speeds_commanded_[FLIPPER_MOTOR_INDEX_] = (unsigned char)flipper_motor_speed;
     if (!velocity_control_on_)
     {
-        ROS_INFO("shouldnt see this");
+        //ROS_INFO("shouldnt see this");
         motor_speeds_commanded_[LEFT_MOTOR_INDEX_] = (unsigned char)left_motor_speed;
         motor_speeds_commanded_[RIGHT_MOTOR_INDEX_] = (unsigned char)right_motor_speed;
     }
@@ -840,7 +840,7 @@ void OpenRover::serialManager()
 
             unsigned char right_motor_speed = right_controller_.calculate(right_vel_commanded_, right_vel_measured_, dt);
             motor_speeds_commanded_[RIGHT_MOTOR_INDEX_] = right_motor_speed;
-            ROS_INFO("%i | %i", left_motor_speed, right_motor_speed);
+            //ROS_INFO("%i | %i", left_motor_speed, right_motor_speed);
             publishOdometry(left_vel_measured_, right_vel_measured_); //Publish new calculated odometry
             publishWheelVels(); //call after publishOdomEnc()
             publishMotorSpeeds();

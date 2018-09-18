@@ -4,7 +4,7 @@
 #include <cmath>
 #include <fstream>
 #include <iostream>
-#include "ros/ros.h"
+//#include "ros/ros.h"
 
 #include <rr_openrover_basic/odom_control.hpp>
 
@@ -72,7 +72,6 @@ unsigned char OdomControl::calculate(double commanded_vel, double measured_vel, 
 
     if (hasZeroHistory(velocity_history_))
     {    // If stopping, stop now
-        ROS_INFO("Has zero history");
         integral_value_ = 0;
         if (commanded_vel == 0)
         {
@@ -87,7 +86,7 @@ unsigned char OdomControl::calculate(double commanded_vel, double measured_vel, 
     if (!skip_measurement_) 
     {
         motor_speed_ = PID(error_, dt);
-        ROS_INFO("Running PID loop. Returned %i", motor_speed_);
+        //ROS_INFO("Running PID loop. Returned %i", motor_speed_);
     }
 
     motor_speed_ = deadbandOffset(motor_speed_, MOTOR_DEADBAND_);
@@ -112,7 +111,7 @@ int OdomControl::PID(double error, double dt)
         stop_integrating_ = false;
     }
 
-    ROS_INFO("%4.4f | %4.4f | %4.4f | err: %4.4f | dt: %4.4f", p_val, i_val, d_val, error, dt);
+    //ROS_INFO("%4.4f | %4.4f | %4.4f | err: %4.4f | dt: %4.4f", p_val, i_val, d_val, error, dt);
     return (int)round(pid_val + 125.0);
 }
 
@@ -133,7 +132,7 @@ double OdomControl::I(double error, double dt)
 double OdomControl::P(double error, double dt)
 {
     double p_val = error*K_P_;
-    ROS_INFO("P: %4.4f | e: %4.4f | Kp: %4.4f", p_val, error, K_P_);
+    //ROS_INFO("P: %4.4f | e: %4.4f | Kp: %4.4f", p_val, error, K_P_);
     return error*K_P_;
 }
 

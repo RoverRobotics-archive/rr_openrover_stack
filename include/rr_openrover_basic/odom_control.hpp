@@ -5,7 +5,6 @@
 #include <vector>
 #include <string>
 
-
 namespace openrover {
 
 class OdomControl
