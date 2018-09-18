@@ -5,10 +5,13 @@
 #include <vector>
 #include <string>
 #include <cmath>
+#include <fstream>
+#include <iostream>
 
 #include "tf/tf.h"
 #include "std_msgs/Int32.h"
 #include "std_msgs/Int32MultiArray.h"
+#include "std_msgs/Float32MultiArray.h"
 #include "geometry_msgs/TwistStamped.h"
 #include <std_msgs/Bool.h>
 #include "nav_msgs/Odometry.h"
@@ -18,7 +21,9 @@
 
 #include "rr_openrover_basic/openrover.hpp"
 
-const int SERIAL_START_BYTE = 253;
+namespace openrover {
+
+const unsigned char SERIAL_START_BYTE = 253;
 const int SERIAL_OUT_PACKAGE_LENGTH = 7;
 const int SERIAL_IN_PACKAGE_LENGTH = 5;
 const int LOOP_RATE = 1000; //microseconds between serial manager calls
@@ -66,6 +71,10 @@ const int MOTOR_SPEED_ANGULAR_COEF_2WD_LS = 56;
 //high speed cmd_vel to motor command 2wd constants
 const int MOTOR_SPEED_LINEAR_COEF_2WD_HS = 293;
 const int MOTOR_SPEED_ANGULAR_COEF_2WD_HS = 56;
+
+// Velocity Controller Constants
+const int CONTROLLER_DEADBAND_COMP = 0; //reduce MOTOR_DEADBAND by this amount
+const int MAX_ACCEL_CUTOFF = 20; // m/s^2
 
 //general openrover_basic platform constants
 const int ENCODER_MAX = 5000;
@@ -138,10 +147,16 @@ const int FAST_SIZE = sizeof(ROBOT_DATA_INDEX_FAST)/sizeof(ROBOT_DATA_INDEX_FAST
 const int MEDIUM_SIZE = sizeof(ROBOT_DATA_INDEX_MEDIUM)/sizeof(ROBOT_DATA_INDEX_MEDIUM[0]);
 const int SLOW_SIZE = sizeof(ROBOT_DATA_INDEX_SLOW)/sizeof(ROBOT_DATA_INDEX_SLOW[0]);
 
+std::ofstream global_file ("tuning_data.csv");
+
+const double K_P = 80;
+const double K_I = 200;
+const double K_D = 0;
+
 OpenRover::OpenRover( ros::NodeHandle &_nh, ros::NodeHandle &_nh_priv ) :
     port_("/dev/ttyUSB0"),
     baud_(57600),
-    fast_rate_(10.0), //10Hz Total Serial data is limited to 66 msgs/second
+    fast_rate_(60.0), //10Hz Total Serial data is limited to 66 msgs/second
     medium_rate_(2.0), //2Hz
     slow_rate_(1.0), //1Hz
     motor_speeds_commanded_{MOTOR_NEUTRAL,MOTOR_NEUTRAL,MOTOR_NEUTRAL}, //default motor commands to neutral
@@ -149,11 +164,38 @@ OpenRover::OpenRover( ros::NodeHandle &_nh, ros::NodeHandle &_nh_priv ) :
     publish_fast_rate_vals_(false),
     publish_med_rate_vals_(false),
     publish_slow_rate_vals_(false),
-    low_speed_mode_on_(true)
+    low_speed_mode_on_(true),
+    velocity_control_on_(true),
+    K_P_(K_P), //old val 40.5
+    K_I_(K_I),//2029.617 //1056.52), //old val 97.2
+    K_D_(K_D),
+    left_controller_ (velocity_control_on_, K_P, K_I, K_D, MOTOR_SPEED_MAX, MOTOR_SPEED_MIN),
+    right_controller_ (velocity_control_on_, K_P, K_I, K_D, MOTOR_SPEED_MAX, MOTOR_SPEED_MIN),
+
+    /* K_P_(80), //old val 40.5
+    K_I_(200),//2029.617 //1056.52), //old val 97.2
+    K_D_(0), //2.2449
+    left_err_(0),
+    right_err_(0),
+    left_vel_commanded_(0),
+    right_vel_commanded_(0),
+    left_vel_filtered_(0),
+    right_vel_filtered_(0),
+    left_vel_history_(3, 0),
+    right_vel_history_(3, 0),
+    skip_left_vel_(false),
+    skip_right_vel_(false), */
+
+    LEFT_MOTOR_INDEX_(0),
+    RIGHT_MOTOR_INDEX_(1),
+    FLIPPER_MOTOR_INDEX_(2)
 {
     ROS_INFO( "Initializing openrover driver." );
     //nh_priv.param( "port", port_, (std::string)"/dev/ttyUSB0" );
     //nh_priv.param( "baud", baud_, 57600 );
+    global_file << "time,left_filtered,left_measured,left_commanded,right_filtered,right_measured,right_commanded" << std::endl;
+    //OdomControl left_controller_ (velocity_control_on_, K_P_, K_I_, K_D_, MOTOR_SPEED_MAX, MOTOR_SPEED_MIN);// std::string("tuning_dataL.csv")),
+    //OdomControl right_controller_ (velocity_control_on_, K_P_, K_I_, K_D_, MOTOR_SPEED_MAX, MOTOR_SPEED_MIN);// std::string("tuning_dataR.csv")),
     
     serial_fast_buffer_.reserve(10*FAST_SIZE); //reserve space for 5 sets of FAST rate data
     serial_medium_buffer_.reserve(10*MEDIUM_SIZE); //reserve space for 5 sets of Medium rate data
@@ -183,7 +225,9 @@ bool OpenRover::start()
     odom_enc_pub = nh.advertise<nav_msgs::Odometry>("rr_openrover_basic/odom_encoder", 1);
     is_charging_pub = nh.advertise<std_msgs::Bool>("rr_openrover_basic/charging", 1);
 
-    test_odom_cmd_vel_pub = nh.advertise<std_msgs::Int32MultiArray>("rr_openrover_basic/motor_speeds_commanded", 1);
+    motor_speeds_pub = nh.advertise<std_msgs::Int32MultiArray>("rr_openrover_basic/motor_speeds_commanded", 1);
+    vel_calc_pub = nh.advertise<std_msgs::Float32MultiArray>("rr_openrover_basic/vel_calc_pub", 1);
+
 
     cmd_vel_sub = nh.subscribe("/cmd_vel/managed", 1, &OpenRover::cmdVelCB, this);
     
@@ -409,19 +453,27 @@ void OpenRover::robotDataFastCB(const ros::WallTimerEvent &e)
 }
 
 void OpenRover::timeoutCB(const ros::WallTimerEvent &e)
-{//Timer goes off when a command isn't received soon enough. Sets motors to stop values
-    updateMotorSpeedsCommanded(MOTOR_NEUTRAL, MOTOR_NEUTRAL, MOTOR_NEUTRAL);
+{//Timer goes off when a command isn't received soon enough. Sets motors to neutral values
+    motor_speeds_commanded_[LEFT_MOTOR_INDEX_] = (unsigned char)MOTOR_NEUTRAL;
+    motor_speeds_commanded_[RIGHT_MOTOR_INDEX_] = (unsigned char)MOTOR_NEUTRAL;
+    motor_speeds_commanded_[FLIPPER_MOTOR_INDEX_] = (unsigned char)MOTOR_NEUTRAL;
 }
 
 void OpenRover::cmdVelCB(const geometry_msgs::TwistStamped::ConstPtr& msg)
 {//converts from cmd_vel (m/s and radians/s) into motor speed commands
+    cmd_vel_commanded_ = msg->twist;
     float left_motor_speed, right_motor_speed;
     int flipper_motor_speed;
     int motor_speed_deadband_scaled;
-    float turn_rate = msg->twist.angular.z;
-    float linear_rate = msg->twist.linear.x;
-    float flipper_rate = msg->twist.angular.y;
+    double turn_rate = msg->twist.angular.z;
+    double linear_rate = msg->twist.linear.x;
+    double flipper_rate = msg->twist.angular.y;
     bool is_moving_forward, is_turning_cw, is_stationary, is_zero_point_turn;
+
+    double diff_vel_commanded = turn_rate/odom_angular_coef_;
+
+    right_vel_commanded_ = linear_rate + 0.5*diff_vel_commanded;
+    left_vel_commanded_ = linear_rate - 0.5*diff_vel_commanded;
 
     timeout_timer.stop();
     if ((linear_rate == 0) && (turn_rate != 0))
@@ -510,73 +562,43 @@ void OpenRover::cmdVelCB(const geometry_msgs::TwistStamped::ConstPtr& msg)
         right_motor_speed = average_motor_speed - MOTOR_DIFF_MAX/2;
     }
 
-    //Add most recent motor values to motor_speeds_commanded_[3] class variable
-    updateMotorSpeedsCommanded((char)round(left_motor_speed), (char)round(right_motor_speed), (char)(flipper_motor_speed));
+    //Add most recent motor values to motor_speeds_commanded_[3] class variable if velocity_control_on_ is not true (open loop)
+    motor_speeds_commanded_[FLIPPER_MOTOR_INDEX_] = (unsigned char)flipper_motor_speed;
+    if (!velocity_control_on_)
+    {
+        //ROS_INFO("shouldnt see this");
+        motor_speeds_commanded_[LEFT_MOTOR_INDEX_] = (unsigned char)left_motor_speed;
+        motor_speeds_commanded_[RIGHT_MOTOR_INDEX_] = (unsigned char)right_motor_speed;
+    }
     timeout_timer.start();
 }
 
-void OpenRover::publishOdomEnc()
+void OpenRover::publishOdometry(float left_vel, float right_vel)
 {//convert encoder readings to real world values and publish as Odometry
-    int left_enc = robot_data_[i_ENCODER_INTERVAL_MOTOR_LEFT];
-    int right_enc = robot_data_[i_ENCODER_INTERVAL_MOTOR_RIGHT];
-    
-    static double left_vel = 0;
-    static double right_vel = 0;
     static double left_dist = 0;
     static double right_dist = 0;
     static double pos_x = 0;
     static double pos_y = 0;
     static double theta = 0;
+    static double past_time = 0;
     double net_vel = 0;
     double diff_vel = 0;
     double alpha = 0;
     double dt = 0;
-    
     tf::Quaternion q_new;
+    
     ros::Time ros_now_time = ros::Time::now();
     double now_time = ros_now_time.toSec();
-    static double past_time = 0;
     
     nav_msgs::Odometry odom_msg;
     
     dt = now_time-past_time;
-    
-    if((ENCODER_MIN < left_enc) && (left_enc < ENCODER_MAX))
-    {
-        if (motor_speeds_commanded_[0] > 125)
-        {            
-            left_vel = odom_encoder_coef_/left_enc;
-        }
-        else
-        {
-            left_vel = -odom_encoder_coef_/left_enc;
-        }
-    }
-    else
-    {
-        left_vel = 0;
-    }
-    
-    if((ENCODER_MIN < right_enc) && (right_enc < ENCODER_MAX))
-    {
-        if ( motor_speeds_commanded_[1] > 125)
-        {
-            right_vel = odom_encoder_coef_/right_enc;
-        }
-        else
-        {
-            right_vel = -odom_encoder_coef_/right_enc;
-        }
-    }
-    else
-    {
-        right_vel = 0;
-    }
+    past_time = now_time;
     
     if(past_time!=0)
     {
-        left_dist = left_dist + left_vel*dt;
-        right_dist = right_dist + right_vel*dt;
+        left_dist += left_vel*dt;
+        right_dist += right_vel*dt;
             
         net_vel = 0.5*(left_vel+right_vel);
         diff_vel = right_vel - left_vel;
@@ -590,7 +612,7 @@ void OpenRover::publishOdomEnc()
         q_new = tf::createQuaternionFromRPY(0, 0, theta);
         quaternionTFToMsg(q_new, odom_msg.pose.pose.orientation);
     }
-    
+
     odom_msg.header.stamp = ros_now_time;
     odom_msg.header.frame_id = "odom";
     odom_msg.child_frame_id = "base_link";
@@ -616,7 +638,36 @@ void OpenRover::publishOdomEnc()
     odom_msg.pose.pose.position.y = pos_y;
     
     odom_enc_pub.publish(odom_msg);
-    past_time=now_time;
+}
+
+void OpenRover::publishWheelVels() //Update to publish from OdomControl
+{
+    static ros::Time ros_start_time = ros::Time::now();
+    ros::Time ros_now_time = ros::Time::now();
+    double run_time = (ros_now_time - ros_start_time).toSec();
+    std_msgs::Float32MultiArray vel_vec;
+
+    vel_vec.data.push_back(left_vel_filtered_);
+    vel_vec.data.push_back(left_vel_measured_);
+    vel_vec.data.push_back(left_vel_commanded_);
+    vel_vec.data.push_back(right_vel_filtered_);
+    vel_vec.data.push_back(right_vel_measured_);
+    vel_vec.data.push_back(right_vel_commanded_);
+
+    vel_calc_pub.publish(vel_vec);
+/*    if (global_file.is_open())
+    {
+        double ros_now_time = ros::Time::now().toNSec();
+        //ROS_INFO("writing to file");
+        int vsize = vel_vec.data.size();
+        global_file << run_time << ",";
+        for (int n=0; n<vsize; n++)
+        {
+            global_file << vel_vec.data[n];
+            global_file << ",";
+        }
+         global_file << std::endl;
+    }*/
 }
 
 void OpenRover::publishFastRateData()
@@ -688,26 +739,24 @@ void OpenRover::publishSlowRateData()
     slow_rate_pub.publish(slow_msg);
     publish_slow_rate_vals_ = false;
 }
-void OpenRover::publishTestOdomCmdVel()
+
+void OpenRover::publishMotorSpeeds()
 {
     std_msgs::Int32MultiArray motor_speeds_msg;
     motor_speeds_msg.data.clear();
-    //std::vector<int8_t> motor_speeds_vec (motor_speeds_commanded_, motor_speeds_commanded_ + sizeof(motor_speeds_commanded_)/sizeof(motor_speeds_commanded_[0]));
-        //vector<int> vec (arr, arr + sizeof(arr) / sizeof(arr[0]) );
-    /*motor_speeds_vec[0] = motor_speeds_commanded_[0]; //left
-    motor_speeds_vec[1] = motor_speeds_commanded_[1]; //right
-    motor_speeds_vec[2] = motor_speeds_commanded_[2]; //flipper*/
-    //std::vector<int8_t> motor_speeds_vec (motor_speeds_commanded_
-    motor_speeds_msg.data.push_back(motor_speeds_commanded_[0]);
-    motor_speeds_msg.data.push_back(motor_speeds_commanded_[1]);
-    motor_speeds_msg.data.push_back(motor_speeds_commanded_[2]);
-    //motor_speeds_msg.data = motor_speeds_vec;
-    test_odom_cmd_vel_pub.publish(motor_speeds_msg);
+    motor_speeds_msg.data.push_back(motor_speeds_commanded_[LEFT_MOTOR_INDEX_]);
+    motor_speeds_msg.data.push_back(motor_speeds_commanded_[RIGHT_MOTOR_INDEX_]);
+    motor_speeds_msg.data.push_back(motor_speeds_commanded_[FLIPPER_MOTOR_INDEX_]);
+
+    motor_speeds_pub.publish(motor_speeds_msg);
 }
+
 void OpenRover::serialManager()
 {//sends serial commands stored in the 3 buffers in order of speed with fast getting highest priority
-    char param1;
-    char param2;
+    unsigned char param1;
+    unsigned char param2;
+    static double past_time = 0;
+
     while ((serial_fast_buffer_.size()>1) || (serial_medium_buffer_.size()>1) || (serial_slow_buffer_.size()>1))
     {
         if (serial_fast_buffer_.size()>1)
@@ -739,10 +788,6 @@ void OpenRover::serialManager()
             param2 = 0;
             param1 = 0; 
         }
-        
-        //Check callbacks in case any new motor commands or timer callbacks were triggered
-        // since entering the Serial Manager
-        ros::spinOnce();
         
         //Check param1 to determine what communication to the robot is required
         try{
@@ -781,19 +826,71 @@ void OpenRover::serialManager()
         
         //If one of the buffers are empty, publish the values
         if ((serial_fast_buffer_.size()==0) && publish_fast_rate_vals_)
-        {   
+        {
+            ros::Time ros_now_time = ros::Time::now();
+            double now_time = ros_now_time.toSec();
+            
+            double dt = now_time-past_time;
+            past_time = now_time;
             publishFastRateData();
-            publishOdomEnc();
-            publishTestOdomCmdVel();
+            updateOdometry(); //Update openrover variables based on latest encoder readings
+            unsigned char left_motor_speed = left_controller_.calculate(left_vel_commanded_, left_vel_measured_, dt);
+
+            motor_speeds_commanded_[LEFT_MOTOR_INDEX_] = left_motor_speed;
+
+            unsigned char right_motor_speed = right_controller_.calculate(right_vel_commanded_, right_vel_measured_, dt);
+            motor_speeds_commanded_[RIGHT_MOTOR_INDEX_] = right_motor_speed;
+            //ROS_INFO("%i | %i", left_motor_speed, right_motor_speed);
+            publishOdometry(left_vel_measured_, right_vel_measured_); //Publish new calculated odometry
+            publishWheelVels(); //call after publishOdomEnc()
+            publishMotorSpeeds();
         }
         else if ((serial_medium_buffer_.size()==0) && publish_med_rate_vals_)
         {
-            publishMedRateData();           
+            publishMedRateData();
         }
         else if ((serial_slow_buffer_.size()==0) && publish_slow_rate_vals_)
         {
             publishSlowRateData();
         }
+    }
+}
+
+void OpenRover::updateOdometry()
+{
+    int left_enc = robot_data_[i_ENCODER_INTERVAL_MOTOR_LEFT];
+    int right_enc = robot_data_[i_ENCODER_INTERVAL_MOTOR_RIGHT];
+    
+    if((ENCODER_MIN < left_enc) && (left_enc < ENCODER_MAX))
+    {
+        if (motor_speeds_commanded_[LEFT_MOTOR_INDEX_] > 125)
+        {            
+            left_vel_measured_ = odom_encoder_coef_/left_enc;
+        }
+        else
+        {
+            left_vel_measured_ = -odom_encoder_coef_/left_enc;
+        }
+    }
+    else
+    {
+        left_vel_measured_ = 0;
+    }
+    
+    if((ENCODER_MIN < right_enc) && (right_enc < ENCODER_MAX))
+    {
+        if ( motor_speeds_commanded_[RIGHT_MOTOR_INDEX_] > 125)
+        {
+            right_vel_measured_ = odom_encoder_coef_/right_enc;
+        }
+        else
+        {
+            right_vel_measured_ = -odom_encoder_coef_/right_enc;
+        }
+    }
+    else
+    {
+        right_vel_measured_ = 0;
     }
 }
 
@@ -817,25 +914,18 @@ void OpenRover::updateRobotData(int param)
     }
 }
 
-void OpenRover::updateMotorSpeedsCommanded(char left_motor, char right_motor, char flipper_motor)
-{//updates the stored motor speeds to the most recent commanded motor speeds
-    motor_speeds_commanded_[0] = left_motor;
-    motor_speeds_commanded_[1] = right_motor;
-    motor_speeds_commanded_[2] = flipper_motor;
-}
-
 bool OpenRover::sendCommand(int param1, int param2)
 {
     unsigned char write_buffer[SERIAL_OUT_PACKAGE_LENGTH];
     
     write_buffer[0] = SERIAL_START_BYTE;
-    write_buffer[1] = (char)motor_speeds_commanded_[0]; //left motor
-    write_buffer[2] = (char)motor_speeds_commanded_[1]; //right motor
-    write_buffer[3] = (char)motor_speeds_commanded_[2]; //flipper
-    write_buffer[4] = (char)param1; //Param 1: 10 to get data, 240 for low speed mode 
-    write_buffer[5] = (char)param2; //Param 2:
+    write_buffer[1] = (unsigned char)motor_speeds_commanded_[LEFT_MOTOR_INDEX_]; //left motor
+    write_buffer[2] = (unsigned char)motor_speeds_commanded_[RIGHT_MOTOR_INDEX_]; //right motor
+    write_buffer[3] = (unsigned char)motor_speeds_commanded_[FLIPPER_MOTOR_INDEX_]; //flipper
+    write_buffer[4] = (unsigned char)param1; //Param 1: 10 to get data, 240 for low speed mode 
+    write_buffer[5] = (unsigned char)param2; //Param 2:
     //Calculate Checksum
-    write_buffer[6] = (char) 255-(write_buffer[1]+write_buffer[2]+write_buffer[3]+write_buffer[4]+write_buffer[5])%255;
+    write_buffer[6] = (unsigned char) 255-(write_buffer[1]+write_buffer[2]+write_buffer[3]+write_buffer[4]+write_buffer[5])%255;
     
     if (write(fd, write_buffer, SERIAL_OUT_PACKAGE_LENGTH)<SERIAL_OUT_PACKAGE_LENGTH)
     {
@@ -980,6 +1070,8 @@ bool OpenRover::openComs()
     return true;
 }
 
+}
+
 int main( int argc, char *argv[] )
 {
         // Create ROS node handlers 
@@ -987,7 +1079,7 @@ int main( int argc, char *argv[] )
         ros::NodeHandle *nh_priv = NULL;
 
         // Create driver object
-        OpenRover *openrover = NULL;
+        openrover::OpenRover *openrover = NULL;
  
         // Create ROS node
         ros::init( argc, argv, "openrover_basic_node" );
@@ -1007,7 +1099,7 @@ int main( int argc, char *argv[] )
                 ros::shutdown( );
                 return -2;
         }
-        openrover = new OpenRover( *nh, *nh_priv );
+        openrover = new openrover::OpenRover( *nh, *nh_priv );
         if( !openrover )
         {
                 ROS_FATAL( "Failed to initialize driver" );
@@ -1019,7 +1111,7 @@ int main( int argc, char *argv[] )
         if( !openrover->start( ) )
                 ROS_ERROR( "Failed to start the driver" );
 
-        ros::Rate loop_rate(LOOP_RATE);
+        ros::Rate loop_rate(openrover::LOOP_RATE);
 
         while(ros::ok())
         {
