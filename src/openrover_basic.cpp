@@ -203,10 +203,10 @@ OpenRover::OpenRover( ros::NodeHandle &_nh, ros::NodeHandle &_nh_priv ) :
     
     //WallTimers simplify the timing of updating parameters by reloading serial buffers at specified rates.
     //without them the serial buffers will never be loaded with new commands
-    fast_timer = nh.createWallTimer( ros::WallDuration(1.0/fast_rate_), &OpenRover::robotDataFastCB, this);
-    medium_timer = nh.createWallTimer( ros::WallDuration(1.0/medium_rate_), &OpenRover::robotDataMediumCB, this);
-    slow_timer = nh.createWallTimer( ros::WallDuration(1.0/slow_rate_), &OpenRover::robotDataSlowCB, this);
-    timeout_timer = nh.createWallTimer( ros::WallDuration(timeout_), &OpenRover::timeoutCB, this, true);
+    fast_timer = nh_priv.createWallTimer( ros::WallDuration(1.0/fast_rate_), &OpenRover::robotDataFastCB, this);
+    medium_timer = nh_priv.createWallTimer( ros::WallDuration(1.0/medium_rate_), &OpenRover::robotDataMediumCB, this);
+    slow_timer = nh_priv.createWallTimer( ros::WallDuration(1.0/slow_rate_), &OpenRover::robotDataSlowCB, this);
+    timeout_timer = nh_priv.createWallTimer( ros::WallDuration(timeout_), &OpenRover::timeoutCB, this, true);
 }
 
 bool OpenRover::start()
@@ -219,24 +219,24 @@ bool OpenRover::start()
     ROS_INFO("Creating Publishers and Subscribers");
     ROS_INFO("Fast Data List: %i, Med Data List: %i, Slow Data List: %i", FAST_SIZE, MEDIUM_SIZE, SLOW_SIZE);
     ROS_INFO("Number of messages per sec (must be less than 66): %i", FAST_SIZE*10+MEDIUM_SIZE*2+SLOW_SIZE*1);
-    fast_rate_pub = nh.advertise<rr_openrover_basic::RawRrOpenroverBasicFastRateData>("rr_openrover_basic/raw_fast_rate_data",1);
-    medium_rate_pub = nh.advertise<rr_openrover_basic::RawRrOpenroverBasicMedRateData>("rr_openrover_basic/raw_med_rate_data",1);
-    slow_rate_pub = nh.advertise<rr_openrover_basic::RawRrOpenroverBasicSlowRateData>("rr_openrover_basic/raw_slow_rate_data",1);
-    odom_enc_pub = nh.advertise<nav_msgs::Odometry>("rr_openrover_basic/odom_encoder", 1);
-    is_charging_pub = nh.advertise<std_msgs::Bool>("rr_openrover_basic/charging", 1);
+    fast_rate_pub = nh_priv.advertise<rr_openrover_basic::RawRrOpenroverBasicFastRateData>("raw_fast_rate_data",1);
+    medium_rate_pub = nh_priv.advertise<rr_openrover_basic::RawRrOpenroverBasicMedRateData>("raw_med_rate_data",1);
+    slow_rate_pub = nh_priv.advertise<rr_openrover_basic::RawRrOpenroverBasicSlowRateData>("raw_slow_rate_data",1);
+    odom_enc_pub = nh_priv.advertise<nav_msgs::Odometry>("odom_encoder", 1);
+    is_charging_pub = nh_priv.advertise<std_msgs::Bool>("charging", 1);
 
-    motor_speeds_pub = nh.advertise<std_msgs::Int32MultiArray>("rr_openrover_basic/motor_speeds_commanded", 1);
-    vel_calc_pub = nh.advertise<std_msgs::Float32MultiArray>("rr_openrover_basic/vel_calc_pub", 1);
+    motor_speeds_pub = nh_priv.advertise<std_msgs::Int32MultiArray>("motor_speeds_commanded", 1);
+    vel_calc_pub = nh_priv.advertise<std_msgs::Float32MultiArray>("vel_calc_pub", 1);
 
 
-    cmd_vel_sub = nh.subscribe("/cmd_vel/managed", 1, &OpenRover::cmdVelCB, this);
+    cmd_vel_sub = nh_priv.subscribe("/cmd_vel/managed", 1, &OpenRover::cmdVelCB, this);
     
     return true;
 }
 
 bool OpenRover::setupRobotParams()
 {//Get ROS params and save them to class variables
-    if (!(nh.getParam("/openrover_basic_node/port", port_)))
+    if (!(nh_priv.getParam("port", port_)))
     {
         ROS_WARN("Failed to retrieve port from parameter server.");
         return false;
@@ -247,7 +247,7 @@ bool OpenRover::setupRobotParams()
         ROS_WARN("Failed to start serial comunication.");
     }
 
-    if (!(nh.getParam("/openrover_basic_node/default_low_speed_mode", low_speed_mode_on_)))
+    if (!(nh_priv.getParam("default_low_speed_mode", low_speed_mode_on_)))
     {
         ROS_WARN("Failed to retrieve default_low_speed_mode from parameter server.");
         return false;
@@ -263,20 +263,20 @@ bool OpenRover::setupRobotParams()
         setParameterData(240, 0);
         ROS_INFO("low_speed_mode: off");
     }
-    if (!(nh.getParam("/openrover_basic_node/timeout", timeout_)))
+    if (!(nh_priv.getParam("timeout", timeout_)))
     {
         ROS_ERROR("Failed to retrieve timeout from parameter server. Defaulting to ");
         return false;
     }
     
-    if (!(nh.getParam("/openrover_basic_node/total_weight", total_weight_)))
+    if (!(nh_priv.getParam("total_weight", total_weight_)))
     {
         ROS_ERROR("Failed to retrieve total_weight_ from parameter server. Defaulting to 0");
         total_weight_ = 0;
         return false;
     }
 
-    if (!(nh.getParam("/openrover_basic_node/drive_type", drive_type_)))
+    if (!(nh_priv.getParam("drive_type", drive_type_)))
     {
         ROS_ERROR("Failed to retrieve drive_type from parameter.Defaulting to flippers.");
         drive_type_ = "flippers";
@@ -389,20 +389,20 @@ bool OpenRover::setupRobotParams()
         }
     }
 
-    if (!(nh.getParam("/openrover_basic_node/slippage_factor", odom_slippage_factor_)))
+    if (!(nh_priv.getParam("slippage_factor", odom_slippage_factor_)))
     {
         ROS_ERROR("Failed to retrieve odom_slippage_factor_ from parameter.Defaulting to drive_type_ slippage_factor");
         return false;
     }
 
-    if (!(nh.getParam("/openrover_basic_node/odom_covariance_0", odom_covariance_0_)))
+    if (!(nh_priv.getParam("odom_covariance_0", odom_covariance_0_)))
     {
         ROS_ERROR("Failed to retrieve odom_covariance_0 from parameter. Defaulting to 0.01");
         odom_covariance_0_ = 0.01;
         return false;
     }
 
-    if (!(nh.getParam("/openrover_basic_node/odom_covariance_35", odom_covariance_35_)))
+    if (!(nh_priv.getParam("odom_covariance_35", odom_covariance_35_)))
     {
         ROS_ERROR("Failed to retrieve odom_covariance_35 from parameter. Defaulting to 0.03");
         odom_covariance_35_ = 0.03;
