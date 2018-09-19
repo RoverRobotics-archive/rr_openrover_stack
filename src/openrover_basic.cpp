@@ -149,7 +149,8 @@ OpenRover::OpenRover( ros::NodeHandle &_nh, ros::NodeHandle &_nh_priv ) :
     publish_fast_rate_vals_(false),
     publish_med_rate_vals_(false),
     publish_slow_rate_vals_(false),
-    low_speed_mode_on_(true)
+    low_speed_mode_on_(true),
+    is_serial_coms_open_(false)
 {
     ROS_INFO( "Initializing openrover driver." );
     //nh_priv.param( "port", port_, (std::string)"/dev/ttyUSB0" );
@@ -200,6 +201,7 @@ bool OpenRover::setupRobotParams()
 
     if (!(openComs()))
     {
+        is_serial_coms_open_ = false;
         ROS_WARN("Failed to start serial comunication.");
     }
 
@@ -850,10 +852,16 @@ int OpenRover::readCommand()
 {//only used after a send command with param1==10
     unsigned char read_buffer[SERIAL_IN_PACKAGE_LENGTH];
     int data, checksum;
-    if (fd > 0)
+
+    if (!(fd >= 0))
     {
-        ROS_INFO("Serial coms open.");
+        ROS_WARN("Serial communication failed. Attempting to restart.");
+        if (!(openComs()))
+        {
+            ROS_WARN("Failed to restart serial comunication.");
+        }
     }
+
     int bits_read = read(fd, read_buffer, SERIAL_IN_PACKAGE_LENGTH);
     
     if(!(SERIAL_START_BYTE==read_buffer[0]))
@@ -926,23 +934,23 @@ bool OpenRover::openComs()
     fd = ::open( port_.c_str( ), O_RDWR | O_NOCTTY | O_NDELAY );
     if( fd < 0 )
     {
-    ROS_FATAL( "Failed to open port: %s", strerror( errno ) );
-    return false;
+        ROS_FATAL( "Failed to open port: %s", strerror( errno ) );
+        return false;
     }
     if( 0 > fcntl( fd, F_SETFL, 0 ) )
     {
-    ROS_FATAL( "Failed to set port descriptor: %s", strerror( errno ) );
-    return false;
+        ROS_FATAL( "Failed to set port descriptor: %s", strerror( errno ) );
+        return false;
     }
     if( 0 > tcgetattr( fd, &fd_options ) )
     {
-    ROS_FATAL( "Failed to fetch port attributes: %s", strerror( errno ) );
-    return false;
+        ROS_FATAL( "Failed to fetch port attributes: %s", strerror( errno ) );
+        return false;
     }
     if( 0 > cfsetispeed( &fd_options, B57600 ) )
     {
-    ROS_FATAL( "Failed to set input baud: %s", strerror( errno ) );
-        return false;
+        ROS_FATAL( "Failed to set input baud: %s", strerror( errno ) );
+            return false;
     }
     if( 0 > cfsetospeed( &fd_options, B57600 ) )
     {
@@ -977,10 +985,12 @@ bool OpenRover::openComs()
 
     if( 0 > tcsetattr( fd, TCSANOW, &fd_options ) )
     {
-    ROS_FATAL( "Failed to set port attributes: %s", strerror( errno ) );
-    return false;
+        ROS_FATAL( "Failed to set port attributes: %s", strerror( errno ) );
+        return false;
     }
+
     ROS_INFO("Serial port opened");
+    is_serial_coms_open_ = true;
     return true;
 }
 
