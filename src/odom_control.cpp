@@ -103,7 +103,7 @@ void OdomControl::reset()
     velocity_measured_ = 0;
     velocity_filtered_ = 0;
     std::fill(velocity_history_.begin(), velocity_history_.end(), 0);
-    motor_speed_ = 0;
+    motor_speed_ = MOTOR_NEUTRAL_;
     skip_measurement_ = false;
 }
 
