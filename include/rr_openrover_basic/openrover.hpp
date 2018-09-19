@@ -22,7 +22,7 @@ namespace openrover {
 class OpenRover
 {
 public:
-    OpenRover( ros::NodeHandle &_nh, ros::NodeHandle &_nh_priv );
+    OpenRover( ros::NodeHandle& nh, ros::NodeHandle& nh_priv );
     /*OpenRover(std::string port_, std::string drive_type_, bool enable_timeout_, float total_weight_,
         float slippage_factor_, float odom_covariance_0_, float odom_covariance_35_);*/
     OdomControl left_controller_; //(bool use_control, double Kp, double Ki, double Kd, unsigned char max, unsigned char min);
@@ -57,8 +57,8 @@ private:
     float timeout_; //Default to neutral motor values after timeout seconds
 
     //ROS node handlers
-    ros::NodeHandle nh;
-    ros::NodeHandle nh_priv;
+    ros::NodeHandle& nh_;
+    ros::NodeHandle& nh_priv_;
     
     //ROS Timers
     ros::WallTimer fast_timer;
