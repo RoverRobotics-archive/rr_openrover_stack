@@ -850,6 +850,10 @@ int OpenRover::readCommand()
 {//only used after a send command with param1==10
     unsigned char read_buffer[SERIAL_IN_PACKAGE_LENGTH];
     int data, checksum;
+    if (fd > 0)
+    {
+        ROS_INFO("Serial coms open.");
+    }
     int bits_read = read(fd, read_buffer, SERIAL_IN_PACKAGE_LENGTH);
     
     if(!(SERIAL_START_BYTE==read_buffer[0]))
