@@ -844,6 +844,15 @@ bool OpenRover::sendCommand(int param1, int param2)
     write_buffer[5] = (char)param2; //Param 2:
     //Calculate Checksum
     write_buffer[6] = (char) 255-(write_buffer[1]+write_buffer[2]+write_buffer[3]+write_buffer[4]+write_buffer[5])%255;
+
+    if (!(fd > 0))
+    {
+        ROS_INFO("Serial communication failed. Attempting to restart.");
+        if (!(openComs()))
+        {
+            ROS_INFO("Failed to restart serial comunication.");
+        }
+    }
     
     if (write(fd, write_buffer, SERIAL_OUT_PACKAGE_LENGTH)<SERIAL_OUT_PACKAGE_LENGTH)
     {
@@ -856,35 +865,47 @@ bool OpenRover::sendCommand(int param1, int param2)
 
 int OpenRover::readCommand()
 {//only used after a send command with param1==10
-    unsigned char read_buffer[SERIAL_IN_PACKAGE_LENGTH];
-    int data, checksum;
-
-    if (!(fd >= 0))
+    unsigned char read_buffer[1];
+    int data, checksum, read_checksum, data1, data2, dataNO;
+    if (!(fd > 0))
     {
-        ROS_WARN("Serial communication failed. Attempting to restart.");
+        ROS_INFO("Serial communication failed. Attempting to restart.");
         if (!(openComs()))
         {
-            ROS_WARN("Failed to restart serial comunication.");
+            ROS_INFO("Failed to restart serial comunication.");
         }
     }
 
-    int bits_read = read(fd, read_buffer, SERIAL_IN_PACKAGE_LENGTH);
+    int bits_read = read(fd, read_buffer, 1);
     
     if(!(SERIAL_START_BYTE==read_buffer[0]))
     {
         char str_ex [50];
-        sprintf(str_ex, "Received bad start byte. Received: %02x,%02x,%02x,%02x,%02x", read_buffer[0], read_buffer[1], read_buffer[2], read_buffer[3], read_buffer[4]);
+        sprintf(str_ex, "Received bad start byte. Received: %02x", read_buffer[0]);
         throw std::string(str_ex);
     }
-    checksum = 255-(read_buffer[1]+read_buffer[2]+read_buffer[3])%255;
-    if(!(checksum==read_buffer[4]))
+
+    read(fd, read_buffer, 1); //get param
+    dataNO = read_buffer[0];
+
+    read(fd, read_buffer, 1); //get data1
+    data1 = read_buffer[0];
+    
+    read(fd, read_buffer, 1); //get data2
+    data2 = read_buffer[0];
+
+    read(fd, read_buffer, 1); //get checksum
+    read_checksum = read_buffer[0];
+
+    checksum = 255-(dataNO + data1 + data2)%255;
+    if(!(checksum == read_checksum))
     {
         char str_ex [50];
         sprintf(str_ex, "Received bad CRC. Received: %02x,%02x,%02x,%02x,%02x", read_buffer[0], read_buffer[1], read_buffer[2], read_buffer[3], read_buffer[4]);
         throw std::string(str_ex);
     }
 
-    data = (read_buffer[2]<<8) + read_buffer[3];
+    data = (data1 << 8) + data2;
     return data;
 }
 
@@ -977,7 +998,7 @@ bool OpenRover::openComs()
     fd_options.c_cc[VKILL] = 0x15;  //KILL Character
     fd_options.c_cc[VEOF] = 0x04; //EOF Character
     fd_options.c_cc[VTIME] = 0x01; //Timeout in 0.1s of serial read
-    fd_options.c_cc[VMIN] = SERIAL_IN_PACKAGE_LENGTH; //Min Number of bytes to read
+    fd_options.c_cc[VMIN] = 0; //SERIAL_IN_PACKAGE_LENGTH; //Min Number of bytes to read
     fd_options.c_cc[VSWTC] = 0x00;
     fd_options.c_cc[VSTART] = SERIAL_START_BYTE;  //START Character
     fd_options.c_cc[VSTOP] = 0x13;  //STOP character
