@@ -219,8 +219,8 @@ bool OpenRover::start()
     }
 
     ROS_INFO("Creating Publishers and Subscribers");
-    ROS_INFO("Fast Data List: %i, Med Data List: %i, Slow Data List: %i", FAST_SIZE, MEDIUM_SIZE, SLOW_SIZE);
-    ROS_INFO("Number of messages per sec (must be less than 66): %i", FAST_SIZE*10+MEDIUM_SIZE*2+SLOW_SIZE*1);
+    //ROS_INFO("Fast Data List: %i, Med Data List: %i, Slow Data List: %i", FAST_SIZE, MEDIUM_SIZE, SLOW_SIZE);
+    //ROS_INFO("Number of messages per sec (must be less than 66): %i", FAST_SIZE*10+MEDIUM_SIZE*2+SLOW_SIZE*1);
     fast_rate_pub = nh_priv_.advertise<rr_openrover_basic::RawRrOpenroverBasicFastRateData>("raw_fast_rate_data",1);
     medium_rate_pub = nh_priv_.advertise<rr_openrover_basic::RawRrOpenroverBasicMedRateData>("raw_med_rate_data",1);
     slow_rate_pub = nh_priv_.advertise<rr_openrover_basic::RawRrOpenroverBasicSlowRateData>("raw_slow_rate_data",1);
