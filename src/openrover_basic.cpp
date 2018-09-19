@@ -382,32 +382,38 @@ bool OpenRover::setupRobotParams()
 
 void OpenRover::robotDataSlowCB(const ros::WallTimerEvent &e)
 {
-    for(int i = 0; i<SLOW_SIZE; i++)
-    {
-        serial_slow_buffer_.push_back(10);
-        serial_slow_buffer_.push_back(ROBOT_DATA_INDEX_SLOW[i]);
+    if (is_serial_coms_open_){
+        for(int i = 0; i<SLOW_SIZE; i++)
+        {
+            serial_slow_buffer_.push_back(10);
+            serial_slow_buffer_.push_back(ROBOT_DATA_INDEX_SLOW[i]);
+        }
+        publish_slow_rate_vals_ = true;
     }
-    publish_slow_rate_vals_ = true;
 }
 
 void OpenRover::robotDataMediumCB(const ros::WallTimerEvent &e)
 {
-    for(int i = 0; i<MEDIUM_SIZE; i++)
-    {
-        serial_medium_buffer_.push_back(10);
-        serial_medium_buffer_.push_back(ROBOT_DATA_INDEX_MEDIUM[i]);
+    if (is_serial_coms_open_){
+        for(int i = 0; i<MEDIUM_SIZE; i++)
+        {
+            serial_medium_buffer_.push_back(10);
+            serial_medium_buffer_.push_back(ROBOT_DATA_INDEX_MEDIUM[i]);
+        }
+        publish_med_rate_vals_ = true;
     }
-    publish_med_rate_vals_ = true;
 }
 
 void OpenRover::robotDataFastCB(const ros::WallTimerEvent &e)
 {
-    for(int i = 0; i<FAST_SIZE; i++)
-    {
-        serial_fast_buffer_.push_back(10);
-        serial_fast_buffer_.push_back(ROBOT_DATA_INDEX_FAST[i]);
+    if (is_serial_coms_open_){
+        for(int i = 0; i<FAST_SIZE; i++)
+        {
+            serial_fast_buffer_.push_back(10);
+            serial_fast_buffer_.push_back(ROBOT_DATA_INDEX_FAST[i]);
+        }
+        publish_fast_rate_vals_ = true;
     }
-    publish_fast_rate_vals_ = true;
 }
 
 void OpenRover::timeoutCB(const ros::WallTimerEvent &e)
