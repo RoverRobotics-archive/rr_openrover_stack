@@ -67,6 +67,8 @@ OdomControl::OdomControl(bool use_control, double Kp, double Ki, double Kd, int 
 
 unsigned char OdomControl::calculate(double commanded_vel, double measured_vel, double dt)
 {
+    velocity_commanded_ = commanded_vel;
+    velocity_measured_ = measured_vel;
 
     if (hasZeroHistory(velocity_history_))
     {    // If stopping, stop now
@@ -80,15 +82,16 @@ unsigned char OdomControl::calculate(double commanded_vel, double measured_vel, 
 
     velocity_filtered_ = filter(measured_vel, dt);
     error_ = commanded_vel - velocity_filtered_;
-    //ROS_INFO("error_ = %3.3f", error_);
     if (!skip_measurement_) 
     {
         motor_speed_ = PID(error_, dt);
-        //ROS_INFO("Running PID loop. Returned %i", motor_speed_);
+        ROS_INFO("PID ms = %i", motor_speed_);
     }
 
     motor_speed_ = deadbandOffset(motor_speed_, MOTOR_DEADBAND_);
-    motor_speed_ = boundMotorSpeed(motor_speed_, MOTOR_MAX_, MOTOR_MIN_); 
+    ROS_INFO("dead ms = %i", motor_speed_);
+    motor_speed_ = boundMotorSpeed(motor_speed_, MOTOR_MAX_, MOTOR_MIN_);
+    ROS_INFO("bound ms = %i", motor_speed_);
 
     return (unsigned char) motor_speed_;
 }

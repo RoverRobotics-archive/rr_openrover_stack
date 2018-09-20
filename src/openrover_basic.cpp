@@ -876,7 +876,7 @@ void OpenRover::serialManager()
             }
             else
             {
-                ROS_INFO("MSC - controller set. %i | %i", left_motor_speed, right_motor_speed);
+                ROS_INFO("MSC - controller set. %i | %i | %3.3f | %3.3f", left_motor_speed, right_motor_speed, left_controller_.velocity_commanded_, left_controller_.velocity_measured_);
                 motor_speeds_commanded_[LEFT_MOTOR_INDEX_] = left_motor_speed;
                 motor_speeds_commanded_[RIGHT_MOTOR_INDEX_] = right_motor_speed;
             }
