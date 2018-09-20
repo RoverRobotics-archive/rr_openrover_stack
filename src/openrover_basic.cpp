@@ -173,16 +173,16 @@ OpenRover::OpenRover( ros::NodeHandle& nh, ros::NodeHandle& nh_priv ) :
     K_D_(K_D),
     left_controller_ (velocity_control_on_, K_P, K_I, K_D, MOTOR_SPEED_MAX, MOTOR_SPEED_MIN),
     right_controller_ (velocity_control_on_, K_P, K_I, K_D, MOTOR_SPEED_MAX, MOTOR_SPEED_MIN),
+    left_vel_commanded_(0),
+    right_vel_commanded_(0),
+    left_vel_filtered_(0),
+    right_vel_filtered_(0)
 
     /* K_P_(80), //old val 40.5
     K_I_(200),//2029.617 //1056.52), //old val 97.2
     K_D_(0), //2.2449
     left_err_(0),
     right_err_(0),
-    left_vel_commanded_(0),
-    right_vel_commanded_(0),
-    left_vel_filtered_(0),
-    right_vel_filtered_(0),
     left_vel_history_(3, 0),
     right_vel_history_(3, 0),
     skip_left_vel_(false),
