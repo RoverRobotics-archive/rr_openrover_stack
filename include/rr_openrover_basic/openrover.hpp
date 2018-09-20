@@ -102,12 +102,12 @@ private:
     float odom_covariance_35_;
 
     //velocity feedback
-    float left_vel_commanded_;
-    float right_vel_commanded_;
-    float left_vel_measured_;
-    float right_vel_measured_;
-    float left_vel_filtered_;
-    float right_vel_filtered_;
+    double left_vel_commanded_;
+    double right_vel_commanded_;
+    double left_vel_measured_;
+    double right_vel_measured_;
+    double left_vel_filtered_;
+    double right_vel_filtered_;
     bool velocity_control_on_;
     double K_P_;
     double K_I_;

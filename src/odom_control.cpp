@@ -4,15 +4,13 @@
 #include <cmath>
 #include <fstream>
 #include <iostream>
-//#include "ros/ros.h"
+#include "ros/ros.h"
 
 #include <rr_openrover_basic/odom_control.hpp>
 
 namespace openrover {
 
-OdomControl::OdomControl(bool use_control, double Kp, double Ki, 
-        double Kd, int max, int min, std::string log_filename) :
-
+OdomControl::OdomControl(bool use_control, double Kp, double Ki, double Kd, int max, int min, std::string log_filename) :
     MOTOR_NEUTRAL_(125),
     MOTOR_MAX_(250),
     MOTOR_MIN_(0),
@@ -69,6 +67,8 @@ OdomControl::OdomControl(bool use_control, double Kp, double Ki, double Kd, int 
 
 unsigned char OdomControl::calculate(double commanded_vel, double measured_vel, double dt)
 {
+    velocity_commanded_ = commanded_vel;
+    velocity_measured_ = measured_vel;
 
     if (hasZeroHistory(velocity_history_))
     {    // If stopping, stop now
@@ -82,15 +82,13 @@ unsigned char OdomControl::calculate(double commanded_vel, double measured_vel, 
 
     velocity_filtered_ = filter(measured_vel, dt);
     error_ = commanded_vel - velocity_filtered_;
-    //ROS_INFO("error_ = %3.3f", error_);
     if (!skip_measurement_) 
     {
         motor_speed_ = PID(error_, dt);
-        //ROS_INFO("Running PID loop. Returned %i", motor_speed_);
     }
 
     motor_speed_ = deadbandOffset(motor_speed_, MOTOR_DEADBAND_);
-    motor_speed_ = boundMotorSpeed(motor_speed_, MOTOR_MAX_, MOTOR_MIN_); 
+    motor_speed_ = boundMotorSpeed(motor_speed_, MOTOR_MAX_, MOTOR_MIN_);
 
     return (unsigned char) motor_speed_;
 }
@@ -123,7 +121,6 @@ int OdomControl::PID(double error, double dt)
         stop_integrating_ = false;
     }
 
-    //ROS_INFO("%4.4f | %4.4f | %4.4f | err: %4.4f | dt: %4.4f", p_val, i_val, d_val, error, dt);
     return (int)round(pid_val + 125.0);
 }
 
@@ -144,7 +141,6 @@ double OdomControl::I(double error, double dt)
 double OdomControl::P(double error, double dt)
 {
     double p_val = error*K_P_;
-    //ROS_INFO("P: %4.4f | e: %4.4f | Kp: %4.4f", p_val, error, K_P_);
     return error*K_P_;
 }
 
