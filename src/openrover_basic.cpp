@@ -487,6 +487,7 @@ void OpenRover::cmdVelCB(const geometry_msgs::TwistStamped::ConstPtr& msg)
     if (frame_id == (std::string) "soft e-stopped")
     {
         e_stop_on_ = true;
+        ROS_INFO("Soft e-stopped");
         motor_speeds_commanded_[FLIPPER_MOTOR_INDEX_] = MOTOR_NEUTRAL;
         motor_speeds_commanded_[LEFT_MOTOR_INDEX_] = MOTOR_NEUTRAL;
         motor_speeds_commanded_[RIGHT_MOTOR_INDEX_] = MOTOR_NEUTRAL;
@@ -587,7 +588,7 @@ void OpenRover::cmdVelCB(const geometry_msgs::TwistStamped::ConstPtr& msg)
     motor_speeds_commanded_[FLIPPER_MOTOR_INDEX_] = (unsigned char)flipper_motor_speed;
     if (!velocity_control_on_)
     {
-        //ROS_INFO("shouldnt see this");
+        ROS_INFO("MSC - cmd vel cb");
         motor_speeds_commanded_[LEFT_MOTOR_INDEX_] = (unsigned char)left_motor_speed;
         motor_speeds_commanded_[RIGHT_MOTOR_INDEX_] = (unsigned char)right_motor_speed;
     }
@@ -867,11 +868,15 @@ void OpenRover::serialManager()
             unsigned char right_motor_speed = right_controller_.calculate(right_vel_commanded_, right_vel_measured_, dt);
             if (e_stop_on_)
             {
+                ROS_INFO("MSC - e-stop set");
+                motor_speeds_commanded_[LEFT_MOTOR_INDEX_] = MOTOR_NEUTRAL;
+                motor_speeds_commanded_[RIGHT_MOTOR_INDEX_] = MOTOR_NEUTRAL;
                 left_controller_.reset();
                 right_controller_.reset();
             }
             else
             {
+                ROS_INFO("MSC - controller set. %i | %i", left_motor_speed, right_motor_speed);
                 motor_speeds_commanded_[LEFT_MOTOR_INDEX_] = left_motor_speed;
                 motor_speeds_commanded_[RIGHT_MOTOR_INDEX_] = right_motor_speed;
             }

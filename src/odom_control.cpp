@@ -10,9 +10,7 @@
 
 namespace openrover {
 
-OdomControl::OdomControl(bool use_control, double Kp, double Ki, 
-        double Kd, int max, int min, std::string log_filename) :
-
+OdomControl::OdomControl(bool use_control, double Kp, double Ki, double Kd, int max, int min, std::string log_filename) :
     MOTOR_NEUTRAL_(125),
     MOTOR_MAX_(250),
     MOTOR_MIN_(0),
