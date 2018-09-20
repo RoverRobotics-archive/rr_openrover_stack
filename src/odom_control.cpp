@@ -4,7 +4,7 @@
 #include <cmath>
 #include <fstream>
 #include <iostream>
-//#include "ros/ros.h"
+#include "ros/ros.h"
 
 #include <rr_openrover_basic/odom_control.hpp>
 
