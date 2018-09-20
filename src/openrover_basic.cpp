@@ -166,7 +166,7 @@ OpenRover::OpenRover( ros::NodeHandle& nh, ros::NodeHandle& nh_priv ) :
     publish_fast_rate_vals_(false),
     publish_med_rate_vals_(false),
     publish_slow_rate_vals_(false),
-    is_serial_coms_open_(false)
+    is_serial_coms_open_(false),
     low_speed_mode_on_(true),
     velocity_control_on_(true),
     K_P_(K_P), //old val 40.5
