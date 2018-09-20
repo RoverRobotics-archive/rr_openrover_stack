@@ -88,6 +88,7 @@ private:
     const int LEFT_MOTOR_INDEX_;
     const int RIGHT_MOTOR_INDEX_;
     const int FLIPPER_MOTOR_INDEX_;
+    bool is_serial_coms_open_;
     double fast_rate_; //update rate for encoders, 10Hz recommended
     double medium_rate_;
     double slow_rate_;
