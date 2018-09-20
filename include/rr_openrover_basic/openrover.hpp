@@ -69,6 +69,7 @@ private:
     int fd;
     int robot_data_[50]; //stores all received data from robot
     int is_charging_;
+    bool is_serial_coms_open_;
     char motor_speeds_commanded_[3]; //stores most recent commanded motor speeds
     double fast_rate_; //update rate for encoders, 10Hz recommended
     double medium_rate_;
