@@ -176,7 +176,9 @@ OpenRover::OpenRover( ros::NodeHandle& nh, ros::NodeHandle& nh_priv ) :
     left_vel_commanded_(0),
     right_vel_commanded_(0),
     left_vel_filtered_(0),
-    right_vel_filtered_(0)
+    right_vel_filtered_(0),
+    left_vel_measured_(0),
+    right_vel_measured_(0),
 
     /* K_P_(80), //old val 40.5
     K_I_(200),//2029.617 //1056.52), //old val 97.2
