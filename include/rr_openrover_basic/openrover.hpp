@@ -43,6 +43,7 @@ public:
     bool publish_fast_rate_vals_;
     bool publish_med_rate_vals_;
     bool publish_slow_rate_vals_;
+    bool closed_loop_control_on_;
     bool low_speed_mode_on_;
     bool e_stop_on_;
 
@@ -109,7 +110,6 @@ private:
     double right_vel_measured_;
     double left_vel_filtered_;
     double right_vel_filtered_;
-    bool velocity_control_on_;
     double K_P_;
     double K_I_;
     double K_D_;
