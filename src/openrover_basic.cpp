@@ -167,19 +167,20 @@ OpenRover::OpenRover( ros::NodeHandle& nh, ros::NodeHandle& nh_priv ) :
     publish_med_rate_vals_(false),
     publish_slow_rate_vals_(false),
     is_serial_coms_open_(false),
-    low_speed_mode_on_(true),
-    velocity_control_on_(true),
+    low_speed_mode_on_(false),
+    closed_loop_control_on_(true),
     K_P_(K_P), //old val 40.5
     K_I_(K_I),//2029.617 //1056.52), //old val 97.2
     K_D_(K_D),
-    left_controller_ (velocity_control_on_, K_P, K_I, K_D, MOTOR_SPEED_MAX, MOTOR_SPEED_MIN),
-    right_controller_ (velocity_control_on_, K_P, K_I, K_D, MOTOR_SPEED_MAX, MOTOR_SPEED_MIN),
+    left_controller_ (closed_loop_control_on_, K_P, K_I, K_D, MOTOR_SPEED_MAX, MOTOR_SPEED_MIN),
+    right_controller_ (closed_loop_control_on_, K_P, K_I, K_D, MOTOR_SPEED_MAX, MOTOR_SPEED_MIN),
     left_vel_commanded_(0),
     right_vel_commanded_(0),
     left_vel_filtered_(0),
     right_vel_filtered_(0),
     left_vel_measured_(0),
     right_vel_measured_(0),
+    e_stop_on_(false),
 
     LEFT_MOTOR_INDEX_(0),
     RIGHT_MOTOR_INDEX_(1),
@@ -237,9 +238,9 @@ bool OpenRover::setupRobotParams()
         ROS_WARN("Failed to start serial comunication.");
     }
 
-    if (!(nh_priv_.getParam("default_low_speed_mode", low_speed_mode_on_)))
+    if (!(nh_priv_.getParam("closed_loop_control_on", closed_loop_control_on_)))
     {
-        ROS_WARN("Failed to retrieve default_low_speed_mode from parameter server.");
+        ROS_WARN("Failed to retrieve closed_loop_control_on from parameter server.");
         return false;
     }
 
@@ -477,8 +478,11 @@ void OpenRover::cmdVelCB(const geometry_msgs::TwistStamped::ConstPtr& msg)
 
     if (frame_id == (std::string) "soft e-stopped")
     {
-        e_stop_on_ = true;
-        ROS_WARN("Openrover driver - Soft e-stopped");
+        if (!e_stop_on_)
+        {
+            e_stop_on_ = true;
+            ROS_WARN("Openrover driver - Soft e-stop on.");
+        }
         motor_speeds_commanded_[FLIPPER_MOTOR_INDEX_] = MOTOR_NEUTRAL;
         motor_speeds_commanded_[LEFT_MOTOR_INDEX_] = MOTOR_NEUTRAL;
         motor_speeds_commanded_[RIGHT_MOTOR_INDEX_] = MOTOR_NEUTRAL;
@@ -486,7 +490,11 @@ void OpenRover::cmdVelCB(const geometry_msgs::TwistStamped::ConstPtr& msg)
     }
     else
     {
-        e_stop_on_ = false;
+        if (e_stop_on_)
+        {
+            e_stop_on_ = false;
+            ROS_INFO("Openrover driver - Soft e-stop off.");
+        }
     }
 
     if ((linear_rate == 0) && (turn_rate != 0))
@@ -571,9 +579,9 @@ void OpenRover::cmdVelCB(const geometry_msgs::TwistStamped::ConstPtr& msg)
         right_motor_speed = average_motor_speed - MOTOR_DIFF_MAX/2;
     }
 
-    //Add most recent motor values to motor_speeds_commanded_[3] class variable if velocity_control_on_ is not true (open loop)
+    //Add most recent motor values to motor_speeds_commanded_[3] class variable if closed_loop_control_on_ is not true (open loop)
     motor_speeds_commanded_[FLIPPER_MOTOR_INDEX_] = (unsigned char)flipper_motor_speed;
-    if (!velocity_control_on_)
+    if (!closed_loop_control_on_)
     {
         motor_speeds_commanded_[LEFT_MOTOR_INDEX_] = (unsigned char)left_motor_speed;
         motor_speeds_commanded_[RIGHT_MOTOR_INDEX_] = (unsigned char)right_motor_speed;
