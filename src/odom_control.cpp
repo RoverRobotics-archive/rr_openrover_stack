@@ -70,10 +70,10 @@ unsigned char OdomControl::calculate(double commanded_vel, double measured_vel, 
     velocity_commanded_ = commanded_vel;
     velocity_measured_ = measured_vel;
 
-    if (hasZeroHistory(velocity_history_))
+    if (commanded_vel == 0)
     {    // If stopping, stop now
         integral_value_ = 0;
-        if (commanded_vel == 0)
+        if (hasZeroHistory(velocity_history_))
         {
             velocity_filtered_ = filter(measured_vel, dt);
             return (unsigned char) MOTOR_NEUTRAL_;
