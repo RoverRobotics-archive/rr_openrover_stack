@@ -180,26 +180,12 @@ OpenRover::OpenRover( ros::NodeHandle& nh, ros::NodeHandle& nh_priv ) :
     left_vel_measured_(0),
     right_vel_measured_(0),
 
-    /* K_P_(80), //old val 40.5
-    K_I_(200),//2029.617 //1056.52), //old val 97.2
-    K_D_(0), //2.2449
-    left_err_(0),
-    right_err_(0),
-    left_vel_history_(3, 0),
-    right_vel_history_(3, 0),
-    skip_left_vel_(false),
-    skip_right_vel_(false), */
-
     LEFT_MOTOR_INDEX_(0),
     RIGHT_MOTOR_INDEX_(1),
     FLIPPER_MOTOR_INDEX_(2)
 {
     ROS_INFO( "Initializing openrover driver." );
-    //nh_priv.param( "port", port_, (std::string)"/dev/ttyUSB0" );
-    //nh_priv.param( "baud", baud_, 57600 );
     global_file << "time,left_filtered,left_measured,left_commanded,right_filtered,right_measured,right_commanded" << std::endl;
-    //OdomControl left_controller_ (velocity_control_on_, K_P_, K_I_, K_D_, MOTOR_SPEED_MAX, MOTOR_SPEED_MIN);// std::string("tuning_dataL.csv")),
-    //OdomControl right_controller_ (velocity_control_on_, K_P_, K_I_, K_D_, MOTOR_SPEED_MAX, MOTOR_SPEED_MIN);// std::string("tuning_dataR.csv")),
     
     serial_fast_buffer_.reserve(10*FAST_SIZE); //reserve space for 5 sets of FAST rate data
     serial_medium_buffer_.reserve(10*MEDIUM_SIZE); //reserve space for 5 sets of Medium rate data
@@ -221,8 +207,6 @@ bool OpenRover::start()
     }
 
     ROS_INFO("Creating Publishers and Subscribers");
-    //ROS_INFO("Fast Data List: %i, Med Data List: %i, Slow Data List: %i", FAST_SIZE, MEDIUM_SIZE, SLOW_SIZE);
-    //ROS_INFO("Number of messages per sec (must be less than 66): %i", FAST_SIZE*10+MEDIUM_SIZE*2+SLOW_SIZE*1);
     fast_rate_pub = nh_priv_.advertise<rr_openrover_basic::RawRrOpenroverBasicFastRateData>("raw_fast_rate_data",1);
     medium_rate_pub = nh_priv_.advertise<rr_openrover_basic::RawRrOpenroverBasicMedRateData>("raw_med_rate_data",1);
     slow_rate_pub = nh_priv_.advertise<rr_openrover_basic::RawRrOpenroverBasicSlowRateData>("raw_slow_rate_data",1);
@@ -332,13 +316,11 @@ bool OpenRover::setupRobotParams()
             float c = MOTOR_SPEED_WEIGHT_COEF_C;
 
             weight_coef_ = a * total_weight_*total_weight_ + b * total_weight_ + c;
-            //ROS_INFO("%f, %f, %f", (a * total_weight_*total_weight_), (b * total_weight_), c);
             motor_speed_linear_coef_ = (int) MOTOR_SPEED_LINEAR_COEF_4WD_HS;
             motor_speed_angular_coef_ = (int) MOTOR_SPEED_ANGULAR_COEF_4WD_HS*weight_coef_;
             motor_speed_deadband_ = (int) MOTOR_DEADBAND;
             motor_speed_angular_deadband_ = (int) MOTOR_DEADBAND*weight_coef_;
             cw_turn_coef_ = MOTOR_SPEED_CW_TURN_COEF;
-            //ROS_INFO("%i,%i,%i, %f, %f", motor_speed_linear_coef_, motor_speed_angular_coef_, motor_speed_deadband_, weight_coef_, total_weight_);
         }
 
     }
@@ -422,7 +404,6 @@ bool OpenRover::setupRobotParams()
     ROS_INFO("slippage_factor: %f", odom_slippage_factor_);
     ROS_INFO("odom_covariance_0: %f", odom_covariance_0_);
     ROS_INFO("odom_covariance_35: %f", odom_covariance_35_);
-    //ROS_INFO("enable_timeout: %i", enable_timeout)
     return true;
 }
 
@@ -489,7 +470,7 @@ void OpenRover::cmdVelCB(const geometry_msgs::TwistStamped::ConstPtr& msg)
     if (frame_id == (std::string) "soft e-stopped")
     {
         e_stop_on_ = true;
-        ROS_INFO("Soft e-stopped");
+        ROS_WARN("Openrover driver - Soft e-stopped");
         motor_speeds_commanded_[FLIPPER_MOTOR_INDEX_] = MOTOR_NEUTRAL;
         motor_speeds_commanded_[LEFT_MOTOR_INDEX_] = MOTOR_NEUTRAL;
         motor_speeds_commanded_[RIGHT_MOTOR_INDEX_] = MOTOR_NEUTRAL;
@@ -519,21 +500,17 @@ void OpenRover::cmdVelCB(const geometry_msgs::TwistStamped::ConstPtr& msg)
     if (is_zero_point_turn)
     {
         motor_speed_deadband_scaled = motor_speed_deadband_ * weight_coef_;
-        //ROS_INFO("Is is_zero_point_turn");
         if (is_turning_cw)
         {
             motor_speed_deadband_scaled = motor_speed_deadband_ * weight_coef_ * cw_turn_coef_;
-            //ROS_INFO("is_turning_cw");
         }
     }
     else
     {
         motor_speed_deadband_scaled = motor_speed_deadband_;
-        //ROS_INFO("Normal Deadband");
     }
     right_motor_speed = round((linear_rate*motor_speed_linear_coef_) + (turn_rate*motor_speed_angular_coef_)) + 125;
     left_motor_speed = round((linear_rate*motor_speed_linear_coef_) - (turn_rate*motor_speed_angular_coef_)) + 125;
-    //ROS_INFO("%f, %f, %i", left_motor_speed, right_motor_speed, motor_speed_deadband_scaled); //, motor_speed_angular_deadband_);
     flipper_motor_speed = ((int)round(flipper_rate*motor_speed_flipper_coef_) + 125) % 250;
 
     //Compensate for deadband
@@ -590,7 +567,6 @@ void OpenRover::cmdVelCB(const geometry_msgs::TwistStamped::ConstPtr& msg)
     motor_speeds_commanded_[FLIPPER_MOTOR_INDEX_] = (unsigned char)flipper_motor_speed;
     if (!velocity_control_on_)
     {
-        ROS_INFO("MSC - cmd vel cb");
         motor_speeds_commanded_[LEFT_MOTOR_INDEX_] = (unsigned char)left_motor_speed;
         motor_speeds_commanded_[RIGHT_MOTOR_INDEX_] = (unsigned char)right_motor_speed;
     }
@@ -865,12 +841,10 @@ void OpenRover::serialManager()
             past_time = now_time;
             publishFastRateData();
             updateOdometry(); //Update openrover variables based on latest encoder readings
-            ROS_INFO("Vel Com - %3.3f", left_vel_commanded_);
             unsigned char left_motor_speed = left_controller_.calculate(left_vel_commanded_, left_vel_measured_, dt);
             unsigned char right_motor_speed = right_controller_.calculate(right_vel_commanded_, right_vel_measured_, dt);
             if (e_stop_on_)
             {
-                ROS_INFO("MSC - e-stop set");
                 motor_speeds_commanded_[LEFT_MOTOR_INDEX_] = MOTOR_NEUTRAL;
                 motor_speeds_commanded_[RIGHT_MOTOR_INDEX_] = MOTOR_NEUTRAL;
                 left_controller_.reset();
@@ -878,7 +852,6 @@ void OpenRover::serialManager()
             }
             else
             {
-                ROS_INFO("MSC - controller set. %i | %i | %3.3f | %3.3f", left_motor_speed, right_motor_speed, left_controller_.velocity_commanded_, left_controller_.velocity_measured_);
                 motor_speeds_commanded_[LEFT_MOTOR_INDEX_] = left_motor_speed;
                 motor_speeds_commanded_[RIGHT_MOTOR_INDEX_] = right_motor_speed;
             }

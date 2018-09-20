@@ -85,13 +85,10 @@ unsigned char OdomControl::calculate(double commanded_vel, double measured_vel, 
     if (!skip_measurement_) 
     {
         motor_speed_ = PID(error_, dt);
-        ROS_INFO("PID ms = %i", motor_speed_);
     }
 
     motor_speed_ = deadbandOffset(motor_speed_, MOTOR_DEADBAND_);
-    ROS_INFO("dead ms = %i", motor_speed_);
     motor_speed_ = boundMotorSpeed(motor_speed_, MOTOR_MAX_, MOTOR_MIN_);
-    ROS_INFO("bound ms = %i", motor_speed_);
 
     return (unsigned char) motor_speed_;
 }
@@ -124,7 +121,6 @@ int OdomControl::PID(double error, double dt)
         stop_integrating_ = false;
     }
 
-    //ROS_INFO("%4.4f | %4.4f | %4.4f | err: %4.4f | dt: %4.4f", p_val, i_val, d_val, error, dt);
     return (int)round(pid_val + 125.0);
 }
 
@@ -145,7 +141,6 @@ double OdomControl::I(double error, double dt)
 double OdomControl::P(double error, double dt)
 {
     double p_val = error*K_P_;
-    //ROS_INFO("P: %4.4f | e: %4.4f | Kp: %4.4f", p_val, error, K_P_);
     return error*K_P_;
 }
 

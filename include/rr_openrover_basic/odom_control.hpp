@@ -12,7 +12,6 @@ class OdomControl
 public:
     OdomControl(bool use_control, double Kp, double Ki, double Kd, int max, int min, std::string log_filename); //max min values for returned value
     OdomControl(bool use_control, double Kp, double Ki, double Kd, int max, int min); //max min values for returned value
-    //OdomControl();
 
     unsigned char calculate(double commanded_vel, double measured_vel, double dt); //in m/s
     void reset();
@@ -71,4 +70,4 @@ private:
 };
 
 }
-#endif /* _odom_control_hpp */
+#endif
