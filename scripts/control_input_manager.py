@@ -19,6 +19,7 @@ class CmdVelManager(object):
     local_control_lock = False
     remote_control_lock = False
     command_timeout = 0.5
+    keyboard_control_input_request = Twist()
     move_base_control_input_request = Twist()
     auto_dock_control_input_request = TwistStamped()
     fleet_manager_control_input_request = Twist()
@@ -28,6 +29,7 @@ class CmdVelManager(object):
     def __init__(self):
 
         # ROS Subscribers
+        self.keyboard_sub = rospy.Subscriber("/cmd_vel/keyboard", Twist, self.keyboard_cb)
         self.joystick_sub = rospy.Subscriber("/cmd_vel/joystick", TwistStamped, self.joystick_cb)
         self.move_base_sub = rospy.Subscriber("/cmd_vel/move_base", Twist, self.move_base_cb)
         self.fleet_manager_sub = rospy.Subscriber("/cmd_vel/fleet_manager", Twist, self.fleet_manager_cb)
@@ -46,6 +48,7 @@ class CmdVelManager(object):
         self.last_auto_dock_command_time = rospy.Time.now()
         self.last_fleet_manager_command_time = rospy.Time.now()
         self.last_joy_command_time = rospy.Time.now()
+        self.last_keyboard_command_time = rospy.Time.now()
 
     def control_input_pub(self, data):
 
@@ -60,6 +63,7 @@ class CmdVelManager(object):
 
         move_base_time_elapsed = current_time - self.last_move_base_command_time
         auto_dock_time_elapsed = current_time - self.last_auto_dock_command_time
+        keyboard_time_elapsed = current_time - self.last_keyboard_command_time
         fleet_manager_time_elapsed = current_time - self.last_fleet_manager_command_time
         joy_time_elapsed = current_time - self.last_joy_command_time
 
@@ -81,7 +85,11 @@ class CmdVelManager(object):
             if fleet_manager_time_elapsed.to_sec() < self.command_timeout:
                 my_managed_control_input.twist = self.fleet_manager_control_input_request
                 my_managed_control_input.header.frame_id = 'fleet_manager'
- 
+
+        # keyboard priority 2
+        if keyboard_time_elapsed.to_sec() < self.command_timeout:
+            my_managed_control_input.twist = self.keyboard_control_input_request
+            my_managed_control_input.header.frame_id = 'keyboard'
 
         # Process joystick requests (Highest Priority 1)
         if joy_time_elapsed.to_sec() < self.command_timeout:
@@ -121,10 +129,16 @@ class CmdVelManager(object):
             self.remote_control_lock = True
             self.fleet_manager_control_input_request = fleet_manager_cmd_vel
 
+    def keyboard_cb(self, keyboard_cmd_vel):
+        # If a user starts to command the robot with a joystick, set local lock
+        if (keyboard_cmd_vel.linear.x, keyboard_cmd_vel.angular.y, keyboard_cmd_vel.angular.z) != (0,0,0):
+            self.last_keyboard_command_time = rospy.Time.now()
+            self.local_control_lock = True
+        self.keyboard_control_input_request = keyboard_cmd_vel
 
     def joystick_cb(self, joy_cmd_vel):
         # If a user starts to command the robot with a joystick, set local lock
-        if (joy_cmd_vel.twist.linear.x, joy_cmd_vel.twist.angular.y, joy_cmd_vel.twist.angular.z) != (0,0,0):    
+        if (joy_cmd_vel.twist.linear.x, joy_cmd_vel.twist.angular.y, joy_cmd_vel.twist.angular.z) != (0,0,0):
             self.last_joy_command_time = joy_cmd_vel.header.stamp
             self.local_control_lock = True
         self.joy_control_input_request = joy_cmd_vel
