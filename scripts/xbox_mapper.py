@@ -150,6 +150,7 @@ FLIPPER_INCREMENTS = float(20)
 DEADBAND = 0.2
 FWD_ACC_LIM = 0.2 
 TRN_ACC_LIM = 0.4 
+DPAD_ACTIVE = False
 
 a_button_msg = Bool()
 a_button_msg.data=False
@@ -202,6 +203,7 @@ def joy_cb(Joy):
     global FLIPPER_INCREMENTS
     global PREV_CMD_TIME
     global PREV_SEQ_NUM
+    global DPAD_ACTIVE
 
     global cmd
     global seq
@@ -259,19 +261,19 @@ def joy_cb(Joy):
     if ADJ_THROTTLE:
         # Increase/Decrease Max Speed
         if (driver == "xpad"):
-            if int(Joy.axes[DPAD_V_AXES]) == 1:
+            if int(Joy.axes[DPAD_V_AXES]) == 1 and not DPAD_ACTIVE:
                 DRIVE_THROTTLE += (1 / DRIVE_INCREMENTS)
-                rospy.loginfo(DRIVE_THROTTLE)
-            if int(Joy.axes[DPAD_V_AXES]) == -1:
+                DPAD_ACTIVE = True
+            if int(Joy.axes[DPAD_V_AXES]) == -1 and not DPAD_ACTIVE:
                 DRIVE_THROTTLE -= (1 / DRIVE_INCREMENTS)
-                rospy.loginfo(DRIVE_THROTTLE)
+                DPAD_ACTIVE = True
         elif (driver == "xboxdrv"):
-            if int(Joy.axes[DPAD_V_AXES]) == 1:
+            if int(Joy.axes[DPAD_V_AXES]) == 1 and not DPAD_ACTIVE:
                 DRIVE_THROTTLE += (1 / DRIVE_INCREMENTS)
-                rospy.loginfo("Drive Throttle: %i", DRIVE_THROTTLE)
-            if int(Joy.axes[DPAD_V_AXES]) == -1:
+                DPAD_ACTIVE = True
+            if int(Joy.axes[DPAD_V_AXES]) == -1 and not DPAD_ACTIVE:
                 DRIVE_THROTTLE -= (1 / DRIVE_INCREMENTS)
-                rospy.loginfo("Drive Throttle: %i", DRIVE_THROTTLE)
+                DPAD_ACTIVE = True
 
         if Joy.buttons[LB_BUTTON] == 1:
                 FLIPPER_THROTTLE -= (1 / FLIPPER_INCREMENTS)
@@ -294,11 +296,16 @@ def joy_cb(Joy):
         if FLIPPER_THROTTLE >= 1:
             FLIPPER_THROTTLE = 1
 
-
         #Update DEADBAND
         FWD_DEADBAND = 0.2 * DRIVE_THROTTLE * MAX_VEL_FWD
         TURN_DEADBAND = 0.2 * DRIVE_THROTTLE * MAX_VEL_TURN
         FLIPPER_DEADBAND = 0.2 * FLIPPER_THROTTLE * MAX_VEL_FLIPPER
+        
+        if DPAD_ACTIVE:
+            rospy.loginfo("Drive Throttle: %f", DRIVE_THROTTLE)
+
+        if (Joy.axes[DPAD_V_AXES], Joy.axes[DPAD_H_AXES]) == (0,0):
+            DPAD_ACTIVE = False
 
     # Drive Forward/Backward commands
     drive_cmd = DRIVE_THROTTLE * MAX_VEL_FWD * Joy.axes[L_STICK_V_AXES] #left joystick
@@ -306,7 +313,7 @@ def joy_cb(Joy):
         drive_cmd = 0 
         
     # Turn left/right commands
-    turn_cmd = DRIVE_THROTTLE * MAX_VEL_TURN * Joy.axes[R_STICK_H_AXES] #right joystick
+    turn_cmd = (1.1-(drive_cmd/MAX_VEL_FWD)) * DRIVE_THROTTLE * MAX_VEL_TURN * Joy.axes[R_STICK_H_AXES]  #right joystick
     if turn_cmd < TURN_DEADBAND and -TURN_DEADBAND < turn_cmd:
         turn_cmd = 0
 
