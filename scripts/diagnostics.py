@@ -17,11 +17,7 @@ class rover_diagnostic():
         warn_msg = "Battery Levels [" + str(data.reg_robot_rel_soc_a) + ", " + str(data.reg_robot_rel_soc_b) + "]    Motor temps [" + str(data.reg_motor_temp_left) + ", " + str(data.reg_motor_temp_right) + "]"
 #        rospy.logwarn_throttle(60,warn_msg)
 
-        # Initialize Key Value message
-        #msg = String()
-
         # Publish battery cell 1 SOC
-        #msg.data = ("Battery Cell 1 SOC=" + str(data.reg_robot_rel_soc_a))
         self.pub.publish(("Battery Cell 1 SOC=" + str(data.reg_robot_rel_soc_a)))
 
         # Publish battery cell 2 SOC
