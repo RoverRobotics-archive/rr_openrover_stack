@@ -18,47 +18,38 @@ class rover_diagnostic():
 #        rospy.logwarn_throttle(60,warn_msg)
 
         # Initialize Key Value message
-        msg = String()
+        #msg = String()
 
         # Publish battery cell 1 SOC
-        msg.data = "Battery Cell 1 SOC=" + str(data.reg_robot_rel_soc_a)
-        self.pub.publish(msg)
+        #msg.data = ("Battery Cell 1 SOC=" + str(data.reg_robot_rel_soc_a))
+        self.pub.publish(("Battery Cell 1 SOC=" + str(data.reg_robot_rel_soc_a)))
 
         # Publish battery cell 2 SOC
-        msg.data = "Battery Cell 2 SOC=" + str(data.reg_robot_rel_soc_b)
-        self.pub.publish(msg)
+        self.pub.publish(("Battery Cell 2 SOC=" + str(data.reg_robot_rel_soc_b)))
 
         # Publish motor 1 temp 
-        msg.data = "Left Motor Temp=" + str(data.reg_motor_temp_left)
-        self.pub.publish(msg)
+        self.pub.publish(("Left Motor Temp=" + str(data.reg_motor_temp_left)))
 
         # Publish motor 2 temp
-        msg.data = "Right Motor Temp=" + str(data.reg_motor_temp_right)
-        self.pub.publish(msg)
+        self.pub.publish("Right Motor Temp=" + str(data.reg_motor_temp_right))
 
         # Publish battery_status_a
-        msg.data = "Battery Status A=" + str(data.battery_status_a)
-        self.pub.publish(msg)
+        self.pub.publish("Battery Status A=" + str(data.battery_status_a))
 
         # Publish battery_status_b
-        msg.data = "Battery Status B=" + str(data.battery_status_b)
-        self.pub.publish(msg)
+        self.pub.publish("Battery Status B=" + str(data.battery_status_b))
 
         # Publish battery_mode_a
-        msg.data = "Battery Mode A=" + str(data.battery_mode_a)
-        self.pub.publish(msg)
+        self.pub.publish("Battery Mode A=" + str(data.battery_mode_a))
 
         # Publish battery_mode_b
-        msg.data = "Battery Mode B=" + str(data.battery_mode_b)
-        self.pub.publish(msg)
+        self.pub.publish("Battery Mode B=" + str(data.battery_mode_b))
 
         # Publish battery_temp_a
-        msg.data = "Battery Temp A=" + str(data.battery_temp_a)
-        self.pub.publish(msg)
+        self.pub.publish("Battery Temp A=" + str(data.battery_temp_a))
 
         # Publish battery_temp_b
-        msg.data = "Battery Temp B=" + str(data.battery_temp_b)
-        self.pub.publish(msg)
+        self.pub.publish("Battery Temp B=" + str(data.battery_temp_b))
 
 if __name__ == '__main__':
     rospy.loginfo("Starting node")
