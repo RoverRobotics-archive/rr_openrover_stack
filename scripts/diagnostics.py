@@ -36,6 +36,29 @@ class rover_diagnostic():
         msg.data = "Right Motor Temp=" + str(data.reg_motor_temp_right)
         self.pub.publish(msg)
 
+        # Publish battery_status_a
+        msg.data = "Battery Status A=" + str(data.battery_status_a)
+        self.pub.publish(msg)
+
+        # Publish battery_status_b
+        msg.data = "Battery Status B=" + str(data.battery_status_b)
+        self.pub.publish(msg)
+
+        # Publish battery_mode_a
+        msg.data = "Battery Mode A=" + str(data.battery_mode_a)
+        self.pub.publish(msg)
+
+        # Publish battery_mode_b
+        msg.data = "Battery Mode B=" + str(data.battery_mode_b)
+        self.pub.publish(msg)
+
+        # Publish battery_temp_a
+        msg.data = "Battery Temp A=" + str(data.battery_temp_a)
+        self.pub.publish(msg)
+
+        # Publish battery_temp_b
+        msg.data = "Battery Temp B=" + str(data.battery_temp_b)
+        self.pub.publish(msg)
 
 if __name__ == '__main__':
     rospy.loginfo("Starting node")
