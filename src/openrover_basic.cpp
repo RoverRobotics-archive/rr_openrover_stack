@@ -681,8 +681,11 @@ void OpenRover::publishWheelVels() //Update to publish from OdomControl
     vel_vec.data.push_back(right_vel_measured_);
     vel_vec.data.push_back(right_vel_commanded_);
 
+    vel_vec.data.push_back(motor_speeds_commanded_[LEFT_MOTOR_INDEX_]);
+    vel_vec.data.push_back(motor_speeds_commanded_[RIGHT_MOTOR_INDEX_]);
+
     vel_calc_pub.publish(vel_vec);
-/*    if (global_file.is_open())
+    if (global_file.is_open())
     {
         double ros_now_time = ros::Time::now().toNSec();
         //ROS_INFO("writing to file");
@@ -694,7 +697,7 @@ void OpenRover::publishWheelVels() //Update to publish from OdomControl
             global_file << ",";
         }
          global_file << std::endl;
-    }*/
+    }
     return;
 }
 
@@ -874,6 +877,9 @@ void OpenRover::serialManager()
             updateOdometry(); //Update openrover variables based on latest encoder readings
             unsigned char left_motor_speed = left_controller_.calculate(left_vel_commanded_, left_vel_measured_, dt);
             unsigned char right_motor_speed = right_controller_.calculate(right_vel_commanded_, right_vel_measured_, dt);
+            left_vel_filtered_ = left_controller_.velocity_filtered_;
+            right_vel_filtered_ = right_controller_.velocity_filtered_;
+
             if (e_stop_on_)
             {
                 motor_speeds_commanded_[LEFT_MOTOR_INDEX_] = MOTOR_NEUTRAL;
