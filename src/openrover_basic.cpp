@@ -122,6 +122,13 @@ const int i_REG_POWER_A_CURRENT = 42;  //5hz
 const int i_REG_POWER_B_CURRENT = 44; //5hz
 const int i_REG_MOTOR_FLIPPER_ANGLE = 46;  //5hz
 
+const int i_BATTERY_STATUS_A = 52;
+const int i_BATTERY_STATUS_B = 54;
+const int i_BATTERY_MODE_A = 56;
+const int i_BATTERY_MODE_B = 58;
+const int i_BATTERY_TEMP_A = 60;
+const int i_BATTERY_TEMP_B = 62;
+
 //const int i_to_computer_REG_MOTOR_SIDE_FAN_SPEED = 48; //5hz----WIP
 //const int i_to_computer_REG_MOTOR_SLOW_SPEED = 50; //5hz ----WIP
 
@@ -141,7 +148,9 @@ const int ROBOT_DATA_INDEX_SLOW[] = {
 //i_REG_MOTOR_FAULT_FLAG_LEFT, ----WIP
 i_REG_MOTOR_TEMP_LEFT,
 i_REG_MOTOR_TEMP_RIGHT, i_REG_POWER_BAT_VOLTAGE_A, i_REG_POWER_BAT_VOLTAGE_B,
-i_REG_ROBOT_REL_SOC_A, i_REG_ROBOT_REL_SOC_B, i_BUILDNO};
+i_REG_ROBOT_REL_SOC_A, i_REG_ROBOT_REL_SOC_B,
+i_BATTERY_STATUS_A, i_BATTERY_STATUS_B, i_BATTERY_MODE_A, i_BATTERY_MODE_B, i_BATTERY_TEMP_A, i_BATTERY_TEMP_B,
+i_BUILDNO};
 
 const int FAST_SIZE = sizeof(ROBOT_DATA_INDEX_FAST)/sizeof(ROBOT_DATA_INDEX_FAST[0]);
 const int MEDIUM_SIZE = sizeof(ROBOT_DATA_INDEX_MEDIUM)/sizeof(ROBOT_DATA_INDEX_MEDIUM[0]);
@@ -158,7 +167,7 @@ OpenRover::OpenRover( ros::NodeHandle& nh, ros::NodeHandle& nh_priv ) :
     nh_priv_(nh_priv),
     port_("/dev/ttyUSB0"),
     baud_(57600),
-    fast_rate_(60.0), //10Hz Total Serial data is limited to 66 msgs/second
+    fast_rate_(10.0), //10Hz Total Serial data is limited to 66 msgs/second
     medium_rate_(2.0), //2Hz
     slow_rate_(1.0), //1Hz
     motor_speeds_commanded_{MOTOR_NEUTRAL,MOTOR_NEUTRAL,MOTOR_NEUTRAL}, //default motor commands to neutral
@@ -755,6 +764,12 @@ void OpenRover::publishSlowRateData()
     slow_msg.reg_power_bat_voltage_b = robot_data_[i_REG_POWER_BAT_VOLTAGE_B];
     slow_msg.reg_robot_rel_soc_a = robot_data_[i_REG_ROBOT_REL_SOC_A];      
     slow_msg.reg_robot_rel_soc_b = robot_data_[i_REG_ROBOT_REL_SOC_B];  
+    slow_msg.battery_status_a = robot_data_[i_BATTERY_STATUS_A];
+    slow_msg.battery_status_b = robot_data_[i_BATTERY_STATUS_B];
+    slow_msg.battery_mode_a = robot_data_[i_BATTERY_MODE_A];
+    slow_msg.battery_mode_b = robot_data_[i_BATTERY_MODE_B];
+    slow_msg.battery_temp_a = robot_data_[i_BATTERY_TEMP_A];
+    slow_msg.battery_temp_b = robot_data_[i_BATTERY_TEMP_B];
     slow_msg.buildno = robot_data_[i_BUILDNO];
     
     slow_rate_pub.publish(slow_msg);

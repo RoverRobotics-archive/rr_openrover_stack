@@ -83,7 +83,7 @@ private:
     //General Class variables
     int baud_; //serial baud rate
     int fd;
-    int robot_data_[50]; //stores all received data from robot
+    int robot_data_[70]; //stores all received data from robot
     int is_charging_;
     int motor_speeds_commanded_[3]; //stores most recent commanded motor speeds
     const int LEFT_MOTOR_INDEX_;
