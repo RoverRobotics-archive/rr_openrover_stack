@@ -167,7 +167,7 @@ OpenRover::OpenRover( ros::NodeHandle& nh, ros::NodeHandle& nh_priv ) :
     nh_priv_(nh_priv),
     port_("/dev/ttyUSB0"),
     baud_(57600),
-    fast_rate_(10.0), //10Hz Total Serial data is limited to 66 msgs/second
+    fast_rate_(60.0), //10Hz Total Serial data is limited to 66 msgs/second
     medium_rate_(2.0), //2Hz
     slow_rate_(1.0), //1Hz
     motor_speeds_commanded_{MOTOR_NEUTRAL,MOTOR_NEUTRAL,MOTOR_NEUTRAL}, //default motor commands to neutral
