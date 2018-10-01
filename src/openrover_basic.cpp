@@ -177,7 +177,7 @@ OpenRover::OpenRover( ros::NodeHandle& nh, ros::NodeHandle& nh_priv ) :
     publish_slow_rate_vals_(false),
     is_serial_coms_open_(false),
     low_speed_mode_on_(false),
-    closed_loop_control_on_(true),
+    closed_loop_control_on_(false),
     K_P_(K_P), //old val 40.5
     K_I_(K_I),//2029.617 //1056.52), //old val 97.2
     K_D_(K_D),
@@ -875,10 +875,7 @@ void OpenRover::serialManager()
             past_time = now_time;
             publishFastRateData();
             updateOdometry(); //Update openrover variables based on latest encoder readings
-            unsigned char left_motor_speed = left_controller_.calculate(left_vel_commanded_, left_vel_measured_, dt);
-            unsigned char right_motor_speed = right_controller_.calculate(right_vel_commanded_, right_vel_measured_, dt);
-            left_vel_filtered_ = left_controller_.velocity_filtered_;
-            right_vel_filtered_ = right_controller_.velocity_filtered_;
+
 
             if (e_stop_on_)
             {
@@ -889,9 +886,15 @@ void OpenRover::serialManager()
             }
             else
             {
-                motor_speeds_commanded_[LEFT_MOTOR_INDEX_] = left_motor_speed;
-                motor_speeds_commanded_[RIGHT_MOTOR_INDEX_] = right_motor_speed;
+                if (closed_loop_control_on_)
+                {
+                    motor_speeds_commanded_[LEFT_MOTOR_INDEX_] = left_controller_.calculate(left_vel_commanded_, left_vel_measured_, dt);
+                    motor_speeds_commanded_[RIGHT_MOTOR_INDEX_] = right_controller_.calculate(right_vel_commanded_, right_vel_measured_, dt);
+                    left_vel_filtered_ = left_controller_.velocity_filtered_;
+                    right_vel_filtered_ = right_controller_.velocity_filtered_;
+                }
             }
+
             publishOdometry(left_vel_measured_, right_vel_measured_); //Publish new calculated odometry
             publishWheelVels(); //call after publishOdomEnc()
             publishMotorSpeeds();
