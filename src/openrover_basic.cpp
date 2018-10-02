@@ -157,6 +157,7 @@ const int MEDIUM_SIZE = sizeof(ROBOT_DATA_INDEX_MEDIUM)/sizeof(ROBOT_DATA_INDEX_
 const int SLOW_SIZE = sizeof(ROBOT_DATA_INDEX_SLOW)/sizeof(ROBOT_DATA_INDEX_SLOW[0]);
 
 std::ofstream global_file ("tuning_data.csv");
+const bool LOG_CONTROLLER_DATA = false;
 
 const double K_P = 80;
 const double K_I = 200;
@@ -196,7 +197,10 @@ OpenRover::OpenRover( ros::NodeHandle& nh, ros::NodeHandle& nh_priv ) :
     FLIPPER_MOTOR_INDEX_(2)
 {
     ROS_INFO( "Initializing openrover driver." );
-    global_file << "time,left_filtered,left_measured,left_commanded,right_filtered,right_measured,right_commanded" << std::endl;
+    if (LOG_CONTROLLER_DATA)
+    {
+        global_file << "time,left_filtered,left_measured,left_commanded,right_filtered,right_measured,right_commanded" << std::endl;
+    }
     
     serial_fast_buffer_.reserve(10*FAST_SIZE); //reserve space for 5 sets of FAST rate data
     serial_medium_buffer_.reserve(10*MEDIUM_SIZE); //reserve space for 5 sets of Medium rate data
@@ -685,7 +689,7 @@ void OpenRover::publishWheelVels() //Update to publish from OdomControl
     vel_vec.data.push_back(motor_speeds_commanded_[RIGHT_MOTOR_INDEX_]);
 
     vel_calc_pub.publish(vel_vec);
-    if (global_file.is_open())
+    if (global_file.is_open() && LOG_CONTROLLER_DATA)
     {
         double ros_now_time = ros::Time::now().toNSec();
         //ROS_INFO("writing to file");
