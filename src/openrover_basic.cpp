@@ -7,6 +7,7 @@
 #include <cmath>
 #include <fstream>
 #include <iostream>
+#include <sys/ioctl.h>
 
 #include "tf/tf.h"
 #include "std_msgs/Int32.h"
@@ -1163,6 +1164,7 @@ bool OpenRover::openComs()
         ROS_FATAL( "Failed to set port attributes: %s", strerror( errno ) );
         return false;
     }
+    ::ioctl(fd, TIOCEXCL); //turn on exclusive mode
 
     ROS_INFO("Serial port opened");
     is_serial_coms_open_ = true;
