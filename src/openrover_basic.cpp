@@ -1025,6 +1025,7 @@ int OpenRover::readCommand()
     {
         char str_ex [50];
         sprintf(str_ex, "Received bad start byte. Received: %02x", read_buffer[0]);
+        tcflush(fd,TCIOFLUSH); //flush received buffer
         throw std::string(str_ex);
     }
 
@@ -1045,6 +1046,7 @@ int OpenRover::readCommand()
     {
         char str_ex [50];
         sprintf(str_ex, "Received bad CRC. Received: %02x,%02x,%02x,%02x,%02x", read_buffer[0], read_buffer[1], read_buffer[2], read_buffer[3], read_buffer[4]);
+        tcflush(fd,TCIOFLUSH); //flush received buffer
         throw std::string(str_ex);
     }
 
@@ -1161,6 +1163,8 @@ bool OpenRover::openComs()
 
     ROS_INFO("Serial port opened");
     is_serial_coms_open_ = true;
+    tcflush(fd,TCIOFLUSH); //flush received buffer
+
     return true;
 }
 
