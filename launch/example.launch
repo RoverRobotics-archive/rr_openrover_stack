@@ -1,6 +1,6 @@
 <launch>
 
-    <arg name="openrover_node_name" default="rr_openrover_basic"/>
+    <arg name="openrover_node_name" default="rr_openrover_basic_node"/>
 
     <!-- OpenRover Driver -->
     <node pkg="rr_openrover_basic" type="openrover_basic_node" name="$(arg openrover_node_name)" respawn="true" output="screen">
