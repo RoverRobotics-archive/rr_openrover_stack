@@ -1009,7 +1009,8 @@ bool OpenRover::sendCommand(int param1, int param2)
 int OpenRover::readCommand()
 {//only used after a send command with param1==10
     unsigned char read_buffer[1];
-    int data, checksum, read_checksum, data1, data2, dataNO;
+    unsigned char start_byte_read, checksum, read_checksum, data1, data2, dataNO;
+    int data; 
     if (!(fd > 0))
     {
         ROS_INFO("Serial communication failed. Attempting to restart.");
@@ -1020,11 +1021,12 @@ int OpenRover::readCommand()
     }
 
     int bits_read = read(fd, read_buffer, 1);
-    
-    if(!(SERIAL_START_BYTE==read_buffer[0]))
+    start_byte_read = read_buffer[0];
+
+    if(!(SERIAL_START_BYTE==start_byte_read))
     {
         char str_ex [50];
-        sprintf(str_ex, "Received bad start byte. Received: %02x", read_buffer[0]);
+        sprintf(str_ex, "Received bad start byte. Received: %02x", start_byte_read);
         tcflush(fd,TCIOFLUSH); //flush received buffer
         throw std::string(str_ex);
     }
@@ -1045,11 +1047,11 @@ int OpenRover::readCommand()
     if(!(checksum == read_checksum))
     {
         char str_ex [50];
-        sprintf(str_ex, "Received bad CRC. Received: %02x,%02x,%02x,%02x,%02x", read_buffer[0], read_buffer[1], read_buffer[2], read_buffer[3], read_buffer[4]);
+        sprintf(str_ex, "Received bad CRC. Received: %02x,%02x,%02x,%02x,%02x", start_byte_read, dataNO, data1, data2, read_checksum);
         tcflush(fd,TCIOFLUSH); //flush received buffer
         throw std::string(str_ex);
     }
-    ROS_INFO("Received: %02x,%02x,%02x,%02x,%02x", read_buffer[0], read_buffer[1], read_buffer[2], read_buffer[3], read_buffer[4]); //print every received message
+    ROS_INFO("Received: %02x,%02x,%02x,%02x,%02x", start_byte_read, dataNO, data1, data2, read_checksum); //print every received message
     data = (data1 << 8) + data2;
     return data;
 }
