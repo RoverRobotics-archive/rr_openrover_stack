@@ -1003,6 +1003,7 @@ bool OpenRover::sendCommand(int param1, int param2)
         sprintf(str_ex, "Failed to send command: %02x,%02x,%02x,%02x,%02x,%02x,%02x", write_buffer[0],write_buffer[1],write_buffer[2],write_buffer[3],write_buffer[4],write_buffer[5],write_buffer[6]);
         throw std::string(str_ex);
     }
+    ROS_INFO("Sent: %02x,%02x,%02x,%02x,%02x,%02x,%02x", write_buffer[0],write_buffer[1],write_buffer[2],write_buffer[3],write_buffer[4],write_buffer[5],write_buffer[6]);
     return true;
 }
 
