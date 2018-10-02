@@ -1049,7 +1049,7 @@ int OpenRover::readCommand()
         tcflush(fd,TCIOFLUSH); //flush received buffer
         throw std::string(str_ex);
     }
-
+    ROS_INFO("Received: %02x,%02x,%02x,%02x,%02x", read_buffer[0], read_buffer[1], read_buffer[2], read_buffer[3], read_buffer[4]); //print every received message
     data = (data1 << 8) + data2;
     return data;
 }
