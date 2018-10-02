@@ -220,6 +220,7 @@ bool OpenRover::start()
     if(!setupRobotParams())
     {
         ROS_WARN("Failed to setup Robot parameters.");
+        return false;
     }
 
     ROS_INFO("Creating Publishers and Subscribers");
@@ -249,7 +250,8 @@ bool OpenRover::setupRobotParams()
     if (!(openComs()))
     {
         is_serial_coms_open_ = false;
-        ROS_WARN("Failed to start serial comunication.");
+        ROS_ERROR("Failed to start serial comunication.");
+        return false;
     }
 
     if (!(nh_priv_.getParam("closed_loop_control_on", closed_loop_control_on_)))
@@ -994,7 +996,7 @@ bool OpenRover::sendCommand(int param1, int param2)
         ROS_INFO("Serial communication failed. Attempting to restart.");
         if (!(openComs()))
         {
-            ROS_INFO("Failed to restart serial comunication.");
+            ROS_WARN("Failed to restart serial comunication.");
         }
     }
     
@@ -1018,7 +1020,7 @@ int OpenRover::readCommand()
         ROS_INFO("Serial communication failed. Attempting to restart.");
         if (!(openComs()))
         {
-            ROS_INFO("Failed to restart serial comunication.");
+            ROS_WARN("Failed to restart serial comunication.");
         }
     }
 
@@ -1110,27 +1112,27 @@ bool OpenRover::openComs()
     fd = ::open( port_.c_str( ), O_RDWR | O_NOCTTY | O_NDELAY );
     if( fd < 0 )
     {
-        ROS_FATAL( "Failed to open port: %s", strerror( errno ) );
+        ROS_ERROR( "Failed to open port: %s", strerror( errno ) );
         return false;
     }
     if( 0 > fcntl( fd, F_SETFL, 0 ) )
     {
-        ROS_FATAL( "Failed to set port descriptor: %s", strerror( errno ) );
+        ROS_ERROR( "Failed to set port descriptor: %s", strerror( errno ) );
         return false;
     }
     if( 0 > tcgetattr( fd, &fd_options ) )
     {
-        ROS_FATAL( "Failed to fetch port attributes: %s", strerror( errno ) );
+        ROS_ERROR( "Failed to fetch port attributes: %s", strerror( errno ) );
         return false;
     }
     if( 0 > cfsetispeed( &fd_options, B57600 ) )
     {
-        ROS_FATAL( "Failed to set input baud: %s", strerror( errno ) );
-            return false;
+        ROS_ERROR( "Failed to set input baud: %s", strerror( errno ) );
+        return false;
     }
     if( 0 > cfsetospeed( &fd_options, B57600 ) )
     {
-        ROS_FATAL( "Failed to set output baud: %s", strerror( errno ) );
+        ROS_ERROR( "Failed to set output baud: %s", strerror( errno ) );
         return false;
     }
 
@@ -1161,7 +1163,7 @@ bool OpenRover::openComs()
 
     if( 0 > tcsetattr( fd, TCSANOW, &fd_options ) )
     {
-        ROS_FATAL( "Failed to set port attributes: %s", strerror( errno ) );
+        ROS_ERROR( "Failed to set port attributes: %s", strerror( errno ) );
         return false;
     }
     ::ioctl(fd, TIOCEXCL); //turn on exclusive mode
@@ -1206,7 +1208,10 @@ int main( int argc, char *argv[] )
         }
 */
         if( !openrover.start( ) )
-                ROS_ERROR( "Failed to start the driver" );
+        {
+            ROS_FATAL( "Failed to start the driver" );
+            ros::requestShutdown();
+        }
 
         ros::Rate loop_rate(openrover::LOOP_RATE);
 
@@ -1217,7 +1222,7 @@ int main( int argc, char *argv[] )
                 ros::spinOnce();
                 //Process Serial Buffers
                 openrover.serialManager();
-                loop_rate.sleep();
+                loop_rate.sleep(); //sleeping greatly reduces CPU
             }
             catch(std::string s)
             {
