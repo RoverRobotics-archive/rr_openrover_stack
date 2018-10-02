@@ -1,9 +1,9 @@
 <launch>
 
-    <arg name="openrover_node_name" default="rr_openrover_basic_node"/>
+    <arg name="openrover_node_name" default="rr_openrover_basic"/>
 
     <!-- OpenRover Driver -->
-    <node pkg="rr_openrover_basic" type="rr_openrover_basic" name="$(arg openrover_node_name)" respawn="false" output="screen">
+    <node pkg="rr_openrover_basic" type="openrover_basic_node" name="$(arg openrover_node_name)" respawn="false" output="screen">
         <param name="port" value="/dev/rover" />
         <param name="drive_type" value="4wd" />
         <param name="enable_timeout" type="bool" value="true"/>
