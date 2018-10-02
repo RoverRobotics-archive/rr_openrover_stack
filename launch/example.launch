@@ -3,7 +3,7 @@
     <arg name="openrover_node_name" default="rr_openrover_basic"/>
 
     <!-- OpenRover Driver -->
-    <node pkg="rr_openrover_basic" type="openrover_basic_node" name="$(arg openrover_node_name)" output="screen">
+    <node pkg="rr_openrover_basic" type="openrover_basic_node" name="$(arg openrover_node_name)" respawn="true" output="screen">
         <param name="port" value="/dev/rover" />
         <param name="drive_type" value="4wd" />
         <param name="enable_timeout" type="bool" value="true"/>
@@ -16,7 +16,7 @@
     </node>
 
     <!-- OpenRover InOrbit Diagnostics -->
-    <node pkg="rr_openrover_basic" type="diagnostics.py" name="rr_openrover_diagnostics_node" respawn="true">
+    <node pkg="rr_openrover_basic" type="diagnostics.py" name="rr_openrover_diagnostics_node">
         <remap from="/raw_slow_rate_data" to="/$(arg openrover_node_name)/raw_slow_rate_data"/>
     </node>
 
