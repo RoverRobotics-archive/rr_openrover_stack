@@ -169,9 +169,9 @@ OpenRover::OpenRover( ros::NodeHandle& nh, ros::NodeHandle& nh_priv ) :
     nh_priv_(nh_priv),
     port_("/dev/ttyUSB0"),
     baud_(57600),
-    fast_rate_(60.0), //10Hz Total Serial data is limited to 66 msgs/second
-    medium_rate_(2.0), //2Hz
-    slow_rate_(1.0), //1Hz
+    fast_rate_(60.0), //Hz -> drop to 10Hz on Rpi
+    medium_rate_(2.0), //Hz
+    slow_rate_(1.0), //Hz
     motor_speeds_commanded_{MOTOR_NEUTRAL,MOTOR_NEUTRAL,MOTOR_NEUTRAL}, //default motor commands to neutral
     timeout_(0.5), //in seconds
     publish_fast_rate_vals_(false),
@@ -180,8 +180,8 @@ OpenRover::OpenRover( ros::NodeHandle& nh, ros::NodeHandle& nh_priv ) :
     is_serial_coms_open_(false),
     low_speed_mode_on_(false),
     closed_loop_control_on_(false),
-    K_P_(K_P), //old val 40.5
-    K_I_(K_I),//2029.617 //1056.52), //old val 97.2
+    K_P_(K_P),
+    K_I_(K_I),
     K_D_(K_D),
     left_controller_ (closed_loop_control_on_, K_P, K_I, K_D, MOTOR_SPEED_MAX, MOTOR_SPEED_MIN),
     right_controller_ (closed_loop_control_on_, K_P, K_I, K_D, MOTOR_SPEED_MAX, MOTOR_SPEED_MIN),
@@ -418,7 +418,7 @@ bool OpenRover::setupRobotParams()
     ROS_INFO("port: %s", port_.c_str());
     ROS_INFO("drive_type: %s", drive_type_.c_str());
     ROS_INFO("timeout: %f s", timeout_);
-    ROS_INFO("default_low_speed_mode: %i", low_speed_mode_on_);
+    ROS_INFO("closed_loop_control_on: %i", closed_loop_control_on_);
     ROS_INFO("total_weight: %f kg", total_weight_);
     ROS_INFO("slippage_factor: %f", odom_slippage_factor_);
     ROS_INFO("odom_covariance_0: %f", odom_covariance_0_);
@@ -1208,7 +1208,7 @@ int main( int argc, char *argv[] )
 */
         if( !openrover.start( ) )
         {
-            ROS_FATAL( "Failed to start the driver" );
+            ROS_FATAL( "Failed to start the openrover driver" );
             ros::requestShutdown();
         }
 
