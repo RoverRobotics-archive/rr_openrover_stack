@@ -50,7 +50,10 @@ OdomControl::OdomControl(bool use_control, double Kp, double Ki, double Kd, int 
     at_min_motor_speed_(false),
     stop_integrating_(false),
     error_(0),
-    integral_value_(0)
+    integral_value_(0),
+    velocity_commanded_(0),
+    velocity_measured_(0),
+    velocity_filtered_(0)
 {
 }
 

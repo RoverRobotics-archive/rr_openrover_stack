@@ -7,6 +7,7 @@
 #include <cmath>
 #include <fstream>
 #include <iostream>
+#include <sys/ioctl.h>
 
 #include "tf/tf.h"
 #include "std_msgs/Int32.h"
@@ -157,6 +158,7 @@ const int MEDIUM_SIZE = sizeof(ROBOT_DATA_INDEX_MEDIUM)/sizeof(ROBOT_DATA_INDEX_
 const int SLOW_SIZE = sizeof(ROBOT_DATA_INDEX_SLOW)/sizeof(ROBOT_DATA_INDEX_SLOW[0]);
 
 std::ofstream global_file ("tuning_data.csv");
+const bool LOG_CONTROLLER_DATA = false;
 
 const double K_P = 80;
 const double K_I = 200;
@@ -167,7 +169,7 @@ OpenRover::OpenRover( ros::NodeHandle& nh, ros::NodeHandle& nh_priv ) :
     nh_priv_(nh_priv),
     port_("/dev/ttyUSB0"),
     baud_(57600),
-    fast_rate_(10.0), //10Hz Total Serial data is limited to 66 msgs/second
+    fast_rate_(60.0), //10Hz Total Serial data is limited to 66 msgs/second
     medium_rate_(2.0), //2Hz
     slow_rate_(1.0), //1Hz
     motor_speeds_commanded_{MOTOR_NEUTRAL,MOTOR_NEUTRAL,MOTOR_NEUTRAL}, //default motor commands to neutral
@@ -177,7 +179,7 @@ OpenRover::OpenRover( ros::NodeHandle& nh, ros::NodeHandle& nh_priv ) :
     publish_slow_rate_vals_(false),
     is_serial_coms_open_(false),
     low_speed_mode_on_(false),
-    closed_loop_control_on_(true),
+    closed_loop_control_on_(false),
     K_P_(K_P), //old val 40.5
     K_I_(K_I),//2029.617 //1056.52), //old val 97.2
     K_D_(K_D),
@@ -196,7 +198,10 @@ OpenRover::OpenRover( ros::NodeHandle& nh, ros::NodeHandle& nh_priv ) :
     FLIPPER_MOTOR_INDEX_(2)
 {
     ROS_INFO( "Initializing openrover driver." );
-    global_file << "time,left_filtered,left_measured,left_commanded,right_filtered,right_measured,right_commanded" << std::endl;
+    if (LOG_CONTROLLER_DATA)
+    {
+        global_file << "time,left_filtered,left_measured,left_commanded,right_filtered,right_measured,right_commanded" << std::endl;
+    }
     
     serial_fast_buffer_.reserve(10*FAST_SIZE); //reserve space for 5 sets of FAST rate data
     serial_medium_buffer_.reserve(10*MEDIUM_SIZE); //reserve space for 5 sets of Medium rate data
@@ -215,6 +220,7 @@ bool OpenRover::start()
     if(!setupRobotParams())
     {
         ROS_WARN("Failed to setup Robot parameters.");
+        return false;
     }
 
     ROS_INFO("Creating Publishers and Subscribers");
@@ -244,7 +250,8 @@ bool OpenRover::setupRobotParams()
     if (!(openComs()))
     {
         is_serial_coms_open_ = false;
-        ROS_WARN("Failed to start serial comunication.");
+        ROS_ERROR("Failed to start serial comunication.");
+        return false;
     }
 
     if (!(nh_priv_.getParam("closed_loop_control_on", closed_loop_control_on_)))
@@ -681,8 +688,11 @@ void OpenRover::publishWheelVels() //Update to publish from OdomControl
     vel_vec.data.push_back(right_vel_measured_);
     vel_vec.data.push_back(right_vel_commanded_);
 
+    vel_vec.data.push_back(motor_speeds_commanded_[LEFT_MOTOR_INDEX_]);
+    vel_vec.data.push_back(motor_speeds_commanded_[RIGHT_MOTOR_INDEX_]);
+
     vel_calc_pub.publish(vel_vec);
-/*    if (global_file.is_open())
+    if (global_file.is_open() && LOG_CONTROLLER_DATA)
     {
         double ros_now_time = ros::Time::now().toNSec();
         //ROS_INFO("writing to file");
@@ -694,7 +704,7 @@ void OpenRover::publishWheelVels() //Update to publish from OdomControl
             global_file << ",";
         }
          global_file << std::endl;
-    }*/
+    }
     return;
 }
 
@@ -872,8 +882,8 @@ void OpenRover::serialManager()
             past_time = now_time;
             publishFastRateData();
             updateOdometry(); //Update openrover variables based on latest encoder readings
-            unsigned char left_motor_speed = left_controller_.calculate(left_vel_commanded_, left_vel_measured_, dt);
-            unsigned char right_motor_speed = right_controller_.calculate(right_vel_commanded_, right_vel_measured_, dt);
+
+
             if (e_stop_on_)
             {
                 motor_speeds_commanded_[LEFT_MOTOR_INDEX_] = MOTOR_NEUTRAL;
@@ -883,9 +893,15 @@ void OpenRover::serialManager()
             }
             else
             {
-                motor_speeds_commanded_[LEFT_MOTOR_INDEX_] = left_motor_speed;
-                motor_speeds_commanded_[RIGHT_MOTOR_INDEX_] = right_motor_speed;
+                if (closed_loop_control_on_)
+                {
+                    motor_speeds_commanded_[LEFT_MOTOR_INDEX_] = left_controller_.calculate(left_vel_commanded_, left_vel_measured_, dt);
+                    motor_speeds_commanded_[RIGHT_MOTOR_INDEX_] = right_controller_.calculate(right_vel_commanded_, right_vel_measured_, dt);
+                    left_vel_filtered_ = left_controller_.velocity_filtered_;
+                    right_vel_filtered_ = right_controller_.velocity_filtered_;
+                }
             }
+
             publishOdometry(left_vel_measured_, right_vel_measured_); //Publish new calculated odometry
             publishWheelVels(); //call after publishOdomEnc()
             publishMotorSpeeds();
@@ -980,7 +996,7 @@ bool OpenRover::sendCommand(int param1, int param2)
         ROS_INFO("Serial communication failed. Attempting to restart.");
         if (!(openComs()))
         {
-            ROS_INFO("Failed to restart serial comunication.");
+            ROS_WARN("Failed to restart serial comunication.");
         }
     }
     
@@ -990,28 +1006,32 @@ bool OpenRover::sendCommand(int param1, int param2)
         sprintf(str_ex, "Failed to send command: %02x,%02x,%02x,%02x,%02x,%02x,%02x", write_buffer[0],write_buffer[1],write_buffer[2],write_buffer[3],write_buffer[4],write_buffer[5],write_buffer[6]);
         throw std::string(str_ex);
     }
+
     return true;
 }
 
 int OpenRover::readCommand()
 {//only used after a send command with param1==10
     unsigned char read_buffer[1];
-    int data, checksum, read_checksum, data1, data2, dataNO;
+    unsigned char start_byte_read, checksum, read_checksum, data1, data2, dataNO;
+    int data; 
     if (!(fd > 0))
     {
         ROS_INFO("Serial communication failed. Attempting to restart.");
         if (!(openComs()))
         {
-            ROS_INFO("Failed to restart serial comunication.");
+            ROS_WARN("Failed to restart serial comunication.");
         }
     }
 
     int bits_read = read(fd, read_buffer, 1);
-    
-    if(!(SERIAL_START_BYTE==read_buffer[0]))
+    start_byte_read = read_buffer[0];
+
+    if(!(SERIAL_START_BYTE==start_byte_read))
     {
         char str_ex [50];
-        sprintf(str_ex, "Received bad start byte. Received: %02x", read_buffer[0]);
+        sprintf(str_ex, "Received bad start byte. Received: %02x", start_byte_read);
+        tcflush(fd,TCIOFLUSH); //flush received buffer
         throw std::string(str_ex);
     }
 
@@ -1031,10 +1051,10 @@ int OpenRover::readCommand()
     if(!(checksum == read_checksum))
     {
         char str_ex [50];
-        sprintf(str_ex, "Received bad CRC. Received: %02x,%02x,%02x,%02x,%02x", read_buffer[0], read_buffer[1], read_buffer[2], read_buffer[3], read_buffer[4]);
+        sprintf(str_ex, "Received bad CRC. Received: %02x,%02x,%02x,%02x,%02x", start_byte_read, dataNO, data1, data2, read_checksum);
+        tcflush(fd,TCIOFLUSH); //flush received buffer
         throw std::string(str_ex);
     }
-
     data = (data1 << 8) + data2;
     return data;
 }
@@ -1091,27 +1111,27 @@ bool OpenRover::openComs()
     fd = ::open( port_.c_str( ), O_RDWR | O_NOCTTY | O_NDELAY );
     if( fd < 0 )
     {
-        ROS_FATAL( "Failed to open port: %s", strerror( errno ) );
+        ROS_ERROR( "Failed to open port: %s", strerror( errno ) );
         return false;
     }
     if( 0 > fcntl( fd, F_SETFL, 0 ) )
     {
-        ROS_FATAL( "Failed to set port descriptor: %s", strerror( errno ) );
+        ROS_ERROR( "Failed to set port descriptor: %s", strerror( errno ) );
         return false;
     }
     if( 0 > tcgetattr( fd, &fd_options ) )
     {
-        ROS_FATAL( "Failed to fetch port attributes: %s", strerror( errno ) );
+        ROS_ERROR( "Failed to fetch port attributes: %s", strerror( errno ) );
         return false;
     }
     if( 0 > cfsetispeed( &fd_options, B57600 ) )
     {
-        ROS_FATAL( "Failed to set input baud: %s", strerror( errno ) );
-            return false;
+        ROS_ERROR( "Failed to set input baud: %s", strerror( errno ) );
+        return false;
     }
     if( 0 > cfsetospeed( &fd_options, B57600 ) )
     {
-        ROS_FATAL( "Failed to set output baud: %s", strerror( errno ) );
+        ROS_ERROR( "Failed to set output baud: %s", strerror( errno ) );
         return false;
     }
 
@@ -1142,12 +1162,15 @@ bool OpenRover::openComs()
 
     if( 0 > tcsetattr( fd, TCSANOW, &fd_options ) )
     {
-        ROS_FATAL( "Failed to set port attributes: %s", strerror( errno ) );
+        ROS_ERROR( "Failed to set port attributes: %s", strerror( errno ) );
         return false;
     }
+    ::ioctl(fd, TIOCEXCL); //turn on exclusive mode
 
     ROS_INFO("Serial port opened");
     is_serial_coms_open_ = true;
+    tcflush(fd,TCIOFLUSH); //flush received buffer
+
     return true;
 }
 
@@ -1184,7 +1207,10 @@ int main( int argc, char *argv[] )
         }
 */
         if( !openrover.start( ) )
-                ROS_ERROR( "Failed to start the driver" );
+        {
+            ROS_FATAL( "Failed to start the driver" );
+            ros::requestShutdown();
+        }
 
         ros::Rate loop_rate(openrover::LOOP_RATE);
 
@@ -1195,7 +1221,7 @@ int main( int argc, char *argv[] )
                 ros::spinOnce();
                 //Process Serial Buffers
                 openrover.serialManager();
-                loop_rate.sleep();
+                loop_rate.sleep(); //sleeping greatly reduces CPU
             }
             catch(std::string s)
             {

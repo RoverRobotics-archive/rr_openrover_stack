@@ -1,6 +1,6 @@
 <launch>
 
-    <arg name="openrover_node_name" default="rr_openrover_basic"/>
+    <arg name="openrover_node_name" default="rr_openrover_basic_node"/>
 
     <!-- OpenRover Driver -->
     <node pkg="rr_openrover_basic" type="openrover_basic_node" name="$(arg openrover_node_name)" respawn="true" output="screen">
@@ -8,7 +8,7 @@
         <param name="drive_type" value="4wd" />
         <param name="enable_timeout" type="bool" value="true"/>
         <param name="timeout" type="double" value="0.3"/>
-        <param name="closed_loop_control_on" type="bool" value="true" />
+        <param name="closed_loop_control_on" type="bool" value="false" />
         <param name="total_weight" type="double" value="20.41"/>
         <param name="slippage_factor" value="0.610"/>
         <param name="odom_covariance_0" value="0.01"/>
@@ -16,7 +16,7 @@
     </node>
 
     <!-- OpenRover InOrbit Diagnostics -->
-    <node pkg="rr_openrover_basic" type="diagnostics.py" name="rr_openrover_diagnostics_node" respawn="true">
+    <node pkg="rr_openrover_basic" type="diagnostics.py" name="rr_openrover_diagnostics_node">
         <remap from="/raw_slow_rate_data" to="/$(arg openrover_node_name)/raw_slow_rate_data"/>
     </node>
 
