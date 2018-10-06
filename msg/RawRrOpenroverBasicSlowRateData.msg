@@ -12,4 +12,6 @@ uint16 battery_mode_a
 uint16 battery_mode_b
 uint16 battery_temp_a
 uint16 battery_temp_b
+uint16 battery_voltage_a
+uint16 battery_voltage_b
 int32 buildno

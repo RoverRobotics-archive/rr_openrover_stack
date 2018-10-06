@@ -122,7 +122,10 @@ const int i_REG_POWER_A_CURRENT = 42;  //5hz
 
 const int i_REG_POWER_B_CURRENT = 44; //5hz
 const int i_REG_MOTOR_FLIPPER_ANGLE = 46;  //5hz
-
+    
+//const int i_to_computer_REG_MOTOR_SIDE_FAN_SPEED = 48; //5hz----WIP
+//const int i_to_computer_REG_MOTOR_SLOW_SPEED = 50; //5hz ----WIP
+    
 const int i_BATTERY_STATUS_A = 52;
 const int i_BATTERY_STATUS_B = 54;
 const int i_BATTERY_MODE_A = 56;
@@ -130,9 +133,11 @@ const int i_BATTERY_MODE_B = 58;
 const int i_BATTERY_TEMP_A = 60;
 const int i_BATTERY_TEMP_B = 62;
 
-//const int i_to_computer_REG_MOTOR_SIDE_FAN_SPEED = 48; //5hz----WIP
-//const int i_to_computer_REG_MOTOR_SLOW_SPEED = 50; //5hz ----WIP
-
+const int i_BATTERY_VOLTAGE_A = 64;
+const int i_BATTERY_VOLTAGE_B = 66;
+const int i_BATTERY_CURRENT_A = 68;
+const int i_BATTERY_CURRENT_B = 70;
+    
 const int ROBOT_DATA_INDEX_FAST[] = {
 i_ENCODER_INTERVAL_MOTOR_LEFT, i_ENCODER_INTERVAL_MOTOR_RIGHT}; /*,
 i_ENCODER_INTERVAL_MOTOR_FLIPPER}; ----WIP //10hz*/ 
@@ -141,7 +146,8 @@ const int ROBOT_DATA_INDEX_MEDIUM[] = {
 i_REG_PWR_TOTAL_CURRENT, //i_REG_MOTOR_FB_RPM_LEFT,i_REG_MOTOR_FB_RPM_RIGHT, ----WIP
 i_REG_FLIPPER_FB_POSITION_POT1, i_REG_FLIPPER_FB_POSITION_POT2,
 i_REG_MOTOR_FB_CURRENT_LEFT, i_REG_MOTOR_FB_CURRENT_RIGHT, i_REG_MOTOR_CHARGER_STATE,
-i_REG_POWER_A_CURRENT, i_REG_POWER_B_CURRENT, i_REG_MOTOR_FLIPPER_ANGLE
+i_REG_POWER_A_CURRENT, i_REG_POWER_B_CURRENT, i_REG_MOTOR_FLIPPER_ANGLE,
+i_BATTERY_CURRENT_A,i_BATTERY_CURRENT_B
 //i_to_computer_REG_MOTOR_SIDE_FAN_SPEED, i_to_computer_REG_MOTOR_SLOW_SPEED ----WIP
 };
 
@@ -150,8 +156,7 @@ const int ROBOT_DATA_INDEX_SLOW[] = {
 i_REG_MOTOR_TEMP_LEFT,
 i_REG_MOTOR_TEMP_RIGHT, i_REG_POWER_BAT_VOLTAGE_A, i_REG_POWER_BAT_VOLTAGE_B,
 i_REG_ROBOT_REL_SOC_A, i_REG_ROBOT_REL_SOC_B,
-i_BATTERY_STATUS_A, i_BATTERY_STATUS_B, i_BATTERY_MODE_A, i_BATTERY_MODE_B, i_BATTERY_TEMP_A, i_BATTERY_TEMP_B,
-i_BUILDNO};
+i_BATTERY_STATUS_A, i_BATTERY_STATUS_B, i_BATTERY_MODE_A, i_BATTERY_MODE_B, i_BATTERY_TEMP_A, i_BATTERY_TEMP_B, i_BATTERY_VOLTAGE_A, i_BATTERY_VOLTAGE_B, i_BUILDNO};
 
 const int FAST_SIZE = sizeof(ROBOT_DATA_INDEX_FAST)/sizeof(ROBOT_DATA_INDEX_FAST[0]);
 const int MEDIUM_SIZE = sizeof(ROBOT_DATA_INDEX_MEDIUM)/sizeof(ROBOT_DATA_INDEX_MEDIUM[0]);
@@ -742,7 +747,9 @@ void OpenRover::publishMedRateData()
     med_msg.reg_power_a_current = robot_data_[i_REG_POWER_A_CURRENT];   
     med_msg.reg_power_b_current = robot_data_[i_REG_POWER_B_CURRENT];
     med_msg.reg_motor_flipper_angle = robot_data_[i_REG_MOTOR_FLIPPER_ANGLE];
-
+    med_msg.battery_current_a = robot_data_[i_BATTERY_CURRENT_A]
+    med_msg.battery_current_b = robot_data_[i_BATTERY_CURRENT_B]
+    
     if ( robot_data_[i_REG_MOTOR_CHARGER_STATE] == 0xDADA) {
         is_charging_= true;
         is_charging_msg.data = true;
@@ -780,6 +787,8 @@ void OpenRover::publishSlowRateData()
     slow_msg.battery_mode_b = robot_data_[i_BATTERY_MODE_B];
     slow_msg.battery_temp_a = robot_data_[i_BATTERY_TEMP_A];
     slow_msg.battery_temp_b = robot_data_[i_BATTERY_TEMP_B];
+    slow_msg.battery_voltage_a = robot_data_[i_battery_voltage_a];
+    slow_msg.battery_voltage_b = robot_data_[i_battery_voltage_b];
     slow_msg.buildno = robot_data_[i_BUILDNO];
     
     slow_rate_pub.publish(slow_msg);
