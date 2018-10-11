@@ -307,8 +307,8 @@ bool OpenRover::setupRobotParams()
         {
             motor_speed_linear_coef_ = MOTOR_SPEED_LINEAR_COEF_2WD_HS;
             motor_speed_angular_coef_ = MOTOR_SPEED_ANGULAR_COEF_2WD_HS;
-            motor_speed_deadband_ = (int) MOTOR_DEADBAND;
-            motor_speed_angular_deadband_ = (int) MOTOR_DEADBAND;
+            motor_speed_deadband_ = MOTOR_DEADBAND;
+            motor_speed_angular_deadband_ = MOTOR_DEADBAND;
             cw_turn_coef_ = MOTOR_SPEED_CW_TURN_COEF;
         }
     }
@@ -324,8 +324,8 @@ bool OpenRover::setupRobotParams()
         {
             motor_speed_linear_coef_ = MOTOR_SPEED_LINEAR_COEF_4WD_LS;
             motor_speed_angular_coef_ = MOTOR_SPEED_ANGULAR_COEF_4WD_LS;
-            motor_speed_deadband_ = (int) MOTOR_DEADBAND;
-            motor_speed_angular_deadband_ = (int) MOTOR_DEADBAND;
+            motor_speed_deadband_ = MOTOR_DEADBAND;
+            motor_speed_angular_deadband_ = MOTOR_DEADBAND;
             cw_turn_coef_ = 1;
         }
         else
@@ -337,8 +337,8 @@ bool OpenRover::setupRobotParams()
             weight_coef_ = a * total_weight_*total_weight_ + b * total_weight_ + c;
             motor_speed_linear_coef_ = (int) MOTOR_SPEED_LINEAR_COEF_4WD_HS;
             motor_speed_angular_coef_ = (int) MOTOR_SPEED_ANGULAR_COEF_4WD_HS*weight_coef_;
-            motor_speed_deadband_ = (int) MOTOR_DEADBAND;
-            motor_speed_angular_deadband_ = (int) MOTOR_DEADBAND*weight_coef_;
+            motor_speed_deadband_ = MOTOR_DEADBAND;
+            motor_speed_angular_deadband_ = MOTOR_DEADBAND*weight_coef_;
             cw_turn_coef_ = MOTOR_SPEED_CW_TURN_COEF;
         }
 
@@ -355,16 +355,16 @@ bool OpenRover::setupRobotParams()
         {
             motor_speed_linear_coef_ = MOTOR_SPEED_LINEAR_COEF_F_LS;
             motor_speed_angular_coef_ = MOTOR_SPEED_ANGULAR_COEF_F_LS;
-            motor_speed_deadband_ = (int) MOTOR_DEADBAND;
-            motor_speed_angular_deadband_ = (int) MOTOR_DEADBAND;
+            motor_speed_deadband_ = MOTOR_DEADBAND;
+            motor_speed_angular_deadband_ = MOTOR_DEADBAND;
             cw_turn_coef_ = 1;
         }
         else
         {
             motor_speed_linear_coef_ = MOTOR_SPEED_LINEAR_COEF_F_HS;
             motor_speed_angular_coef_ = MOTOR_SPEED_ANGULAR_COEF_F_HS;
-            motor_speed_deadband_ = (int) MOTOR_DEADBAND;
-            motor_speed_angular_deadband_ = (int) MOTOR_DEADBAND;
+            motor_speed_deadband_ = MOTOR_DEADBAND;
+            motor_speed_angular_deadband_ = MOTOR_DEADBAND;
             cw_turn_coef_ = MOTOR_SPEED_CW_TURN_COEF;
         }
     }
@@ -380,16 +380,16 @@ bool OpenRover::setupRobotParams()
         {
             motor_speed_linear_coef_ = MOTOR_SPEED_LINEAR_COEF_F_LS;
             motor_speed_angular_coef_ = MOTOR_SPEED_ANGULAR_COEF_F_LS;
-            motor_speed_deadband_ = (int) MOTOR_DEADBAND;
-            motor_speed_angular_deadband_ = (int) MOTOR_DEADBAND;
+            motor_speed_deadband_ = MOTOR_DEADBAND;
+            motor_speed_angular_deadband_ = MOTOR_DEADBAND;
             cw_turn_coef_ = 1;
         }
         else
         {
             motor_speed_linear_coef_ = MOTOR_SPEED_LINEAR_COEF_F_HS;
             motor_speed_angular_coef_ = MOTOR_SPEED_ANGULAR_COEF_F_HS;
-            motor_speed_deadband_ = (int) MOTOR_DEADBAND;
-            motor_speed_angular_deadband_ = (int) MOTOR_DEADBAND;
+            motor_speed_deadband_ = MOTOR_DEADBAND;
+            motor_speed_angular_deadband_ = MOTOR_DEADBAND;
             cw_turn_coef_ = MOTOR_SPEED_CW_TURN_COEF;
         }
     }
@@ -596,11 +596,11 @@ void OpenRover::cmdVelCB(const geometry_msgs::TwistStamped::ConstPtr& msg)
     }
 
     //Add most recent motor values to motor_speeds_commanded_[3] class variable if closed_loop_control_on_ is not true (open loop)
-    motor_speeds_commanded_[FLIPPER_MOTOR_INDEX_] = (unsigned char)flipper_motor_speed;
+    motor_speeds_commanded_[FLIPPER_MOTOR_INDEX_] = (unsigned char) flipper_motor_speed;
     if (!closed_loop_control_on_)
     {
-        motor_speeds_commanded_[LEFT_MOTOR_INDEX_] = (unsigned char)left_motor_speed;
-        motor_speeds_commanded_[RIGHT_MOTOR_INDEX_] = (unsigned char)right_motor_speed;
+        motor_speeds_commanded_[LEFT_MOTOR_INDEX_] = (unsigned char) left_motor_speed;
+        motor_speeds_commanded_[RIGHT_MOTOR_INDEX_] = (unsigned char) right_motor_speed;
     }
     timeout_timer.start();
     return;

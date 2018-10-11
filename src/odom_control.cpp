@@ -180,12 +180,12 @@ int OdomControl::deadbandOffset(int motor_speed, int deadband_offset)
     //Compensate for deadband 
     if (motor_speed > 125) 
     { 
-        motor_speed += deadband_offset; 
+        return (motor_speed + deadband_offset); 
     } 
     else if (motor_speed < 125 ) 
     { 
-        motor_speed -= deadband_offset; 
-    } 
+        return (motor_speed - deadband_offset);
+    }
 }
 
 double OdomControl::filter(double velocity, double dt)
