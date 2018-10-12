@@ -152,7 +152,7 @@ private:
     int readCommand();
 };
 
-SmartBatteryStatus interpret_battery_status(uint16_t bits);
+rr_openrover_basic::SmartBatteryStatus interpret_battery_status(uint16_t bits);
 
 }
 #endif /* _openrover_hpp */

@@ -771,7 +771,7 @@ void OpenRover::publishMedRateData()
     return;
 }
 
-SmartBatteryStatus interpret_battery_status(uint16_t bits) {
+rr_openrover_basic::SmartBatteryStatus interpret_battery_status(uint16_t bits) {
     rr_openrover_basic::SmartBatteryStatus status_msg;
     status_msg.over_charged_alarm = bool(bits & 0x8000);
     status_msg.terminate_charge_alarm = bool(bits & 0x4000);
