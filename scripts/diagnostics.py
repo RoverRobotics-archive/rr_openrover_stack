@@ -10,9 +10,9 @@ class rover_diagnostic():
 
     def __init__(self):
         rospy.Subscriber("/raw_slow_rate_data", RawRrOpenroverBasicSlowRateData, self.slow_data_cb)
-        rospy.Subscriber("/raw_med_rate_data", RawRrOpenroverBasicMedRateData, self.med_data_cb)
-        rospy.Subscriber("/battery_status_a", SmartBatteryStatus, self.battery_status_a_cb)
-        rospy.Subscriber("/battery_status_b", SmartBatteryStatus, self.battery_status_b_cb)
+        rospy.Subscriber("/rr_openrover_basic/raw_med_rate_data", RawRrOpenroverBasicMedRateData, self.med_data_cb)
+        rospy.Subscriber("/rr_openrover_basic/battery_status_a", SmartBatteryStatus, self.battery_status_a_cb)
+        rospy.Subscriber("/rr_openrover_basic/battery_status_b", SmartBatteryStatus, self.battery_status_b_cb)
         self.pub = rospy.Publisher('/inorbit/custom_data/0', String, queue_size=5)
 
     def slow_data_cb(self, data):
