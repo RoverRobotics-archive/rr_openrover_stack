@@ -804,8 +804,8 @@ void OpenRover::publishSlowRateData()
     slow_msg.battery_mode_b = robot_data_[i_BATTERY_MODE_B];
     slow_msg.battery_temp_a = robot_data_[i_BATTERY_TEMP_A];
     slow_msg.battery_temp_b = robot_data_[i_BATTERY_TEMP_B];
-    slow_msg.battery_voltage_a = robot_data_[i_battery_voltage_a];
-    slow_msg.battery_voltage_b = robot_data_[i_battery_voltage_b];
+    slow_msg.battery_voltage_a = robot_data_[i_BATTERY_VOLTAGE_A];
+    slow_msg.battery_voltage_b = robot_data_[i_BATTERY_VOLTAGE_B];
     slow_msg.buildno = robot_data_[i_BUILDNO];
 
     battery_status_a_pub.publish(interpret_battery_status(robot_data_[i_BATTERY_STATUS_A]));
