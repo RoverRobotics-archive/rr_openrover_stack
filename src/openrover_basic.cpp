@@ -232,6 +232,8 @@ bool OpenRover::start()
     fast_rate_pub = nh_priv_.advertise<rr_openrover_basic::RawRrOpenroverBasicFastRateData>("raw_fast_rate_data",1);
     medium_rate_pub = nh_priv_.advertise<rr_openrover_basic::RawRrOpenroverBasicMedRateData>("raw_med_rate_data",1);
     slow_rate_pub = nh_priv_.advertise<rr_openrover_basic::RawRrOpenroverBasicSlowRateData>("raw_slow_rate_data",1);
+    battery_status_a_pub = nh_priv_.advertise<rr_openrover_basic::SmartBatteryStatus>("battery_status_a",1);
+    battery_status_b_pub = nh_priv_.advertise<rr_openrover_basic::SmartBatteryStatus>("battery_status_b",1);
     odom_enc_pub = nh_priv_.advertise<nav_msgs::Odometry>("odom_encoder", 1);
     is_charging_pub = nh_priv_.advertise<std_msgs::Bool>("charging", 1);
 
@@ -255,7 +257,7 @@ bool OpenRover::setupRobotParams()
     if (!(openComs()))
     {
         is_serial_coms_open_ = false;
-        ROS_ERROR("Failed to start serial comunication.");
+        ROS_ERROR("Failed to start serial communication.");
         return false;
     }
 
@@ -767,6 +769,21 @@ void OpenRover::publishMedRateData()
     return;
 }
 
+SmartBatteryStatus interpret_battery_status(uint16_t bits) {
+    rr_openrover_basic::SmartBatteryStatus status_msg;
+    status_msg.over_charged_alarm = bool(bits & 0x8000);
+    status_msg.terminate_charge_alarm = bool(bits & 0x4000);
+    status_msg.over_temp_alarm = bool(bits & 0x1000);
+    status_msg.terminate_discharge_alarm = bool(bits & 0x0800);
+    status_msg.remaining_capacity_alarm = bool(bits & 0x0200);
+    status_msg.remaining_time_alarm = bool(bits & 0x0100);
+    status_msg.initialized = bool(bits & 0x0080);
+    status_msg.discharging = bool(bits & 0x0040);
+    status_msg.fully_charged = bool(bits & 0x0020);
+    status_msg.fully_discharged = bool(bits & 0x0010);
+    return status_msg;
+}
+
 void OpenRover::publishSlowRateData()
 {
     rr_openrover_basic::RawRrOpenroverBasicSlowRateData slow_msg;
@@ -780,9 +797,7 @@ void OpenRover::publishSlowRateData()
     slow_msg.reg_power_bat_voltage_a = robot_data_[i_REG_POWER_BAT_VOLTAGE_A];
     slow_msg.reg_power_bat_voltage_b = robot_data_[i_REG_POWER_BAT_VOLTAGE_B];
     slow_msg.reg_robot_rel_soc_a = robot_data_[i_REG_ROBOT_REL_SOC_A];      
-    slow_msg.reg_robot_rel_soc_b = robot_data_[i_REG_ROBOT_REL_SOC_B];  
-    slow_msg.battery_status_a = robot_data_[i_BATTERY_STATUS_A];
-    slow_msg.battery_status_b = robot_data_[i_BATTERY_STATUS_B];
+    slow_msg.reg_robot_rel_soc_b = robot_data_[i_REG_ROBOT_REL_SOC_B];
     slow_msg.battery_mode_a = robot_data_[i_BATTERY_MODE_A];
     slow_msg.battery_mode_b = robot_data_[i_BATTERY_MODE_B];
     slow_msg.battery_temp_a = robot_data_[i_BATTERY_TEMP_A];
@@ -790,7 +805,10 @@ void OpenRover::publishSlowRateData()
     slow_msg.battery_voltage_a = robot_data_[i_battery_voltage_a];
     slow_msg.battery_voltage_b = robot_data_[i_battery_voltage_b];
     slow_msg.buildno = robot_data_[i_BUILDNO];
-    
+
+    battery_status_a_pub.publish(interpret_battery_status(robot_data_[i_BATTERY_STATUS_A]));
+    battery_status_b_pub.publish(interpret_battery_status(robot_data_[i_BATTERY_STATUS_B]));
+
     slow_rate_pub.publish(slow_msg);
     publish_slow_rate_vals_ = false;
     return;

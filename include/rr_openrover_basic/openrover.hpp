@@ -77,7 +77,8 @@ private:
     ros::Publisher fast_rate_pub;
     ros::Publisher medium_rate_pub;
     ros::Publisher slow_rate_pub;
-    
+    ros::Publisher battery_status_a_pub, battery_status_b_pub;
+
     ros::Subscriber cmd_vel_sub;
 
     //General Class variables
