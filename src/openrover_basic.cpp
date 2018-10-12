@@ -1101,7 +1101,7 @@ bool OpenRover::setParameterData(int param1, int param2)
     }
     catch (std::string s)
     {
-        std::string s2("setParamaterData() failed. ");
+        std::string s2("setParameterData() failed. ");
         throw (s2 + s);
     }
 }

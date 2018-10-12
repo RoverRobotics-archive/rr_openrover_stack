@@ -14,6 +14,7 @@
 #include <rr_openrover_basic/RawRrOpenroverBasicFastRateData.h>
 #include <rr_openrover_basic/RawRrOpenroverBasicMedRateData.h>
 #include <rr_openrover_basic/RawRrOpenroverBasicSlowRateData.h>
+#include <rr_openrover_basic/SmartBatteryStatus.h>
 
 #include <rr_openrover_basic/odom_control.hpp>
 
@@ -48,7 +49,7 @@ public:
     bool e_stop_on_;
 
 private:
-    //.csv Debuggin
+    //.csv Debugging
     std::ofstream fs_;
 
     //ROS Parameters
@@ -149,6 +150,8 @@ private:
     bool sendCommand(int param1, int param2);
     int readCommand();
 };
+
+SmartBatteryStatus interpret_battery_status(uint16_t bits);
 
 }
 #endif /* _openrover_hpp */
