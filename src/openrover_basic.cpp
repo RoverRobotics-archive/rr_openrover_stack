@@ -789,6 +789,7 @@ rr_openrover_basic::SmartBatteryStatus interpret_battery_status(uint16_t bits) {
 void OpenRover::publishSlowRateData()
 {
     rr_openrover_basic::RawRrOpenroverBasicSlowRateData slow_msg;
+    rr_openrover_basic::SmartBatteryStatus batteryStatusA;
     
     slow_msg.header.stamp = ros::Time::now();
     slow_msg.header.frame_id = "";
