@@ -11,10 +11,11 @@
 
 #include <geometry_msgs/TwistStamped.h>
 #include <std_msgs/Bool.h>
-#include <rr_openrover_basic/RawRrOpenroverBasicFastRateData.h>
-#include <rr_openrover_basic/RawRrOpenroverBasicMedRateData.h>
-#include <rr_openrover_basic/RawRrOpenroverBasicSlowRateData.h>
-#include <rr_openrover_basic/SmartBatteryStatus.h>
+#include "rr_openrover_basic/RawRrOpenroverBasicFastRateData.h"
+#include "rr_openrover_basic/RawRrOpenroverBasicMedRateData.h"
+#include "rr_openrover_basic/RawRrOpenroverBasicSlowRateData.h"
+#include "rr_openrover_basic/SmartBatteryStatus.h"
+
 
 #include <rr_openrover_basic/odom_control.hpp>
 

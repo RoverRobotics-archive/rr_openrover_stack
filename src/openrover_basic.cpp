@@ -1025,7 +1025,7 @@ bool OpenRover::sendCommand(int param1, int param2)
         ROS_INFO("Serial communication failed. Attempting to restart.");
         if (!(openComs()))
         {
-            ROS_WARN("Failed to restart serial comunication.");
+            ROS_WARN("Failed to restart serial communication.");
         }
     }
     
@@ -1049,7 +1049,7 @@ int OpenRover::readCommand()
         ROS_INFO("Serial communication failed. Attempting to restart.");
         if (!(openComs()))
         {
-            ROS_WARN("Failed to restart serial comunication.");
+            ROS_WARN("Failed to restart serial communication.");
         }
     }
 
