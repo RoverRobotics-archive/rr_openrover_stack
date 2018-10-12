@@ -16,9 +16,11 @@
 #include "geometry_msgs/TwistStamped.h"
 #include <std_msgs/Bool.h>
 #include "nav_msgs/Odometry.h"
-#include <rr_openrover_basic/RawRrOpenroverBasicFastRateData.h>
-#include <rr_openrover_basic/RawRrOpenroverBasicMedRateData.h>
-#include <rr_openrover_basic/RawRrOpenroverBasicSlowRateData.h>
+#include "rr_openrover_basic/RawRrOpenroverBasicFastRateData.h"
+#include "rr_openrover_basic/RawRrOpenroverBasicMedRateData.h"
+#include "rr_openrover_basic/RawRrOpenroverBasicSlowRateData.h"
+#include "rr_openrover_basic/SmartBatteryStatus.h"
+
 
 #include "rr_openrover_basic/openrover.hpp"
 

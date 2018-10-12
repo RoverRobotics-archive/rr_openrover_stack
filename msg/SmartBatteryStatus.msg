@@ -1,0 +1,13 @@
+Header header
+
+bool over_charged_alarm
+bool terminate_charge_alarm
+bool over_temp_alarm
+bool terminate_discharge_alarm
+bool remaining_capacity_alarm
+bool remaining_time_alarm
+
+bool initialized
+bool discharging
+bool fully_charged
+bool fully_discharged
