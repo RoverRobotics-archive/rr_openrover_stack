@@ -9,7 +9,6 @@ from rr_openrover_basic.msg import RawRrOpenroverBasicSlowRateData, RawRrOpenrov
 class rover_diagnostic():
 
     def __init__(self):
-        self.updater = diagnostic_updater.Updater()
         rospy.Subscriber("/raw_slow_rate_data", RawRrOpenroverBasicSlowRateData, self.slow_data_cb)
         rospy.Subscriber("/raw_med_rate_data", RawRrOpenroverBasicMedRateData, self.med_data_cb)
         rospy.Subscriber("/battery_status_a", SmartBatteryStatus, self.battery_status_a_cb)
