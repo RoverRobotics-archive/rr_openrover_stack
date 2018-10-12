@@ -747,8 +747,8 @@ void OpenRover::publishMedRateData()
     med_msg.reg_power_a_current = robot_data_[i_REG_POWER_A_CURRENT];   
     med_msg.reg_power_b_current = robot_data_[i_REG_POWER_B_CURRENT];
     med_msg.reg_motor_flipper_angle = robot_data_[i_REG_MOTOR_FLIPPER_ANGLE];
-    med_msg.battery_current_a = robot_data_[i_BATTERY_CURRENT_A]
-    med_msg.battery_current_b = robot_data_[i_BATTERY_CURRENT_B]
+    med_msg.battery_current_a = robot_data_[i_BATTERY_CURRENT_A];
+    med_msg.battery_current_b = robot_data_[i_BATTERY_CURRENT_B];
     
     if ( robot_data_[i_REG_MOTOR_CHARGER_STATE] == 0xDADA) {
         is_charging_= true;
