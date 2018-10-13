@@ -44,12 +44,12 @@ class rover_diagnostic():
     def battery_status_a_cb(self, msg):
         for k in type(msg).__slots__:
             if k != 'header':
-                self.pub.publish("Battery Status A." + k + '=' + str(getattr(msg, k)))
+                self.pub.publish("Battery Status A." + k + '=' + str(int(getattr(msg, k))))
 
     def battery_status_b_cb(self, msg):
         for k in type(msg).__slots__:
             if k != 'header':
-                self.pub.publish("Battery Status B." + k + '=' + str(getattr(msg, k)))
+                self.pub.publish("Battery Status B." + k + '=' + str(int(getattr(msg, k))))
 
 
 if __name__ == '__main__':
