@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import rospy
-from std_msgs.msg import String
+from std_msgs.msg import String, Bool
 from nav_msgs.msg import Odometry
 from rr_openrover_basic.msg import RawRrOpenroverBasicSlowRateData, RawRrOpenroverBasicMedRateData, SmartBatteryStatus
 
@@ -13,6 +13,7 @@ class rover_diagnostic():
         rospy.Subscriber("/rr_openrover_basic/raw_med_rate_data", RawRrOpenroverBasicMedRateData, self.med_data_cb)
         rospy.Subscriber("/rr_openrover_basic/battery_status_a", SmartBatteryStatus, self.battery_status_a_cb)
         rospy.Subscriber("/rr_openrover_basic/battery_status_b", SmartBatteryStatus, self.battery_status_b_cb)
+        rospy.Subscriber('/rr_openrover_basic/charging', Bool, self.openrover_charging_cb)
         self.pub = rospy.Publisher('/inorbit/custom_data/0', String, queue_size=5)
 
     def slow_data_cb(self, data):
@@ -50,6 +51,10 @@ class rover_diagnostic():
         for k in type(msg).__slots__:
             if k != 'header':
                 self.pub.publish("Battery Status B." + k + '=' + str(int(getattr(msg, k))))
+
+
+    def openrover_charging_cb(self, msg):
+        self.pub.publish("Open Rover Charging=" + str(msg.data))
 
 
 if __name__ == '__main__':
