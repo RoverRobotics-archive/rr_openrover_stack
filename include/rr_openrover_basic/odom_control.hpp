@@ -32,7 +32,7 @@ public:
     bool at_min_motor_speed_;
     bool stop_integrating_;
 
-    std::string log_filename;
+    std::string log_filename_;
 
     //.csv Debuggin
     std::ofstream fs_;
