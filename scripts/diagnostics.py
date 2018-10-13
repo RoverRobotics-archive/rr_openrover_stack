@@ -42,12 +42,14 @@ class rover_diagnostic():
         self.pub.publish("Battery Current B=" + str(data.battery_current_b))
 
     def battery_status_a_cb(self, msg):
-        for k, v in msg.__dict__.items():
-            self.pub.publish("Battery Status A " + k + '=' + str(v))
+        for k in type(msg).__slots__:
+            if k != 'header':
+                self.pub.publish("Battery Status A." + k + '=' + str(getattr(msg, k)))
 
     def battery_status_b_cb(self, msg):
-        for k, v in msg.__dict__.items():
-            self.pub.publish("Battery Status B " + k + '=' + str(v))
+        for k in type(msg).__slots__:
+            if k != 'header':
+                self.pub.publish("Battery Status B." + k + '=' + str(getattr(msg, k)))
 
 
 if __name__ == '__main__':
