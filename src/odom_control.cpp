@@ -18,8 +18,8 @@ OdomControl::OdomControl(bool use_control, double Kp, double Ki, double Kd, int 
     MAX_ACCEL_CUTOFF_(20.0),
     MIN_VELOCITY_(0.03),
     MAX_VELOCITY_(3),
-    enable_file_logging_(false),
-    log_filename(log_filename),
+    enable_file_logging_(false), //not implemented
+    log_filename_(log_filename),
     K_P_(Kp),
     K_I_(Ki),
     K_D_(Kd),
@@ -39,7 +39,7 @@ OdomControl::OdomControl(bool use_control, double Kp, double Ki, double Kd, int 
     MAX_ACCEL_CUTOFF_(20.0),
     MIN_VELOCITY_(0.03),
     MAX_VELOCITY_(3),
-    enable_file_logging_(false),
+    enable_file_logging_(false), //not implemented
     K_P_(Kp),
     K_I_(Ki),
     K_D_(Kd),
