@@ -11,9 +11,11 @@
 
 #include <geometry_msgs/TwistStamped.h>
 #include <std_msgs/Bool.h>
-#include <rr_openrover_basic/RawRrOpenroverBasicFastRateData.h>
-#include <rr_openrover_basic/RawRrOpenroverBasicMedRateData.h>
-#include <rr_openrover_basic/RawRrOpenroverBasicSlowRateData.h>
+#include "rr_openrover_basic/RawRrOpenroverBasicFastRateData.h"
+#include "rr_openrover_basic/RawRrOpenroverBasicMedRateData.h"
+#include "rr_openrover_basic/RawRrOpenroverBasicSlowRateData.h"
+#include "rr_openrover_basic/SmartBatteryStatus.h"
+
 
 #include <rr_openrover_basic/odom_control.hpp>
 
@@ -48,7 +50,7 @@ public:
     bool e_stop_on_;
 
 private:
-    //.csv Debuggin
+    //.csv Debugging
     std::ofstream fs_;
 
     //ROS Parameters
@@ -77,7 +79,8 @@ private:
     ros::Publisher fast_rate_pub;
     ros::Publisher medium_rate_pub;
     ros::Publisher slow_rate_pub;
-    
+    ros::Publisher battery_status_a_pub, battery_status_b_pub;
+
     ros::Subscriber cmd_vel_sub;
 
     //General Class variables
@@ -148,6 +151,8 @@ private:
     bool sendCommand(int param1, int param2);
     int readCommand();
 };
+
+rr_openrover_basic::SmartBatteryStatus interpret_battery_status(uint16_t bits);
 
 }
 #endif /* _openrover_hpp */

@@ -16,6 +16,7 @@ add_message_files(
    RawRrOpenroverBasicFastRateData.msg
    RawRrOpenroverBasicMedRateData.msg
    RawRrOpenroverBasicSlowRateData.msg
+   SmartBatteryStatus.msg
 )
 
 generate_messages(

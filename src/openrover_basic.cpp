@@ -16,9 +16,11 @@
 #include "geometry_msgs/TwistStamped.h"
 #include <std_msgs/Bool.h>
 #include "nav_msgs/Odometry.h"
-#include <rr_openrover_basic/RawRrOpenroverBasicFastRateData.h>
-#include <rr_openrover_basic/RawRrOpenroverBasicMedRateData.h>
-#include <rr_openrover_basic/RawRrOpenroverBasicSlowRateData.h>
+#include "rr_openrover_basic/RawRrOpenroverBasicFastRateData.h"
+#include "rr_openrover_basic/RawRrOpenroverBasicMedRateData.h"
+#include "rr_openrover_basic/RawRrOpenroverBasicSlowRateData.h"
+#include "rr_openrover_basic/SmartBatteryStatus.h"
+
 
 #include "rr_openrover_basic/openrover.hpp"
 
@@ -122,7 +124,10 @@ const int i_REG_POWER_A_CURRENT = 42;  //5hz
 
 const int i_REG_POWER_B_CURRENT = 44; //5hz
 const int i_REG_MOTOR_FLIPPER_ANGLE = 46;  //5hz
-
+    
+//const int i_to_computer_REG_MOTOR_SIDE_FAN_SPEED = 48; //5hz----WIP
+//const int i_to_computer_REG_MOTOR_SLOW_SPEED = 50; //5hz ----WIP
+    
 const int i_BATTERY_STATUS_A = 52;
 const int i_BATTERY_STATUS_B = 54;
 const int i_BATTERY_MODE_A = 56;
@@ -130,9 +135,11 @@ const int i_BATTERY_MODE_B = 58;
 const int i_BATTERY_TEMP_A = 60;
 const int i_BATTERY_TEMP_B = 62;
 
-//const int i_to_computer_REG_MOTOR_SIDE_FAN_SPEED = 48; //5hz----WIP
-//const int i_to_computer_REG_MOTOR_SLOW_SPEED = 50; //5hz ----WIP
-
+const int i_BATTERY_VOLTAGE_A = 64;
+const int i_BATTERY_VOLTAGE_B = 66;
+const int i_BATTERY_CURRENT_A = 68;
+const int i_BATTERY_CURRENT_B = 70;
+    
 const int ROBOT_DATA_INDEX_FAST[] = {
 i_ENCODER_INTERVAL_MOTOR_LEFT, i_ENCODER_INTERVAL_MOTOR_RIGHT}; /*,
 i_ENCODER_INTERVAL_MOTOR_FLIPPER}; ----WIP //10hz*/ 
@@ -141,7 +148,8 @@ const int ROBOT_DATA_INDEX_MEDIUM[] = {
 i_REG_PWR_TOTAL_CURRENT, //i_REG_MOTOR_FB_RPM_LEFT,i_REG_MOTOR_FB_RPM_RIGHT, ----WIP
 i_REG_FLIPPER_FB_POSITION_POT1, i_REG_FLIPPER_FB_POSITION_POT2,
 i_REG_MOTOR_FB_CURRENT_LEFT, i_REG_MOTOR_FB_CURRENT_RIGHT, i_REG_MOTOR_CHARGER_STATE,
-i_REG_POWER_A_CURRENT, i_REG_POWER_B_CURRENT, i_REG_MOTOR_FLIPPER_ANGLE
+i_REG_POWER_A_CURRENT, i_REG_POWER_B_CURRENT, i_REG_MOTOR_FLIPPER_ANGLE,
+i_BATTERY_CURRENT_A,i_BATTERY_CURRENT_B
 //i_to_computer_REG_MOTOR_SIDE_FAN_SPEED, i_to_computer_REG_MOTOR_SLOW_SPEED ----WIP
 };
 
@@ -150,8 +158,7 @@ const int ROBOT_DATA_INDEX_SLOW[] = {
 i_REG_MOTOR_TEMP_LEFT,
 i_REG_MOTOR_TEMP_RIGHT, i_REG_POWER_BAT_VOLTAGE_A, i_REG_POWER_BAT_VOLTAGE_B,
 i_REG_ROBOT_REL_SOC_A, i_REG_ROBOT_REL_SOC_B,
-i_BATTERY_STATUS_A, i_BATTERY_STATUS_B, i_BATTERY_MODE_A, i_BATTERY_MODE_B, i_BATTERY_TEMP_A, i_BATTERY_TEMP_B,
-i_BUILDNO};
+i_BATTERY_STATUS_A, i_BATTERY_STATUS_B, i_BATTERY_MODE_A, i_BATTERY_MODE_B, i_BATTERY_TEMP_A, i_BATTERY_TEMP_B, i_BATTERY_VOLTAGE_A, i_BATTERY_VOLTAGE_B, i_BUILDNO};
 
 const int FAST_SIZE = sizeof(ROBOT_DATA_INDEX_FAST)/sizeof(ROBOT_DATA_INDEX_FAST[0]);
 const int MEDIUM_SIZE = sizeof(ROBOT_DATA_INDEX_MEDIUM)/sizeof(ROBOT_DATA_INDEX_MEDIUM[0]);
@@ -227,6 +234,8 @@ bool OpenRover::start()
     fast_rate_pub = nh_priv_.advertise<rr_openrover_basic::RawRrOpenroverBasicFastRateData>("raw_fast_rate_data",1);
     medium_rate_pub = nh_priv_.advertise<rr_openrover_basic::RawRrOpenroverBasicMedRateData>("raw_med_rate_data",1);
     slow_rate_pub = nh_priv_.advertise<rr_openrover_basic::RawRrOpenroverBasicSlowRateData>("raw_slow_rate_data",1);
+    battery_status_a_pub = nh_priv_.advertise<rr_openrover_basic::SmartBatteryStatus>("battery_status_a",1);
+    battery_status_b_pub = nh_priv_.advertise<rr_openrover_basic::SmartBatteryStatus>("battery_status_b",1);
     odom_enc_pub = nh_priv_.advertise<nav_msgs::Odometry>("odom_encoder", 1);
     is_charging_pub = nh_priv_.advertise<std_msgs::Bool>("charging", 1);
 
@@ -250,7 +259,7 @@ bool OpenRover::setupRobotParams()
     if (!(openComs()))
     {
         is_serial_coms_open_ = false;
-        ROS_ERROR("Failed to start serial comunication.");
+        ROS_ERROR("Failed to start serial communication.");
         return false;
     }
 
@@ -742,7 +751,9 @@ void OpenRover::publishMedRateData()
     med_msg.reg_power_a_current = robot_data_[i_REG_POWER_A_CURRENT];   
     med_msg.reg_power_b_current = robot_data_[i_REG_POWER_B_CURRENT];
     med_msg.reg_motor_flipper_angle = robot_data_[i_REG_MOTOR_FLIPPER_ANGLE];
-
+    med_msg.battery_current_a = robot_data_[i_BATTERY_CURRENT_A];
+    med_msg.battery_current_b = robot_data_[i_BATTERY_CURRENT_B];
+    
     if ( robot_data_[i_REG_MOTOR_CHARGER_STATE] == 0xDADA) {
         is_charging_= true;
         is_charging_msg.data = true;
@@ -760,9 +771,25 @@ void OpenRover::publishMedRateData()
     return;
 }
 
+rr_openrover_basic::SmartBatteryStatus interpret_battery_status(uint16_t bits) {
+    rr_openrover_basic::SmartBatteryStatus status_msg;
+    status_msg.over_charged_alarm = bool(bits & 0x8000);
+    status_msg.terminate_charge_alarm = bool(bits & 0x4000);
+    status_msg.over_temp_alarm = bool(bits & 0x1000);
+    status_msg.terminate_discharge_alarm = bool(bits & 0x0800);
+    status_msg.remaining_capacity_alarm = bool(bits & 0x0200);
+    status_msg.remaining_time_alarm = bool(bits & 0x0100);
+    status_msg.initialized = bool(bits & 0x0080);
+    status_msg.discharging = bool(bits & 0x0040);
+    status_msg.fully_charged = bool(bits & 0x0020);
+    status_msg.fully_discharged = bool(bits & 0x0010);
+    return status_msg;
+}
+
 void OpenRover::publishSlowRateData()
 {
     rr_openrover_basic::RawRrOpenroverBasicSlowRateData slow_msg;
+    rr_openrover_basic::SmartBatteryStatus batteryStatusA;
     
     slow_msg.header.stamp = ros::Time::now();
     slow_msg.header.frame_id = "";
@@ -773,15 +800,18 @@ void OpenRover::publishSlowRateData()
     slow_msg.reg_power_bat_voltage_a = robot_data_[i_REG_POWER_BAT_VOLTAGE_A];
     slow_msg.reg_power_bat_voltage_b = robot_data_[i_REG_POWER_BAT_VOLTAGE_B];
     slow_msg.reg_robot_rel_soc_a = robot_data_[i_REG_ROBOT_REL_SOC_A];      
-    slow_msg.reg_robot_rel_soc_b = robot_data_[i_REG_ROBOT_REL_SOC_B];  
-    slow_msg.battery_status_a = robot_data_[i_BATTERY_STATUS_A];
-    slow_msg.battery_status_b = robot_data_[i_BATTERY_STATUS_B];
+    slow_msg.reg_robot_rel_soc_b = robot_data_[i_REG_ROBOT_REL_SOC_B];
     slow_msg.battery_mode_a = robot_data_[i_BATTERY_MODE_A];
     slow_msg.battery_mode_b = robot_data_[i_BATTERY_MODE_B];
     slow_msg.battery_temp_a = robot_data_[i_BATTERY_TEMP_A];
     slow_msg.battery_temp_b = robot_data_[i_BATTERY_TEMP_B];
+    slow_msg.battery_voltage_a = robot_data_[i_BATTERY_VOLTAGE_A];
+    slow_msg.battery_voltage_b = robot_data_[i_BATTERY_VOLTAGE_B];
     slow_msg.buildno = robot_data_[i_BUILDNO];
-    
+
+    battery_status_a_pub.publish(interpret_battery_status(robot_data_[i_BATTERY_STATUS_A]));
+    battery_status_b_pub.publish(interpret_battery_status(robot_data_[i_BATTERY_STATUS_B]));
+
     slow_rate_pub.publish(slow_msg);
     publish_slow_rate_vals_ = false;
     return;
@@ -996,7 +1026,7 @@ bool OpenRover::sendCommand(int param1, int param2)
         ROS_INFO("Serial communication failed. Attempting to restart.");
         if (!(openComs()))
         {
-            ROS_WARN("Failed to restart serial comunication.");
+            ROS_WARN("Failed to restart serial communication.");
         }
     }
     
@@ -1020,7 +1050,7 @@ int OpenRover::readCommand()
         ROS_INFO("Serial communication failed. Attempting to restart.");
         if (!(openComs()))
         {
-            ROS_WARN("Failed to restart serial comunication.");
+            ROS_WARN("Failed to restart serial communication.");
         }
     }
 
@@ -1072,7 +1102,7 @@ bool OpenRover::setParameterData(int param1, int param2)
     }
     catch (std::string s)
     {
-        std::string s2("setParamaterData() failed. ");
+        std::string s2("setParameterData() failed. ");
         throw (s2 + s);
     }
 }
