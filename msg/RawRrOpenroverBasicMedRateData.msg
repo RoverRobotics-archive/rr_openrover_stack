@@ -10,3 +10,5 @@ int32 reg_motor_charger_state
 int32 reg_power_a_current
 int32 reg_power_b_current
 int32 reg_motor_flipper_angle
+int16 battery_current_a
+int16 battery_current_b

@@ -16,6 +16,7 @@ add_message_files(
    RawRrOpenroverBasicFastRateData.msg
    RawRrOpenroverBasicMedRateData.msg
    RawRrOpenroverBasicSlowRateData.msg
+   SmartBatteryStatus.msg
 )
 
 generate_messages(
@@ -35,8 +36,9 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
 )
 
-add_executable(openrover_basic_node src/openrover_basic.cpp)
+add_library(odom_control src/odom_control.cpp)
 
+add_executable(openrover_basic_node src/openrover_basic.cpp)
 add_dependencies(openrover_basic_node rr_openrover_basic_generate_messages_cpp)
-target_link_libraries(openrover_basic_node ${catkin_LIBRARIES} )
+target_link_libraries(openrover_basic_node ${catkin_LIBRARIES} odom_control)
 
