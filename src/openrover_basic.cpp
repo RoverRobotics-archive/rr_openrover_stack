@@ -186,7 +186,7 @@ OpenRover::OpenRover( ros::NodeHandle& nh, ros::NodeHandle& nh_priv ) :
     publish_slow_rate_vals_(false),
     is_serial_coms_open_(false),
     low_speed_mode_on_(false),
-    closed_loop_control_on_(false),
+    closed_loop_control_on_(true),
     K_P_(K_P),
     K_I_(K_I),
     K_D_(K_D),
@@ -508,9 +508,9 @@ void OpenRover::cmdVelCB(const geometry_msgs::TwistStamped::ConstPtr& msg)
             e_stop_on_ = true;
             ROS_WARN("Openrover driver - Soft e-stop on.");
         }
-        motor_speeds_commanded_[FLIPPER_MOTOR_INDEX_] = MOTOR_NEUTRAL;
         motor_speeds_commanded_[LEFT_MOTOR_INDEX_] = MOTOR_NEUTRAL;
         motor_speeds_commanded_[RIGHT_MOTOR_INDEX_] = MOTOR_NEUTRAL;
+        motor_speeds_commanded_[FLIPPER_MOTOR_INDEX_] = MOTOR_NEUTRAL;
         return;
     }
     else
