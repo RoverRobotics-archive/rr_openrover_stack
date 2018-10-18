@@ -28,11 +28,12 @@ class rover_diagnostic():
         self.pub.publish("Right Motor Temp=" + str(data.reg_motor_temp_right))
         self.pub.publish("Battery Mode A=" + str(data.battery_mode_a))
         self.pub.publish("Battery Mode B=" + str(data.battery_mode_b))
-        self.pub.publish("Battery Temp A=" + str(data.battery_temp_a))
-        self.pub.publish("Power Bat Voltage A=" + str(data.reg_power_bat_voltage_a))
-        self.pub.publish("Power Bat Voltage B=" + str(data.reg_power_bat_voltage_b))
-        self.pub.publish("Battery Voltage A=" + str(data.battery_voltage_a))
-        self.pub.publish("Battery Voltage B=" + str(data.battery_voltage_b))
+        self.pub.publish("Battery Temp A=" + str((data.battery_temp_a/10)-273))
+        self.pub.publish("Battery Temp B=" + str((data.battery_temp_b/10)-273))
+        self.pub.publish("Power Bat Voltage A=" + str(data.reg_power_bat_voltage_a/58.33))
+        self.pub.publish("Power Bat Voltage B=" + str(data.reg_power_bat_voltage_b/58.33))
+        self.pub.publish("Battery Voltage A=" + str(data.battery_voltage_a/1000))
+        self.pub.publish("Battery Voltage B=" + str(data.battery_voltage_b/1000))
 
     def med_data_cb(self, data):
         self.pub.publish("Motor Feedback Current Left=" + str(data.reg_motor_fb_current_left))
