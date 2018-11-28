@@ -667,8 +667,8 @@ void OpenRover::publishOdometry(float left_vel, float right_vel)
     //otherwise set them to the ROS param 
     if(net_vel==0 && alpha==0)
     {
-        odom_msg.twist.covariance[0] = 0.0;
-        odom_msg.twist.covariance[35] = 0.0;
+        odom_msg.twist.covariance[0] = odom_covariance_0_/1000.0;
+        odom_msg.twist.covariance[35] = odom_covariance_35_/1000.0;
     }
     else
     {    
