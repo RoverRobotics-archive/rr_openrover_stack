@@ -645,11 +645,11 @@ void OpenRover::publishOdometry(float left_vel, float right_vel)
         net_vel = 0.5*(left_vel+right_vel);
         diff_vel = right_vel - left_vel;
         
-        alpha = odom_angular_coef_*diff_vel;
+        alpha = odom_slippage_factor_*odom_angular_coef_*diff_vel;
         
         pos_x = pos_x + net_vel*cos(theta)*dt;
         pos_y = pos_y + net_vel*sin(theta)*dt;
-        theta = (theta + odom_slippage_factor_*alpha*dt);
+        theta = (theta + alpha*dt);
         
         q_new = tf::createQuaternionFromRPY(0, 0, theta);
         quaternionTFToMsg(q_new, odom_msg.pose.pose.orientation);
@@ -667,12 +667,14 @@ void OpenRover::publishOdometry(float left_vel, float right_vel)
     //otherwise set them to the ROS param 
     if(net_vel==0 && alpha==0)
     {
-        odom_msg.twist.covariance[0] = odom_covariance_0_/1000.0;
-        odom_msg.twist.covariance[35] = odom_covariance_35_/1000.0;
+        odom_msg.twist.covariance[0] = odom_covariance_0_/10.0;
+        odom_msg.twist.covariance[7] = odom_covariance_0_/10.0;
+        odom_msg.twist.covariance[35] = odom_covariance_35_/10.0;
     }
     else
-    {    
+    {
         odom_msg.twist.covariance[0] = odom_covariance_0_;
+        odom_msg.twist.covariance[7] = odom_covariance_0_;
         odom_msg.twist.covariance[35] = odom_covariance_35_;
     }
 
