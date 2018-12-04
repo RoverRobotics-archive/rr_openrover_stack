@@ -494,7 +494,7 @@ void OpenRover::cmdVelCB(const geometry_msgs::TwistStamped::ConstPtr& msg)
     std::string frame_id = msg->header.frame_id;
     bool is_moving_forward, is_turning_cw, is_stationary, is_zero_point_turn;
 
-    double diff_vel_commanded = turn_rate/odom_angular_coef_;
+    double diff_vel_commanded = turn_rate/odom_angular_coef_/odom_slippage_factor_;
 
     right_vel_commanded_ = linear_rate + 0.5*diff_vel_commanded;
     left_vel_commanded_ = linear_rate - 0.5*diff_vel_commanded;
@@ -645,7 +645,7 @@ void OpenRover::publishOdometry(float left_vel, float right_vel)
         net_vel = 0.5*(left_vel+right_vel);
         diff_vel = right_vel - left_vel;
         
-        alpha = odom_slippage_factor_*odom_angular_coef_*diff_vel;
+        alpha = odom_angular_coef_*diff_vel*odom_slippage_factor_;
         
         pos_x = pos_x + net_vel*cos(theta)*dt;
         pos_y = pos_y + net_vel*sin(theta)*dt;
@@ -724,7 +724,7 @@ void OpenRover::publishFastRateData()
     rr_openrover_basic::RawRrOpenroverBasicFastRateData msg;
     
     msg.header.stamp = ros::Time::now();
-    msg.header.frame_id = "";    
+    msg.header.frame_id = "";
     
     msg.left_motor = robot_data_[i_ENCODER_INTERVAL_MOTOR_LEFT];
     msg.right_motor = robot_data_[i_ENCODER_INTERVAL_MOTOR_RIGHT];
