@@ -3,16 +3,20 @@ Changelog for package rr_openrover_basic
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 0.6.0 (2018-XX-XX)
 ------------------
-* Add battery status messages
+* Added /rr_openrover_basic/battery_status_a
+* Added /rr_openrover_basic/battery_status_b
 
 0.5.1 (2018-12-07)
 ------------------
-* /rr_openrover_basic/motor_speeds_commanded added
-* /rr_openrover_basic/charging added
+* Added /rr_openrover_basic/motor_speeds_commanded
+* Added /rr_openrover_basic/charging
 * Fixed issue #8
 
 0.5.0 (2018-12-07)
 ------------------
+* Added rosparam for odom covariances
+* Added rosparam for slippage factor
+* Added diagnostics node
 * Fixed issue #1
 
 0.4.0 (2018-07-23)
