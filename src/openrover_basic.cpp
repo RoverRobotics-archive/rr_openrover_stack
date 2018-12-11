@@ -445,6 +445,7 @@ void OpenRover::robotDataSlowCB(const ros::WallTimerEvent &e)
             serial_slow_buffer_.push_back(ROBOT_DATA_INDEX_SLOW[i]);
         }
         publish_slow_rate_vals_ = true;
+        ROS_DEBUG("Slow buffer size is %i", serial_slow_buffer_.size());
     }
     return;
 }
@@ -457,6 +458,7 @@ void OpenRover::robotDataMediumCB(const ros::WallTimerEvent &e)
             serial_medium_buffer_.push_back(ROBOT_DATA_INDEX_MEDIUM[i]);
         }
         publish_med_rate_vals_ = true;
+        ROS_DEBUG("Medium buffer size is %i", serial_medium_buffer_.size());
     }
     return;
 }
@@ -471,6 +473,7 @@ void OpenRover::robotDataFastCB(const ros::WallTimerEvent &e)
             serial_fast_buffer_.push_back(ROBOT_DATA_INDEX_FAST[i]);
         }
         publish_fast_rate_vals_ = true;
+        ROS_DEBUG("Fast buffer size %i", serial_fast_buffer_.size());
     }
     return;
 }
@@ -490,10 +493,7 @@ void OpenRover::fanSpeedCB(const std_msgs::Int32::ConstPtr& msg)
     {
         serial_fan_buffer_.push_back(msg->data);
     }
-    if (serial_fan_buffer_.size() > 20)
-    {
-        ROS_WARN_THROTTLE(1,"Fan Buffer is larger than 20 commans long");
-    }
+    ROS_DEBUG("Fan Buffer size is %i, new data is %i", serial_fan_buffer_.size(), msg->data);
     return;
 }
 
@@ -864,24 +864,28 @@ void OpenRover::serialManager()
             param1 = 10;
             param2 = serial_fast_buffer_.back();
             serial_fast_buffer_.pop_back();
+            ROS_DEBUG("Its fast data's turn to be sent: %i", param2);
         }
         else if (serial_fan_buffer_.size()>1)
         {
             param1 = 20;
             param2 = serial_fan_buffer_.back();
             serial_fan_buffer_.pop_back();
+            ROS_WARN("Fan Buffer size decreased to %i", serial_fan_buffer_.size());
         }
         else if (serial_medium_buffer_.size()>1)
         {
             param1 = 10;
             param2 = serial_medium_buffer_.back();
             serial_medium_buffer_.pop_back();
+            ROS_DEBUG("Its medium data's turn to be sent: %i", param2);
         }
         else if (serial_slow_buffer_.size()>1)
         {
             param1 = 10;
             param2 = serial_slow_buffer_.back();
             serial_slow_buffer_.pop_back();
+            ROS_DEBUG("Its slow data's turn to be sent: %i", param2);
         }
         else
         {
@@ -1236,6 +1240,7 @@ int main( int argc, char *argv[] )
         ros::NodeHandle nh("");
         ros::NodeHandle nh_priv( "~" );
         openrover::OpenRover openrover( nh, nh_priv );
+        ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels::Debug);
 /*        if( !nh )
         {
                 ROS_FATAL( "Failed to initialize NodeHandle" );
