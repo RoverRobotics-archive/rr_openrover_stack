@@ -486,8 +486,13 @@ void OpenRover::timeoutCB(const ros::WallTimerEvent &e)
 
 void OpenRover::fanSpeedCB(const std_msgs::Int32::ConstPtr& msg)
 {
-    if (is_serial_coms_open_){
+    if (is_serial_coms_open_)
+    {
         serial_fan_buffer_.push_back(msg->data);
+    }
+    if (serial_fan_buffer_.size() > 20)
+    {
+        ROS_WARN_THROTTLE(1,"Fan Buffer is larger than 20 commans long");
     }
     return;
 }
