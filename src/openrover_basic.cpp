@@ -445,7 +445,7 @@ void OpenRover::robotDataSlowCB(const ros::WallTimerEvent &e)
             serial_slow_buffer_.push_back(ROBOT_DATA_INDEX_SLOW[i]);
         }
         publish_slow_rate_vals_ = true;
-        ROS_DEBUG("Slow buffer size is %i", serial_slow_buffer_.size());
+        ROS_INFO("Slow buffer size is %i", serial_slow_buffer_.size());
     }
     return;
 }
@@ -855,6 +855,9 @@ void OpenRover::serialManager()
 
     while ((serial_fast_buffer_.size()>1) || (serial_medium_buffer_.size()>1) || (serial_slow_buffer_.size()>1) || (serial_fan_buffer_.size()>1))
     {
+        // Checks timers and subscribers 
+        ros::spinOnce();
+
         // Fast data gets highest priority from being first in this if statement
         // If the CPU running the driver can only process 60 commands / second and the fast
         // data rate is set to 60hz, no other data will be gathered and the medium and slow Buffers
