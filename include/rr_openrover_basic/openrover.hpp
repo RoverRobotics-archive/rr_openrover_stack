@@ -46,7 +46,6 @@ public:
     bool publish_med_rate_vals_;
     bool publish_slow_rate_vals_;
     bool closed_loop_control_on_;
-    bool low_speed_mode_on_;
     bool e_stop_on_;
 
 private:
@@ -102,7 +101,7 @@ private:
     float odom_encoder_coef_;
     float odom_axle_track_;
     float odom_angular_coef_;
-    float odom_slippage_factor_;
+    float odom_traction_factor_;
     float odom_covariance_0_;
     float odom_covariance_35_;
 
