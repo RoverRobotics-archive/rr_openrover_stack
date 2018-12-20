@@ -9,12 +9,12 @@ from rr_openrover_basic.msg import RawRrOpenroverBasicSlowRateData, RawRrOpenrov
 class rover_diagnostic():
 
     def __init__(self):
+        self.pub = rospy.Publisher('/inorbit/custom_data/0', String, queue_size=5)
         rospy.Subscriber("/raw_slow_rate_data", RawRrOpenroverBasicSlowRateData, self.slow_data_cb)
         rospy.Subscriber("/rr_openrover_basic/raw_med_rate_data", RawRrOpenroverBasicMedRateData, self.med_data_cb)
         rospy.Subscriber("/rr_openrover_basic/battery_status_a", SmartBatteryStatus, self.battery_status_a_cb)
         rospy.Subscriber("/rr_openrover_basic/battery_status_b", SmartBatteryStatus, self.battery_status_b_cb)
         rospy.Subscriber('/rr_openrover_basic/charging', Bool, self.openrover_charging_cb)
-        self.pub = rospy.Publisher('/inorbit/custom_data/0', String, queue_size=5)
 
     def slow_data_cb(self, data):
         warn_msg = "Battery Levels [" + str(data.reg_robot_rel_soc_a) + ", " + str(
@@ -28,11 +28,12 @@ class rover_diagnostic():
         self.pub.publish("Right Motor Temp=" + str(data.reg_motor_temp_right))
         self.pub.publish("Battery Mode A=" + str(data.battery_mode_a))
         self.pub.publish("Battery Mode B=" + str(data.battery_mode_b))
-        self.pub.publish("Battery Temp A=" + str(data.battery_temp_a))
-        self.pub.publish("Power Bat Voltage A=" + str(data.reg_power_bat_voltage_a))
-        self.pub.publish("Power Bat Voltage B=" + str(data.reg_power_bat_voltage_b))
-        self.pub.publish("Battery Voltage A=" + str(data.battery_voltage_a))
-        self.pub.publish("Battery Voltage B=" + str(data.battery_voltage_b))
+        self.pub.publish("Battery Temp A=" + str((data.battery_temp_a/10)-273))
+        self.pub.publish("Battery Temp B=" + str((data.battery_temp_b/10)-273))
+        self.pub.publish("Power Bat Voltage A=" + str(data.reg_power_bat_voltage_a/58.33))
+        self.pub.publish("Power Bat Voltage B=" + str(data.reg_power_bat_voltage_b/58.33))
+        self.pub.publish("Battery Voltage A=" + str(data.battery_voltage_a/1000))
+        self.pub.publish("Battery Voltage B=" + str(data.battery_voltage_b/1000))
 
     def med_data_cb(self, data):
         self.pub.publish("Motor Feedback Current Left=" + str(data.reg_motor_fb_current_left))
