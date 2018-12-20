@@ -1159,7 +1159,7 @@ bool OpenRover::openComs()
 int main( int argc, char *argv[] )
 {
         // Create ROS node
-        ros::init( argc, argv, "openrover_basic_node" );
+        ros::init( argc, argv, "rr_openrover_basic_node" );
 
         ros::NodeHandle nh("");
         ros::NodeHandle nh_priv( "~" );
