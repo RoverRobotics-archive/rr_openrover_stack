@@ -1,7 +1,16 @@
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Changelog for package rr_openrover_basic
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-0.6.0 (2018-XX-XX)
+0.6.1 (2018-12-13)
+------------------
+* Migrated release repo from /roverrobotics to /roverrobotics-release
+* Changed rosparam slippage_factor to traction_factor
+* Changed default weight to 20.0 lbs
+* Changed default drive type to 4WD
+* Changed default closed_loop_control_on to false
+* Removed low_speed_mode
+
+0.6.0 (2018-12-11)
 ------------------
 * Added /rr_openrover_basic/battery_status_a
 * Added /rr_openrover_basic/battery_status_b

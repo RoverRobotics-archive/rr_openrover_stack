@@ -3,13 +3,13 @@
 
     <!-- OpenRover Driver -->
     <node pkg="rr_openrover_basic" type="openrover_basic_node" name="$(arg openrover_node_name)" respawn="false" output="screen">
-        <param name="port" value="/dev/rover" />
+        <param name="port" value="/dev/ttyUSB0" />
         <param name="drive_type" value="4wd" />
         <param name="enable_timeout" type="bool" value="true"/>
         <param name="timeout" type="double" value="0.3"/>
         <param name="closed_loop_control_on" type="bool" value="false" />
         <param name="total_weight" type="double" value="20.41"/>
-        <param name="slippage_factor" value="0.610"/>
+        <param name="traction_factor" value="0.610"/>
         <param name="odom_covariance_0" value="0.01"/>
         <param name="odom_covariance_35" value="0.03"/>
     </node>
@@ -45,7 +45,8 @@
         <remap from="/joy" to="/joystick" />
     </node>
 
-    <node pkg="usb_cam" type="usb_cam_node" name="usb_cam_node" />
+<!--    <node pkg="usb_cam" type="usb_cam_node" name="usb_cam_node" />
+-->
 
 <!--   <node pkg="web_video_server" type="web_video_server" name="web_video_server" />
 -->
