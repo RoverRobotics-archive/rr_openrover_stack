@@ -39,12 +39,12 @@
         <param name="wired_or_wireless" value="wireless"/>
     </node>
 
-    <!-- Xbox controller driver
-    <node pkg="joy" type="joy_node" name="joy_node" output="screen" respawn="true" >
+    <!-- Xbox controller driver-->
+    <node pkg="joy" type="joy_node" name="joy_node" output="screen" respawn="false" >
         <param name="autorepeat_rate" value="10" />
         <remap from="/joy" to="/joystick" />
     </node>
--->
+
 <!--    <node pkg="usb_cam" type="usb_cam_node" name="usb_cam_node" />
 -->
 
