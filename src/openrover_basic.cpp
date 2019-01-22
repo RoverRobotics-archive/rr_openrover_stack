@@ -38,11 +38,11 @@ const float ODOM_AXLE_TRACK_F  = 10.75; //distance between centerlines of tracks
 const float ODOM_ANGULAR_COEF_F = 0.5/(ODOM_AXLE_TRACK_F*2.54/100); //rad per meter
 const float ODOM_TRACTION_FACTOR_F = 0.75;
 //low speed mode cmd_vel to motor command flipper constants
-const int MOTOR_SPEED_LINEAR_COEF_F_LS = 495;
-const int MOTOR_SPEED_ANGULAR_COEF_F_LS = 644;
+const int MOTOR_SPEED_LINEAR_COEF_F_LS = 293;
+const int MOTOR_SPEED_ANGULAR_COEF_F_LS = 86;
 //high speed mode cmd_vel to motor command flipper constants
-const int MOTOR_SPEED_LINEAR_COEF_F_HS = 495;
-const int MOTOR_SPEED_ANGULAR_COEF_F_HS = 644;
+const int MOTOR_SPEED_LINEAR_COEF_F_HS = 293;
+const int MOTOR_SPEED_ANGULAR_COEF_F_HS = 86;
 
 //4wd constants__________
 //odometry 4wd constants
@@ -70,10 +70,10 @@ const float ODOM_ANGULAR_COEF_2WD = 1.0/(ODOM_AXLE_TRACK_2WD*2.54/100); //rad pe
 const float ODOM_TRACTION_FACTOR_2WD = 0.9877;
 //low speed mode cmd_vel to motor command 2wd constants
 const int MOTOR_SPEED_LINEAR_COEF_2WD_LS = 30;
-const int MOTOR_SPEED_ANGULAR_COEF_2WD_LS = 6;
+const int MOTOR_SPEED_ANGULAR_COEF_2WD_LS = 10;
 //high speed cmd_vel to motor command 2wd constants
 const int MOTOR_SPEED_LINEAR_COEF_2WD_HS = 30;
-const int MOTOR_SPEED_ANGULAR_COEF_2WD_HS = 6;
+const int MOTOR_SPEED_ANGULAR_COEF_2WD_HS = 10;
 
 // Velocity Controller Constants
 const int CONTROLLER_DEADBAND_COMP = 0; //reduce MOTOR_DEADBAND by this amount
