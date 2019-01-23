@@ -1,6 +1,10 @@
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Changelog for package rr_openrover_basic
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+0.6.2 (2019-1-23)
+------------------
+* Fixed issue #13
+
 0.6.1 (2018-12-13)
 ------------------
 * Migrated release repo from /roverrobotics to /roverrobotics-release
