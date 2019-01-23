@@ -38,11 +38,11 @@ const float ODOM_AXLE_TRACK_F  = 10.75; //distance between centerlines of tracks
 const float ODOM_ANGULAR_COEF_F = 0.5/(ODOM_AXLE_TRACK_F*2.54/100); //rad per meter
 const float ODOM_TRACTION_FACTOR_F = 0.75;
 //low speed mode cmd_vel to motor command flipper constants
-const int MOTOR_SPEED_LINEAR_COEF_F_LS = 495;
-const int MOTOR_SPEED_ANGULAR_COEF_F_LS = 644;
+const int MOTOR_SPEED_LINEAR_COEF_F_LS = 100;
+const int MOTOR_SPEED_ANGULAR_COEF_F_LS = 60;
 //high speed mode cmd_vel to motor command flipper constants
-const int MOTOR_SPEED_LINEAR_COEF_F_HS = 495;
-const int MOTOR_SPEED_ANGULAR_COEF_F_HS = 644;
+const int MOTOR_SPEED_LINEAR_COEF_F_HS = 90;
+const int MOTOR_SPEED_ANGULAR_COEF_F_HS = 50;
 
 //4wd constants__________
 //odometry 4wd constants
