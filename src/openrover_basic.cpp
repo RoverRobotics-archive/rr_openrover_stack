@@ -301,6 +301,7 @@ bool OpenRover::setupRobotParams()
         motor_speed_deadband_ = MOTOR_DEADBAND;
         motor_speed_angular_deadband_ = MOTOR_DEADBAND;
         cw_turn_coef_ = MOTOR_SPEED_CW_TURN_COEF;
+        weight_coef_ = 1;
     }
     else if (drive_type_==(std::string) "4wd")
     {
@@ -335,6 +336,7 @@ bool OpenRover::setupRobotParams()
         motor_speed_deadband_ = MOTOR_DEADBAND;
         motor_speed_angular_deadband_ = MOTOR_DEADBAND;
         cw_turn_coef_ = MOTOR_SPEED_CW_TURN_COEF;
+        weight_coef_ = 1;
     }
     else
     {
@@ -349,6 +351,7 @@ bool OpenRover::setupRobotParams()
         motor_speed_deadband_ = MOTOR_DEADBAND;
         motor_speed_angular_deadband_ = MOTOR_DEADBAND;
         cw_turn_coef_ = MOTOR_SPEED_CW_TURN_COEF;
+        weight_coef_ = 1;
     }
 
     if (!(nh_priv_.getParam("traction_factor", odom_traction_factor_)))
