@@ -176,7 +176,7 @@ OpenRover::OpenRover( ros::NodeHandle& nh, ros::NodeHandle& nh_priv ) :
     nh_priv_(nh_priv),
     port_("/dev/ttyUSB0"),
     baud_(57600),
-    fast_rate_(60.0), //Hz -> drop to 10Hz on Rpi
+    fast_rate_(10.0), //Hz -> can increase to 60Hz for TX2
     medium_rate_(2.0), //Hz
     slow_rate_(1.0), //Hz
     motor_speeds_commanded_{MOTOR_NEUTRAL,MOTOR_NEUTRAL,MOTOR_NEUTRAL}, //default motor commands to neutral
