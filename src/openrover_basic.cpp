@@ -176,7 +176,7 @@ OpenRover::OpenRover( ros::NodeHandle& nh, ros::NodeHandle& nh_priv ) :
     nh_priv_(nh_priv),
     port_("/dev/ttyUSB0"),
     baud_(57600),
-    fast_rate_(10.0), //Hz -> can increase to 60Hz for TX2
+    fast_rate_(60.0), //Hz -> can increase to 60Hz for TX2
     medium_rate_(2.0), //Hz
     slow_rate_(1.0), //Hz
     motor_speeds_commanded_{MOTOR_NEUTRAL,MOTOR_NEUTRAL,MOTOR_NEUTRAL}, //default motor commands to neutral
@@ -390,7 +390,7 @@ bool OpenRover::setupRobotParams()
 
 void OpenRover::robotDataSlowCB(const ros::WallTimerEvent &e)
 {
-    if (is_serial_coms_open_){
+    if (is_serial_coms_open_  && (serial_slow_buffer_.size()==0)){
         for(int i = 0; i<SLOW_SIZE; i++)
         {
             serial_slow_buffer_.push_back(ROBOT_DATA_INDEX_SLOW[i]);
@@ -403,7 +403,7 @@ void OpenRover::robotDataSlowCB(const ros::WallTimerEvent &e)
 
 void OpenRover::robotDataMediumCB(const ros::WallTimerEvent &e)
 {
-    if (is_serial_coms_open_){
+    if (is_serial_coms_open_ && (serial_medium_buffer_.size()==0)){
         for(int i = 0; i<MEDIUM_SIZE; i++)
         {
             serial_medium_buffer_.push_back(ROBOT_DATA_INDEX_MEDIUM[i]);
@@ -416,7 +416,7 @@ void OpenRover::robotDataMediumCB(const ros::WallTimerEvent &e)
 
 void OpenRover::robotDataFastCB(const ros::WallTimerEvent &e)
 {
-    if (is_serial_coms_open_){
+    if (is_serial_coms_open_ && (serial_fast_buffer_.size()==0)){
         for(int i = 0; i<FAST_SIZE; i++)
         {
             // Fill buffer with all the param2's defined as fast data
@@ -440,7 +440,7 @@ void OpenRover::timeoutCB(const ros::WallTimerEvent &e)
 
 void OpenRover::fanSpeedCB(const std_msgs::Int32::ConstPtr& msg)
 {
-    if (is_serial_coms_open_)
+    if (is_serial_coms_open_ && (serial_fan_buffer_.size()==0))
     {
         serial_fan_buffer_.push_back(msg->data);
     }
