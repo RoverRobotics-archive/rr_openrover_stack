@@ -390,7 +390,7 @@ bool OpenRover::setupRobotParams()
 
 void OpenRover::robotDataSlowCB(const ros::WallTimerEvent &e)
 {
-    if (is_serial_coms_open_  && (serial_slow_buffer_.size()==0)){
+    if (is_serial_coms_open_  && !publish_slow_rate_vals_){
         for(int i = 0; i<SLOW_SIZE; i++)
         {
             serial_slow_buffer_.push_back(ROBOT_DATA_INDEX_SLOW[i]);
@@ -403,7 +403,7 @@ void OpenRover::robotDataSlowCB(const ros::WallTimerEvent &e)
 
 void OpenRover::robotDataMediumCB(const ros::WallTimerEvent &e)
 {
-    if (is_serial_coms_open_ && (serial_medium_buffer_.size()==0)){
+    if (is_serial_coms_open_ && !publish_med_rate_vals_){
         for(int i = 0; i<MEDIUM_SIZE; i++)
         {
             serial_medium_buffer_.push_back(ROBOT_DATA_INDEX_MEDIUM[i]);
@@ -416,7 +416,7 @@ void OpenRover::robotDataMediumCB(const ros::WallTimerEvent &e)
 
 void OpenRover::robotDataFastCB(const ros::WallTimerEvent &e)
 {
-    if (is_serial_coms_open_ && (serial_fast_buffer_.size()==0)){
+    if (is_serial_coms_open_ && !publish_fast_rate_vals_){
         for(int i = 0; i<FAST_SIZE; i++)
         {
             // Fill buffer with all the param2's defined as fast data
