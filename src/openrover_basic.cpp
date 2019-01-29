@@ -251,6 +251,28 @@ bool OpenRover::start()
 
 bool OpenRover::setupRobotParams()
 {//Get ROS params and save them to class variables
+
+    if (!(nh_priv_.getParam("fast_data_rate", fast_rate_)))
+    {
+        ROS_ERROR("Failed to retrieve fast_data_rate from parameter. Defaulting to 10");
+        fast_rate_ = 10;
+        return false;
+    }
+
+    if (!(nh_priv_.getParam("medium_data_rate", medium_rate_)))
+    {
+        ROS_ERROR("Failed to retrieve medium_data_rate from parameter. Defaulting to 2");
+        medium_rate_ = 2;
+        return false;
+    }
+
+    if (!(nh_priv_.getParam("slow_data_rate", slow_rate_)))
+    {
+        ROS_ERROR("Failed to retrieve slow_data_rate from parameter. Defaulting to 1");
+        slow_rate_ = 1;
+        return false;
+    }
+
     if (!(nh_priv_.getParam("port", port_)))
     {
         ROS_WARN("Failed to retrieve port from parameter server.");
@@ -376,27 +398,6 @@ bool OpenRover::setupRobotParams()
         return false;
     }
 
-    if (!(nh_priv_.getParam("fast_data_rate", fast_rate_)))
-    {
-        ROS_ERROR("Failed to retrieve fast_data_rate from parameter. Defaulting to 10");
-        fast_rate_ = 10;
-        return false;
-    }
-
-    if (!(nh_priv_.getParam("medium_data_rate", medium_rate_)))
-    {
-        ROS_ERROR("Failed to retrieve medium_data_rate from parameter. Defaulting to 2");
-        medium_rate_ = 0.03;
-        return false;
-    }
-
-    if (!(nh_priv_.getParam("slow_data_rate", slow_rate_)))
-    {
-        ROS_ERROR("Failed to retrieve slow_data_rate from parameter. Defaulting to 1");
-        slow_rate_ = 0.03;
-        return false;
-    }
-
     ROS_INFO("Openrover parameters loaded:");
     ROS_INFO("port: %s", port_.c_str());
     ROS_INFO("drive_type: %s", drive_type_.c_str());
@@ -452,7 +453,7 @@ void OpenRover::robotDataFastCB(const ros::WallTimerEvent &e)
         //ROS_DEBUG("Fast buffer size %i", serial_fast_buffer_.size());
     }
     else {
-        ROS_WARN_THROTTLE(2, "Missing fast data rate timing. Consider reducing fast_rate_");
+        ROS_WARN_DELAYED_THROTTLE(5, "Fast data rate too high. Consider reducing fast_data_rate param");
     }
     return;
 }
@@ -834,8 +835,6 @@ void OpenRover::serialManager()
 
     while ((serial_fast_buffer_.size()>0) || (serial_medium_buffer_.size()>0) || (serial_slow_buffer_.size()>0) || (serial_fan_buffer_.size()>0))
     {
-        // Checks timers and subscribers 
-        ros::spinOnce();
 
         // Fast data gets highest priority from being first in this if statement
         // If the CPU running the driver can only process 60 commands / second and the fast
@@ -952,6 +951,9 @@ void OpenRover::serialManager()
         {
             publishSlowRateData();
         }
+
+        // Checks timers and subscribers 
+        ros::spinOnce();
     }
     return;
 }
@@ -1065,13 +1067,6 @@ int OpenRover::readCommand()
     int bits_read = read(fd, read_buffer, 1);
     start_byte_read = read_buffer[0];
 
-    if(!(SERIAL_START_BYTE==start_byte_read))
-    {
-        char str_ex [50];
-        sprintf(str_ex, "Received bad start byte. Received: %02x", start_byte_read);
-        tcflush(fd,TCIOFLUSH); //flush received buffer
-        throw std::string(str_ex);
-    }
 
     read(fd, read_buffer, 1); //get param
     dataNO = read_buffer[0];
@@ -1086,7 +1081,15 @@ int OpenRover::readCommand()
     read_checksum = read_buffer[0];
 
     checksum = 255-(dataNO + data1 + data2)%255;
-    if(!(checksum == read_checksum))
+
+    if(!(SERIAL_START_BYTE==start_byte_read))
+    {
+        char str_ex [50];
+        sprintf(str_ex, "Received bad start byte. Received: %02x", start_byte_read);
+        tcflush(fd,TCIOFLUSH); //flush received buffer
+        throw std::string(str_ex);
+    }
+    else if(!(checksum == read_checksum))
     {
         char str_ex [50];
         sprintf(str_ex, "Received bad CRC. Received: %02x,%02x,%02x,%02x,%02x", start_byte_read, dataNO, data1, data2, read_checksum);
