@@ -426,6 +426,9 @@ void OpenRover::robotDataFastCB(const ros::WallTimerEvent &e)
         publish_fast_rate_vals_ = true;
         //ROS_DEBUG("Fast buffer size %i", serial_fast_buffer_.size());
     }
+    else {
+        ROS_WARN_THROTTLE(2, "Missing fast data rate timing. Consider reducing fast_rate_");
+    }
     return;
 }
 
