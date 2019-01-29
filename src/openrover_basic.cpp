@@ -176,7 +176,7 @@ OpenRover::OpenRover( ros::NodeHandle& nh, ros::NodeHandle& nh_priv ) :
     nh_priv_(nh_priv),
     port_("/dev/ttyUSB0"),
     baud_(57600),
-    fast_rate_(60.0), //Hz -> can increase to 60Hz for TX2
+    fast_rate_(10.0), //Hz -> can increase to 60Hz for TX2
     medium_rate_(2.0), //Hz
     slow_rate_(1.0), //Hz
     motor_speeds_commanded_{MOTOR_NEUTRAL,MOTOR_NEUTRAL,MOTOR_NEUTRAL}, //default motor commands to neutral
@@ -208,18 +208,6 @@ OpenRover::OpenRover( ros::NodeHandle& nh, ros::NodeHandle& nh_priv ) :
     {
         global_file << "time,left_filtered,left_measured,left_commanded,right_filtered,right_measured,right_commanded" << std::endl;
     }
-
-    serial_fast_buffer_.reserve(5*FAST_SIZE); //reserve space for 5 sets of FAST rate data
-    serial_medium_buffer_.reserve(5*MEDIUM_SIZE); //reserve space for 5 sets of Medium rate data
-    serial_slow_buffer_.reserve(5*SLOW_SIZE); //reserve space for 5 sets of Slow rate data
-    serial_fan_buffer_.reserve(5); //reserve space for 5 sets of Fan commands
-
-    //WallTimers simplify the timing of updating parameters by reloading serial buffers at specified rates.
-    //without them the serial buffers will never be loaded with new commands
-    fast_timer = nh_priv_.createWallTimer( ros::WallDuration(1.0/fast_rate_), &OpenRover::robotDataFastCB, this);
-    medium_timer = nh_priv_.createWallTimer( ros::WallDuration(1.0/medium_rate_), &OpenRover::robotDataMediumCB, this);
-    slow_timer = nh_priv_.createWallTimer( ros::WallDuration(1.0/slow_rate_), &OpenRover::robotDataSlowCB, this);
-    timeout_timer = nh_priv_.createWallTimer( ros::WallDuration(timeout_), &OpenRover::timeoutCB, this, true);
 }
 
 bool OpenRover::start()
@@ -230,7 +218,19 @@ bool OpenRover::start()
         return false;
     }
 
+    serial_fast_buffer_.reserve(5*FAST_SIZE); //reserve space for 5 sets of FAST rate data
+    serial_medium_buffer_.reserve(5*MEDIUM_SIZE); //reserve space for 5 sets of Medium rate data
+    serial_slow_buffer_.reserve(5*SLOW_SIZE); //reserve space for 5 sets of Slow rate data
+    serial_fan_buffer_.reserve(5); //reserve space for 5 sets of Fan commands
+
     ROS_INFO("Creating Publishers and Subscribers");
+    //WallTimers simplify the timing of updating parameters by reloading serial buffers at specified rates.
+    //without them the serial buffers will never be loaded with new commands
+    fast_timer = nh_priv_.createWallTimer( ros::WallDuration(1.0/fast_rate_), &OpenRover::robotDataFastCB, this);
+    medium_timer = nh_priv_.createWallTimer( ros::WallDuration(1.0/medium_rate_), &OpenRover::robotDataMediumCB, this);
+    slow_timer = nh_priv_.createWallTimer( ros::WallDuration(1.0/slow_rate_), &OpenRover::robotDataSlowCB, this);
+    timeout_timer = nh_priv_.createWallTimer( ros::WallDuration(timeout_), &OpenRover::timeoutCB, this, true);
+
     fast_rate_pub = nh_priv_.advertise<rr_openrover_basic::RawRrOpenroverBasicFastRateData>("raw_fast_rate_data",1);
     medium_rate_pub = nh_priv_.advertise<rr_openrover_basic::RawRrOpenroverBasicMedRateData>("raw_med_rate_data",1);
     slow_rate_pub = nh_priv_.advertise<rr_openrover_basic::RawRrOpenroverBasicSlowRateData>("raw_slow_rate_data",1);
@@ -376,6 +376,27 @@ bool OpenRover::setupRobotParams()
         return false;
     }
 
+    if (!(nh_priv_.getParam("fast_data_rate", fast_rate_)))
+    {
+        ROS_ERROR("Failed to retrieve fast_data_rate from parameter. Defaulting to 10");
+        fast_rate_ = 10;
+        return false;
+    }
+
+    if (!(nh_priv_.getParam("medium_data_rate", medium_rate_)))
+    {
+        ROS_ERROR("Failed to retrieve medium_data_rate from parameter. Defaulting to 2");
+        medium_rate_ = 0.03;
+        return false;
+    }
+
+    if (!(nh_priv_.getParam("slow_data_rate", slow_rate_)))
+    {
+        ROS_ERROR("Failed to retrieve slow_data_rate from parameter. Defaulting to 1");
+        slow_rate_ = 0.03;
+        return false;
+    }
+
     ROS_INFO("Openrover parameters loaded:");
     ROS_INFO("port: %s", port_.c_str());
     ROS_INFO("drive_type: %s", drive_type_.c_str());
@@ -385,6 +406,10 @@ bool OpenRover::setupRobotParams()
     ROS_INFO("traction_factor: %f", odom_traction_factor_);
     ROS_INFO("odom_covariance_0: %f", odom_covariance_0_);
     ROS_INFO("odom_covariance_35: %f", odom_covariance_35_);
+    ROS_INFO("fast_data_rate: %f", fast_rate_);
+    ROS_INFO("medium_data_rate: %f", medium_rate_);
+    ROS_INFO("slow_data_rate: %f", slow_rate_);
+
     return true;
 }
 
