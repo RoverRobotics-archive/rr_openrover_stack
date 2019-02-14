@@ -254,23 +254,20 @@ bool OpenRover::setupRobotParams()
 
     if (!(nh_priv_.getParam("fast_data_rate", fast_rate_)))
     {
-        ROS_ERROR("Failed to retrieve fast_data_rate from parameter. Defaulting to 10");
+        ROS_WARN("Failed to retrieve fast_data_rate from parameter. Defaulting to 10");
         fast_rate_ = 10;
-        return false;
     }
 
     if (!(nh_priv_.getParam("medium_data_rate", medium_rate_)))
     {
-        ROS_ERROR("Failed to retrieve medium_data_rate from parameter. Defaulting to 2");
+        ROS_WARN("Failed to retrieve medium_data_rate from parameter. Defaulting to 2");
         medium_rate_ = 2;
-        return false;
     }
 
     if (!(nh_priv_.getParam("slow_data_rate", slow_rate_)))
     {
-        ROS_ERROR("Failed to retrieve slow_data_rate from parameter. Defaulting to 1");
+        ROS_WARN("Failed to retrieve slow_data_rate from parameter. Defaulting to 1");
         slow_rate_ = 1;
-        return false;
     }
 
     if (!(nh_priv_.getParam("port", port_)))
@@ -288,28 +285,27 @@ bool OpenRover::setupRobotParams()
 
     if (!(nh_priv_.getParam("closed_loop_control_on", closed_loop_control_on_)))
     {
-        ROS_WARN("Failed to retrieve closed_loop_control_on from parameter server.");
-        return false;
+        ROS_WARN("Failed to retrieve closed_loop_control_on from parameter server. Defaulting to off.");
+        closed_loop_control_on_ = false;
     }
 
     if (!(nh_priv_.getParam("timeout", timeout_)))
     {
-        ROS_ERROR("Failed to retrieve timeout from parameter server. Defaulting to ");
-        return false;
+        ROS_WARN("Failed to retrieve timeout from parameter server. Defaulting to 0.2s");
+        timeout_ = 0.2;
+
     }
 
     if (!(nh_priv_.getParam("total_weight", total_weight_)))
     {
-        ROS_ERROR("Failed to retrieve total_weight_ from parameter server. Defaulting to 20 lbs");
+        ROS_WARN("Failed to retrieve total_weight_ from parameter server. Defaulting to 20 lbs");
         total_weight_ = 20.0;
-        return false;
     }
 
     if (!(nh_priv_.getParam("drive_type", drive_type_)))
     {
-        ROS_ERROR("Failed to retrieve drive_type from parameter.Defaulting to flippers.");
+        ROS_WARN("Failed to retrieve drive_type from parameter.Defaulting to 4wd.");
         drive_type_ = "4wd";
-        return false;
     }
 
     if(drive_type_==(std::string) "2wd")
@@ -380,22 +376,19 @@ bool OpenRover::setupRobotParams()
 
     if (!(nh_priv_.getParam("traction_factor", odom_traction_factor_)))
     {
-        ROS_ERROR("Failed to retrieve odom_traction_factor_ from parameter.Defaulting to drive_type_ traction_factor");
-        return false;
+        ROS_WARN("Failed to retrieve odom_traction_factor_ from parameter. Defaulting to drive_type_ traction_factor");
     }
 
     if (!(nh_priv_.getParam("odom_covariance_0", odom_covariance_0_)))
     {
-        ROS_ERROR("Failed to retrieve odom_covariance_0 from parameter. Defaulting to 0.01");
+        ROS_WARN("Failed to retrieve odom_covariance_0 from parameter. Defaulting to 0.01");
         odom_covariance_0_ = 0.01;
-        return false;
     }
 
     if (!(nh_priv_.getParam("odom_covariance_35", odom_covariance_35_)))
     {
-        ROS_ERROR("Failed to retrieve odom_covariance_35 from parameter. Defaulting to 0.03");
+        ROS_WARN("Failed to retrieve odom_covariance_35 from parameter. Defaulting to 0.03");
         odom_covariance_35_ = 0.03;
-        return false;
     }
 
     ROS_INFO("Openrover parameters loaded:");
