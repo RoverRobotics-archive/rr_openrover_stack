@@ -1,6 +1,14 @@
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Changelog for package rr_openrover_basic
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+0.7.0 (2019-5-13)
+------------------
+* Fixed issue #12
+* Added fan speed control
+* Added launch file for 2wd teleop
+* Changed default fast rate data to 10hz
+
 0.6.2 (2019-1-23)
 ------------------
 * Fixed issue #13
@@ -19,26 +27,31 @@ Changelog for package rr_openrover_basic
 * Added /rr_openrover_basic/battery_status_a
 * Added /rr_openrover_basic/battery_status_b
 
+0.6.0 (2018-12-08)
+------------------
+* Added ROS topic /rr_openrover_basic/battery_status_a
+* Added ROS topic /rr_openrover_basic/battery_status_b
+
 0.5.1 (2018-12-07)
 ------------------
-* Added /rr_openrover_basic/motor_speeds_commanded
-* Added /rr_openrover_basic/charging
+* Added ROS topic /rr_openrover_basic/motor_speeds_commanded
+* Added ROS topic /rr_openrover_basic/charging
 * Fixed issue #8
 
 0.5.0 (2018-12-07)
 ------------------
-* Added rosparam for odom covariances
-* Added rosparam for slippage factor
+* Added ROS param for 'odom covariances'
+* Added ROS param for 'slippage factor'
 * Added diagnostics node
 * Fixed issue #1
 
 0.4.0 (2018-07-23)
 ------------------
-* Added drive_type ROS param to switch odometry between 4wd, 2wd, and flipper robots
+* Added ROS param 'drive_type'
 
 0.3.0 (2018-07-19)
 ------------------
-* Added Flipper encoder odometry publishing topic /rr_openrover_basic/odom_encoder
+* Added ROS topic /rr_openrover_basic/odom_encoder
 * Added 2nd maintainer to package.xml and URL to wiki
 
 0.2.0 (2018-07-17)

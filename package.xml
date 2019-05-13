@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package format="2">
   <name>rr_openrover_basic</name>
-  <version>0.6.2</version>
+  <version>0.7.0</version>
   <description>The rr_openrover_basic package</description>
 
   <maintainer email="jack@digilabs.io">Jack Kilian</maintainer>

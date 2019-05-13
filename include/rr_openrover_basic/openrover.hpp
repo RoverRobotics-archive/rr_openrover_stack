@@ -35,13 +35,13 @@ public:
     bool setupRobotParams();
     void updateOdometry();
 
-    void robotDataFastCB( const ros::WallTimerEvent &e); 
-    void robotDataMediumCB( const ros::WallTimerEvent &e); 
-    void robotDataSlowCB( const ros::WallTimerEvent &e); 
-    void timeoutCB( const ros::WallTimerEvent &e ); 
-    
+    void robotDataFastCB( const ros::WallTimerEvent &e);
+    void robotDataMediumCB( const ros::WallTimerEvent &e);
+    void robotDataSlowCB( const ros::WallTimerEvent &e);
+    void timeoutCB( const ros::WallTimerEvent &e );
+
     void serialManager();
-    
+
     bool publish_fast_rate_vals_;
     bool publish_med_rate_vals_;
     bool publish_slow_rate_vals_;
@@ -55,13 +55,13 @@ private:
     //ROS Parameters
     std::string port_;
     std::string drive_type_;
-    
+
     float timeout_; //Default to neutral motor values after timeout seconds
 
     //ROS node handlers
     ros::NodeHandle& nh_;
     ros::NodeHandle& nh_priv_;
-    
+
     //ROS Timers
     ros::WallTimer fast_timer;
     ros::WallTimer medium_timer;
@@ -74,13 +74,14 @@ private:
     ros::Publisher is_charging_pub;
     ros::Publisher motor_speeds_pub;
     ros::Publisher vel_calc_pub;
-    
+
     ros::Publisher fast_rate_pub;
     ros::Publisher medium_rate_pub;
     ros::Publisher slow_rate_pub;
     ros::Publisher battery_status_a_pub, battery_status_b_pub;
 
     ros::Subscriber cmd_vel_sub;
+    ros::Subscriber fan_speed_sub;
 
     //General Class variables
     int baud_; //serial baud rate
@@ -131,10 +132,12 @@ private:
     std::vector<unsigned char> serial_fast_buffer_;
     std::vector<unsigned char> serial_medium_buffer_;
     std::vector<unsigned char> serial_slow_buffer_;
+    std::vector<unsigned char> serial_fan_buffer_;
 
     //ROS Subscriber callback functions
     void cmdVelCB(const geometry_msgs::TwistStamped::ConstPtr& msg);
-    
+    void fanSpeedCB(const std_msgs::Int32::ConstPtr& msg);
+
     //ROS Publish Functions (robot_data_[X] to ros topics)
     void publishFastRateData();
     void publishMedRateData();

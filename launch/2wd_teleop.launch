@@ -10,7 +10,7 @@
         <param name="timeout" type="double" value="0.3"/>
         <param name="closed_loop_control_on" type="bool" value="false" />
         <param name="total_weight" type="double" value="20.41"/>
-        <param name="traction_factor" value="0.610"/>
+        <param name="traction_factor" value="0.98"/>
         <param name="odom_covariance_0" value="0.01"/>
         <param name="odom_covariance_35" value="0.03"/>
 
