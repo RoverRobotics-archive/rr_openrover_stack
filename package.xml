@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package format="2">
   <name>rr_openrover_basic</name>
-  <version>0.7.0</version>
+  <version>0.7.1</version>
   <description>The rr_openrover_basic package</description>
 
   <maintainer email="jack@digilabs.io">Jack Kilian</maintainer>
@@ -19,6 +19,8 @@
   <depend>sensor_msgs</depend>
   <depend>std_msgs</depend>
   <depend>tf</depend>
+  <depend>joy</depend>
+  <depend>twist_mux</depend>
 
   <depend>roscpp</depend>
   <depend>rospy</depend>

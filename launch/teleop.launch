@@ -4,7 +4,7 @@
 
     <!-- OpenRover Driver -->
     <node pkg="rr_openrover_basic" type="openrover_basic_node" name="$(arg openrover_node_name)" respawn="false" output="screen">
-        <param name="port" value="/dev/ttyUSB0" />
+        <param name="port" value="/dev/rover" />
         <param name="drive_type" value="2wd" />
         <param name="enable_timeout" type="bool" value="true"/>
         <param name="timeout" type="double" value="0.3"/>
@@ -25,7 +25,7 @@
     </node>
 
     <!-- Xbox 360 Controller Button Mapping -->
-    <node pkg="rr_control_input_manager" type="xbox_mapper.py" name="rr_xbox_mapper_node" output="screen" >
+    <node pkg="rr_openrover_basic" type="xbox_mapper.py" name="rr_xbox_mapper_node" output="screen" >
         <remap from="joy" to="/joystick" />
         <remap from="/joystick/a_button" to="/soft_estop/enable" />
         <remap from="/joystick/b_button" to="/soft_estop/reset" />
@@ -38,10 +38,11 @@
         <param name="flipper_increment" value="20" />
     </node>
 
-    <!-- Control input manager -->
-    <node pkg="rr_control_input_manager" type="control_input_manager.py" name="rr_control_input_manager_node" output="log" >
-        <param name="driver" value="xboxdrv"/>
-        <param name="wired_or_wireless" value="wireless"/>
+    <node pkg="twist_mux" type="twist_mux" name="twist_mux" output="screen">
+        <remap from="cmd_vel_out" to="cmd_vel_out"/>
+
+        <rosparam file="$(find rr_openrover_basic)/config/twist_mux_locks.yaml"  command="load"/>
+        <rosparam file="$(find rr_openrover_basic)/config/twist_mux_topics.yaml" command="load"/>
     </node>
 
     <!-- Xbox controller driver -->
