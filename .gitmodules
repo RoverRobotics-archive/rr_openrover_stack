@@ -1,0 +1,6 @@
+[submodule "rr_openrover_basic"]
+	path = rr_openrover_basic
+	url = https://github.com/RoverRobotics/rr_openrover_basic
+[submodule "rr_control_input_manager"]
+	path = rr_control_input_manager
+	url = https://github.com/RoverRobotics/rr_control_input_manager
