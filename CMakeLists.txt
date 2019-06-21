@@ -10,7 +10,6 @@ find_package(catkin REQUIRED COMPONENTS
   geometry_msgs
   nav_msgs
   tf
-  joy
 )
 
 add_message_files(
