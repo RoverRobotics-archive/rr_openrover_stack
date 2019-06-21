@@ -14,6 +14,7 @@
 #include "std_msgs/Int32MultiArray.h"
 #include "std_msgs/Float32MultiArray.h"
 #include "geometry_msgs/TwistStamped.h"
+#include "geometry_msgs/Twist.h"
 #include <std_msgs/Bool.h>
 #include "nav_msgs/Odometry.h"
 #include "rr_openrover_basic/RawRrOpenroverBasicFastRateData.h"
@@ -243,7 +244,8 @@ bool OpenRover::start()
     vel_calc_pub = nh_priv_.advertise<std_msgs::Float32MultiArray>("vel_calc_pub", 1);
 
 
-    cmd_vel_sub = nh_priv_.subscribe("/cmd_vel/managed", 1, &OpenRover::cmdVelCB, this);
+    cmd_vel_stamped_sub = nh_priv_.subscribe("/cmd_vel/managed/stamped", 1, &OpenRover::cmdVelStampedCB, this);
+    cmd_vel_unstamped_sub = nh_priv_.subscribe("/cmd_vel/managed/unstamped", 1, &OpenRover::cmdVelUnstampedCB, this);
     fan_speed_sub = nh_priv_.subscribe("/rr_openrover_basic/fan_speed", 1, &OpenRover::fanSpeedCB, this);
 
     return true;
@@ -470,8 +472,22 @@ void OpenRover::fanSpeedCB(const std_msgs::Int32::ConstPtr& msg)
     return;
 }
 
+void OpenRover::cmdVelStampedCB(const geometry_msgs::Twist::ConstPtr& msg)
+{
+    geometry_msgs::TwistStamped msgStamped;
+    msgStamped.twist = *msg;
+    // It appears that
+    msgStamped.header.frame_id = "origin unstamped";
 
-void OpenRover::cmdVelCB(const geometry_msgs::TwistStamped::ConstPtr& msg)
+    OpenRover::cmdVelCommon((geometry_msgs::TwistStamped::ConstPtr)& msgStamped);
+}
+
+void OpenRover::cmdVelUnstampedCB(const geometry_msgs::TwistStamped::ConstPtr& msg)
+{
+   OpenRover::cmdVelCommon(msg);
+}
+
+void OpenRover::cmdVelCommon(const geometry_msgs::TwistStamped::ConstPtr& msg)
 {//converts from cmd_vel (m/s and radians/s) into motor speed commands
     cmd_vel_commanded_ = msg->twist;
     float left_motor_speed, right_motor_speed;

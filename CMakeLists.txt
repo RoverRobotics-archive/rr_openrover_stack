@@ -69,6 +69,6 @@ install(DIRECTORY include/${PROJECT_NAME}/
    FILES_MATCHING PATTERN "*.h" PATTERN "*.hpp"
 )
 
-catkin_install_python(PROGRAMS scripts/diagnostics.py scripts/xbox_mapper.py
+catkin_install_python(PROGRAMS scripts/diagnostics.py
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/
 )

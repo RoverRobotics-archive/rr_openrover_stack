@@ -19,8 +19,6 @@
   <depend>sensor_msgs</depend>
   <depend>std_msgs</depend>
   <depend>tf</depend>
-  <depend>joy</depend>
-  <depend>twist_mux</depend>
 
   <depend>roscpp</depend>
   <depend>rospy</depend>

@@ -10,6 +10,7 @@
 #include <string>
 
 #include <geometry_msgs/TwistStamped.h>
+#include <geometry_msgs/Twist.h>
 #include <std_msgs/Bool.h>
 #include "rr_openrover_basic/RawRrOpenroverBasicFastRateData.h"
 #include "rr_openrover_basic/RawRrOpenroverBasicMedRateData.h"
@@ -80,7 +81,8 @@ private:
     ros::Publisher slow_rate_pub;
     ros::Publisher battery_status_a_pub, battery_status_b_pub;
 
-    ros::Subscriber cmd_vel_sub;
+    ros::Subscriber cmd_vel_stamped_sub;
+    ros::Subscriber cmd_vel_unstamped_sub;
     ros::Subscriber fan_speed_sub;
 
     //General Class variables
@@ -135,7 +137,9 @@ private:
     std::vector<unsigned char> serial_fan_buffer_;
 
     //ROS Subscriber callback functions
-    void cmdVelCB(const geometry_msgs::TwistStamped::ConstPtr& msg);
+    void cmdVelStampedCB(const geometry_msgs::Twist::ConstPtr& msg);
+    void cmdVelUnstampedCB(const geometry_msgs::TwistStamped::ConstPtr& msg);
+    void cmdVelCommon(const geometry_msgs::TwistStamped::ConstPtr& msg);
     void fanSpeedCB(const std_msgs::Int32::ConstPtr& msg);
 
     //ROS Publish Functions (robot_data_[X] to ros topics)
