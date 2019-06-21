@@ -244,8 +244,7 @@ bool OpenRover::start()
     vel_calc_pub = nh_priv_.advertise<std_msgs::Float32MultiArray>("vel_calc_pub", 1);
 
 
-    cmd_vel_stamped_sub = nh_priv_.subscribe("/cmd_vel/managed/stamped", 1, &OpenRover::cmdVelStampedCB, this);
-    cmd_vel_unstamped_sub = nh_priv_.subscribe("/cmd_vel/managed/unstamped", 1, &OpenRover::cmdVelUnstampedCB, this);
+    cmd_vel_stamped_sub = nh_priv_.subscribe("/cmd_vel/managed", 1, &OpenRover::cmdVelCB, this);
     fan_speed_sub = nh_priv_.subscribe("/rr_openrover_basic/fan_speed", 1, &OpenRover::fanSpeedCB, this);
 
     return true;
