@@ -25,29 +25,29 @@
     </node>
 
     <!-- Xbox 360 Controller Button Mapping -->
-<!--    <node pkg="rr_control_input_manager" type="xbox_mapper.py" name="rr_xbox_mapper_node" output="screen" >-->
-<!--        <remap from="joy" to="/joystick" />-->
-<!--        <remap from="/joystick/a_button" to="/soft_estop/enable" />-->
-<!--        <remap from="/joystick/b_button" to="/soft_estop/reset" />-->
-<!--        <remap from="/joystick/y_button" to="/auto_dock/dock" />-->
-<!--        <remap from="/joystick/x_button" to="/datarecorder/enable"/>-->
-<!--        <param name="max_vel_fwd" value="0.4" />-->
-<!--        <param name="max_vel_turn" value="0.9" />-->
-<!--        <param name="adjustable_throttle" value="True" />-->
-<!--        <param name="drive_increment" value="20" />-->
-<!--        <param name="flipper_increment" value="20" />-->
-<!--    </node>-->
+    <node pkg="rr_control_input_manager" type="xbox_mapper.py" name="rr_xbox_mapper_node" output="screen" >
+        <remap from="joy" to="/joystick" />
+        <remap from="/joystick/a_button" to="/soft_estop/enable" />
+        <remap from="/joystick/b_button" to="/soft_estop/reset" />
+        <remap from="/joystick/y_button" to="/auto_dock/dock" />
+        <remap from="/joystick/x_button" to="/datarecorder/enable"/>
+        <param name="max_vel_fwd" value="0.4" />
+        <param name="max_vel_turn" value="0.9" />
+        <param name="adjustable_throttle" value="True" />
+        <param name="drive_increment" value="20" />
+        <param name="flipper_increment" value="20" />
+    </node>
 
     <!-- Control input manager -->
-<!--    <node pkg="rr_control_input_manager" type="control_input_manager.py" name="rr_control_input_manager_node" output="log" >-->
-<!--        <param name="driver" value="xboxdrv"/>-->
-<!--        <param name="wired_or_wireless" value="wireless"/>-->
-<!--    </node>-->
+    <node pkg="rr_control_input_manager" type="control_input_manager.py" name="rr_control_input_manager_node" output="log" >
+        <param name="driver" value="xboxdrv"/>
+        <param name="wired_or_wireless" value="wireless"/>
+    </node>
 
     <!-- Xbox controller driver -->
     <node pkg="joy" type="joy_node" name="joy_node" output="screen" respawn="true" >
         <param name="autorepeat_rate" value="10" />
-        <remap from="/joy" to="/cmd_vel/managed/unstamped" />
+        <remap from="/joy" to="/joystick" />
     </node>
 
 <!--    <node pkg="usb_cam" type="usb_cam_node" name="usb_cam_node" />
