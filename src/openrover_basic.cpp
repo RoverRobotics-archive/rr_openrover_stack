@@ -471,22 +471,7 @@ void OpenRover::fanSpeedCB(const std_msgs::Int32::ConstPtr& msg)
     return;
 }
 
-void OpenRover::cmdVelStampedCB(const geometry_msgs::Twist::ConstPtr& msg)
-{
-    geometry_msgs::TwistStamped msgStamped;
-    msgStamped.twist = *msg;
-    // It appears that
-    msgStamped.header.frame_id = "origin unstamped";
-
-    OpenRover::cmdVelCommon((geometry_msgs::TwistStamped::ConstPtr)& msgStamped);
-}
-
-void OpenRover::cmdVelUnstampedCB(const geometry_msgs::TwistStamped::ConstPtr& msg)
-{
-   OpenRover::cmdVelCommon(msg);
-}
-
-void OpenRover::cmdVelCommon(const geometry_msgs::TwistStamped::ConstPtr& msg)
+void OpenRover::cmdVelCB(const geometry_msgs::TwistStamped::ConstPtr& msg)
 {//converts from cmd_vel (m/s and radians/s) into motor speed commands
     cmd_vel_commanded_ = msg->twist;
     float left_motor_speed, right_motor_speed;
