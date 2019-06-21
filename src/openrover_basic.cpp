@@ -14,7 +14,6 @@
 #include "std_msgs/Int32MultiArray.h"
 #include "std_msgs/Float32MultiArray.h"
 #include "geometry_msgs/TwistStamped.h"
-#include "geometry_msgs/Twist.h"
 #include <std_msgs/Bool.h>
 #include "nav_msgs/Odometry.h"
 #include "rr_openrover_basic/RawRrOpenroverBasicFastRateData.h"
@@ -828,6 +827,7 @@ void OpenRover::serialManager()
 
     while ((serial_fast_buffer_.size()>0) || (serial_medium_buffer_.size()>0) || (serial_slow_buffer_.size()>0) || (serial_fan_buffer_.size()>0))
     {
+
         // Fast data gets highest priority from being first in this if statement
         // If the CPU running the driver can only process 60 commands / second and the fast
         // data rate is set to 60hz, no other data will be gathered and the medium and slow Buffers
