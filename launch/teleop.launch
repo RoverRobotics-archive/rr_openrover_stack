@@ -4,7 +4,7 @@
 
     <!-- OpenRover Driver -->
     <node pkg="rr_openrover_basic" type="openrover_basic_node" name="$(arg openrover_node_name)" respawn="false" output="screen">
-        <param name="port" value="/dev/ttyUSB0" />
+        <param name="port" value="/dev/rover" />
         <param name="drive_type" value="2wd" />
         <param name="enable_timeout" type="bool" value="true"/>
         <param name="timeout" type="double" value="0.3"/>
