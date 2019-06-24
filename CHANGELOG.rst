@@ -2,6 +2,11 @@
 Changelog for package rr_openrover_basic
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.7.1 (2019-6-24)
+------------------
+* Changed default port to `/dev/rover`
+* Changed CMAke to install `diagnostics.py`
+
 0.7.0 (2019-5-13)
 ------------------
 * Fixed issue #12
