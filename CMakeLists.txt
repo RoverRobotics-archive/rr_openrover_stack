@@ -53,8 +53,11 @@ target_link_libraries(openrover_basic_node ${catkin_LIBRARIES} odom_control)
 #############
 
 ## Mark executables and/or libraries for installation
-install(TARGETS openrover_basic_node 
+install(TARGETS openrover_basic_node
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
+
+install(TARGETS odom_control
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 )
 
@@ -69,3 +72,6 @@ install(DIRECTORY include/${PROJECT_NAME}/
    FILES_MATCHING PATTERN "*.h" PATTERN "*.hpp"
 )
 
+catkin_install_python(PROGRAMS scripts/diagnostics.py
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/
+)

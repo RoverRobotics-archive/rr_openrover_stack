@@ -470,7 +470,6 @@ void OpenRover::fanSpeedCB(const std_msgs::Int32::ConstPtr& msg)
     return;
 }
 
-
 void OpenRover::cmdVelCB(const geometry_msgs::TwistStamped::ConstPtr& msg)
 {//converts from cmd_vel (m/s and radians/s) into motor speed commands
     cmd_vel_commanded_ = msg->twist;
