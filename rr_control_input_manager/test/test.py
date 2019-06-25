@@ -1,16 +1,31 @@
 #!/usr/bin/env python
+from __future__ import print_function
+
 PKG = 'rr_control_input_manager'
 import roslib
-import rostest
 
+roslib.load_manifest(PKG)  # This line is not needed with Catkin.
+
+import os
 import sys
+import rospkg
+
+rospack = rospkg.RosPack()
+sys.path.append(os.path.join(rospack.get_path(PKG), 'scripts'))
 import unittest
+import rosunit
+
+from control_input_manager import CommandHandle, ControlInputManager
+
 
 ## A sample python unit test
-class TestBareBones(unittest.TestCase):
-    ## test 1 == 1
-    def test_one_equals_one(self): # only functions with 'test_'-prefix will be run!
-        self.assertEquals(1, 1, "1!=1")
+class TestTwistCommand(unittest.TestCase):
+    def test_default_timeout_0_float(self):  # only functions with 'test_'-prefix will be run!
 
-if __name__ == '__main__':
-    rostest.rosrun(PKG, 'test_bare_bones', TestBareBones)
+
+
+class TestLatency(unittest.TestCase):
+    pass
+
+
+rosunit.unitrun(PKG, 'test_bare_bones', TestTwistCommand)

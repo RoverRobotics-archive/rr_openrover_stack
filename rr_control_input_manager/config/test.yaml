@@ -1,0 +1,53 @@
+# Input topics handled/muxed.
+# For each topic:
+# - name    : name identifier to select the topic
+# - topic   : input topic of geometry_msgs::Twist type
+# - timeout : timeout in seconds to start discarding old messages, and use 0.0 speed instead
+# - priority: priority in the range [0, 255]; the higher the more priority over other topics
+
+command_inputs:
+-
+  sub_topic : /test/inputA
+  pub_topic : /test/outputA
+  timeout   : 0.0
+  stamped   : false
+-
+  sub_topic : /test/inputB
+  pub_topic : /test/outputB
+  timeout   : 1.0
+  stamped   : false
+-
+  sub_topic : /test/inputC
+  pub_topic : /test/outputC
+  timeout   : -1.0
+  stamped   : false
+-
+  sub_topic: /test/inputD
+  pub_topic: /test/outputD
+  timeout: 0
+  stamped: false
+-
+  sub_topic: /test/inputE
+  pub_topic: /test/outputE
+  timeout: 1
+  stamped: false
+-
+  sub_topic: /test/inputD
+  pub_topic: /test/outputD
+  timeout: -1
+  stamped: false
+-
+  sub_topic: /test/inputE
+  pub_topic: /test/outputE
+  timeout: -notNum
+  stamped: false
+-
+  sub_topic: /test/inputF
+  pub_topic: /test/outputF
+  timeout: 0.0
+  stamped: true
+-
+  sub_topic: /test/inputG
+  pub_topic: /test/outputG
+  timeout: 5.0
+  stamped: false

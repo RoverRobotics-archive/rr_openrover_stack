@@ -1,22 +1,10 @@
 <launch>
-
-  <!-- ROS Joystick driver -->
-  <node pkg="joy" type="joy_node" name="joy_node" output="screen">
-    <param name="autorepeat_rate" value="10" />
-    <remap from="joy" to="joystick"/>
-  </node>
-
-
-  <!-- Map joystick to more useful commands -->
-  <node pkg="rr_control_input_manager" type="xbox_mapper.py" name="xbox_mapper_node" output="screen">
-    <param name="driver" value="xboxdrv"/>
-    <param name="wired_or_wireless" value="wireless"/>
-  </node>
-
-
   <!-- Managed control inputs -->
-  <node pkg="rr_control_input_manager" type="new_control_input_manager.py" name="control_input_manager_node" output="screen">
-    <rosparam file="$(find rr_control_input_manager)/config/input_topics.yaml" command="load"/>
+  <node pkg="rr_control_input_manager" type="control_input_manager.py" name="control_input_manager_node"
+        output="screen">
+    <rosparam file="$(find rr_control_input_manager)/config/test.yaml" command="load"/>
   </node>
 
+  <test pkg="rr_control_input_manager" test-name="test" type="test.py" name="control_input_manager_test_node">
+  </test>
 </launch>
