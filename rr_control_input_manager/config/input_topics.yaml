@@ -7,7 +7,7 @@
 
 command_inputs:
 -
-  sub_topic : /cmd_vel/joystick
+  sub_topic : cmd_vel/joystick
   pub_topic : /managed/joy
   timeout   : 0.5
   stamped   : true
