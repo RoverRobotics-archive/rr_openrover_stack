@@ -10,14 +10,7 @@ find_package(catkin REQUIRED COMPONENTS
   geometry_msgs
   nav_msgs
   tf
-)
-
-add_message_files(
-   FILES
-   RawRrOpenroverBasicFastRateData.msg
-   RawRrOpenroverBasicMedRateData.msg
-   RawRrOpenroverBasicSlowRateData.msg
-   SmartBatteryStatus.msg
+  rr_openrover_basic_msgs
 )
 
 generate_messages(

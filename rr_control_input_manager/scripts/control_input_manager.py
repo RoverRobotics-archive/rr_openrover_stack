@@ -1,171 +1,76 @@
 #!/usr/bin/env python
-
-# Author: Nick Fragale
-# Description: This script manages cmd_vel from multiple sources so that they don't over-ride eachother, and so that soft E-stop can works from multiple sources. 
-
+from __future__ import print_function
 
 import rospy
-import time
-from std_msgs.msg import Bool, String
-from sensor_msgs.msg import Joy
-from geometry_msgs.msg import Twist, TwistStamped
-from actionlib_msgs.msg import GoalID
-from copy import deepcopy
-
-class CmdVelManager(object):
-
-    use_joystick = True
-    soft_estop = False
-    local_control_lock = False
-    remote_control_lock = False
-    command_timeout = 0.5
-    keyboard_control_input_request = Twist()
-    move_base_control_input_request = Twist()
-    auto_dock_control_input_request = TwistStamped()
-    fleet_manager_control_input_request = Twist()
-    joy_control_input_request = TwistStamped()
-    managed_control_input = TwistStamped()
-    seq = 0
-    def __init__(self):
-
-        # ROS Subscribers
-        self.keyboard_sub = rospy.Subscriber("/cmd_vel/keyboard", Twist, self.keyboard_cb)
-        self.joystick_sub = rospy.Subscriber("/cmd_vel/joystick", TwistStamped, self.joystick_cb)
-        self.move_base_sub = rospy.Subscriber("/cmd_vel/move_base", Twist, self.move_base_cb)
-        self.fleet_manager_sub = rospy.Subscriber("/cmd_vel/fleet_manager", Twist, self.fleet_manager_cb)
-        self.auto_dock_sub = rospy.Subscriber("/cmd_vel/auto_dock", TwistStamped, self.auto_dock_cb)
-        self.soft_estop_enable_sub = rospy.Subscriber("/soft_estop/enable", Bool, self.soft_estop_enable_cb)
-        self.soft_estop_reset_sub = rospy.Subscriber("/soft_estop/reset", Bool, self.soft_estop_reset_cb)
-
-        # ROS Publishers
-        self.managed_pub = rospy.Publisher('/cmd_vel/managed', TwistStamped, queue_size=1)
-        self.move_base_cancel = rospy.Publisher('/move_base/cancel', GoalID,  queue_size=1)
-        self.active_controller_pub = rospy.Publisher('/rr_control_input_manager/active_controller', String, queue_size=1)
-        self.auto_dock_cancel = rospy.Publisher('/auto_dock/cancel', Bool, queue_size = 10)
+from geometry_msgs.msg import TwistStamped, Twist
 
 
-        self.last_move_base_command_time = rospy.Time.now()
-        self.last_auto_dock_command_time = rospy.Time.now()
-        self.last_fleet_manager_command_time = rospy.Time.now()
-        self.last_joy_command_time = rospy.Time.now()
-        self.last_keyboard_command_time = rospy.Time.now()
+class CommandHandle(object):
+    def __init__(self, sub_topic, pub_topic, timeout, is_stamped=False):
+        self.sub_topic = sub_topic
+        self.pub_topic = pub_topic
+        self.timeout = timeout
+        self.is_stamped = is_stamped
 
-    def control_input_pub(self, data):
+        rospy.loginfo(
+            'Configuring Command Input Handler\n' +
+            'Subscribed Topic: {TOPIC}\n'.format(TOPIC=self.sub_topic) +
+            'Published Topic: {TOPIC}\n'.format(TOPIC=self.pub_topic) +
+            'Timeout: {TIMEOUT}\n'.format(TIMEOUT=self.timeout) +
+            'Output Topic Stamped: {STAMPED}\n'.format(STAMPED=self.is_stamped)
+        )
 
-        my_managed_control_input = deepcopy(self.managed_control_input)
-        my_managed_control_input.header.seq = self.seq
-        my_managed_control_input.header.stamp = rospy.Time.now()
-        my_managed_control_input.header.frame_id = 'none'
-        my_managed_control_input.twist.linear.x=0.0
-        my_managed_control_input.twist.angular.y=0.0
-        my_managed_control_input.twist.angular.z=0.0
-        current_time = rospy.Time.now()
+        self._pub_type = TwistStamped if is_stamped else Twist
 
-        move_base_time_elapsed = current_time - self.last_move_base_command_time
-        auto_dock_time_elapsed = current_time - self.last_auto_dock_command_time
-        keyboard_time_elapsed = current_time - self.last_keyboard_command_time
-        fleet_manager_time_elapsed = current_time - self.last_fleet_manager_command_time
-        joy_time_elapsed = current_time - self.last_joy_command_time
+        self.sub = rospy.Subscriber(self.sub_topic, TwistStamped, self.callback)
+        self.pub = rospy.Publisher(self.pub_topic, self._pub_type, queue_size=10)
 
-        if joy_time_elapsed.to_sec > 2:
-            self.lock_release_cb()
+    def callback(self, data):
+        if not self.expired(data):
+            if self.is_stamped:
+                self.pub.publish(data)
+            else:
+                self.pub.publish(data.twist)
+        return
 
-
-        # Process non-human-local commands
-        if not self.local_control_lock:
-            # move_base requests (Priority 4)
-            if move_base_time_elapsed.to_sec() < self.command_timeout:
-                my_managed_control_input.twist = self.move_base_control_input_request
-                my_managed_control_input.header.frame_id = 'move_base'
-            # auto_dock requests (Lowest Priority 3)
-            if auto_dock_time_elapsed.to_sec() < self.command_timeout:
-                my_managed_control_input = self.auto_dock_control_input_request
-                my_managed_control_input.header.frame_id = 'auto_dock'
-            # fleet_manager requests (Priority 2)
-            if fleet_manager_time_elapsed.to_sec() < self.command_timeout:
-                my_managed_control_input.twist = self.fleet_manager_control_input_request
-                my_managed_control_input.header.frame_id = 'fleet_manager'
-
-        # keyboard priority 2
-        if keyboard_time_elapsed.to_sec() < self.command_timeout:
-            my_managed_control_input.twist = self.keyboard_control_input_request
-            my_managed_control_input.header.frame_id = 'keyboard'
-
-        # Process joystick requests (Highest Priority 1)
-        if joy_time_elapsed.to_sec() < self.command_timeout:
-            my_managed_control_input = self.joy_control_input_request
-            my_managed_control_input.header.frame_id = 'joystick'
+    def expired(self, data):
+        time_stamp = rospy.Time.now()
+        return 0.0 < self.timeout <= (time_stamp - data.header.stamp).to_sec()
 
 
-        # Check for estop 
-        if self.soft_estop:
-            my_managed_control_input.header.frame_id = 'soft e-stopped'
-            my_managed_control_input.twist.linear.x=0
-            my_managed_control_input.twist.angular.y=0
-            my_managed_control_input.twist.angular.z=0
-            rospy.logwarn_throttle(60, "[CONTROL_INPUT_MANAGER_NODE] Soft Estop is still enabled which will prevent any motion")
-        self.managed_pub.publish(my_managed_control_input)
+class ControlInputManager:
+    def __init__(self, command_inputs):
+        input_handles = []
+        for input in command_inputs:
+            pub_topic = input['pub_topic']
+            sub_topic = input['sub_topic']
+            timeout = input['timeout']
+            stamped = input['stamped']
 
-        self.seq += 1
+            input_handles.append(CommandHandle(sub_topic, pub_topic, timeout, stamped))
 
-         
-    def move_base_cb(self, move_base_cmd_vel):
-        if (move_base_cmd_vel.linear.x, move_base_cmd_vel.angular.y, move_base_cmd_vel.angular.z) != (0,0,0):
-            self.last_move_base_command_time = rospy.Time.now()
-            self.move_base_control_input_request.linear.x = move_base_cmd_vel.linear.x
-            self.move_base_control_input_request.linear.y = move_base_cmd_vel.linear.y
-            self.move_base_control_input_request.angular.z = move_base_cmd_vel.angular.z * 1.4 ##Fudge factor, remove when switched to closed loop control on rr_openrover_basic
+    def start(self):
+        rospy.spin()
 
 
-    def auto_dock_cb(self, auto_dock_cmd_vel):
-        if (auto_dock_cmd_vel.twist.linear.x, auto_dock_cmd_vel.twist.angular.y, auto_dock_cmd_vel.twist.angular.z) != (0,0,0):
-            self.last_auto_dock_command_time = rospy.Time.now()
-        self.auto_dock_control_input_request = auto_dock_cmd_vel
+def check_params(command_inputs):
+    print(command_inputs)
+    required_parameters = set(['pub_topic', 'sub_topic', 'timeout', 'stamped'])
+    for input in command_inputs:
+        params = set(input.keys())
+        missing_params = required_parameters - params
+        if len(missing_params) != 0:
+            err_msg = "Missing the parameters: " + ', '.join(list(missing_params))
+            raise ValueError(err_msg)
 
 
-    def fleet_manager_cb(self, fleet_manager_cmd_vel):
-        self.last_fleet_manager_command_time = rospy.Time.now()
-        if (fleet_manager_cmd_vel.linear.x, fleet_manager_cmd_vel.angular.y, fleet_manager_cmd_vel.angular.z) != (0,0,0):
-            self.remote_control_lock = True
-            self.fleet_manager_control_input_request = fleet_manager_cmd_vel
-
-    def keyboard_cb(self, keyboard_cmd_vel):
-        # If a user starts to command the robot with a joystick, set local lock
-        if (keyboard_cmd_vel.linear.x, keyboard_cmd_vel.angular.y, keyboard_cmd_vel.angular.z) != (0,0,0):
-            self.last_keyboard_command_time = rospy.Time.now()
-            self.local_control_lock = True
-        self.keyboard_control_input_request = keyboard_cmd_vel
-
-    def joystick_cb(self, joy_cmd_vel):
-        # If a user starts to command the robot with a joystick, set local lock
-        if (joy_cmd_vel.twist.linear.x, joy_cmd_vel.twist.angular.y, joy_cmd_vel.twist.angular.z) != (0,0,0):
-            self.last_joy_command_time = joy_cmd_vel.header.stamp
-            self.local_control_lock = True
-        self.joy_control_input_request = joy_cmd_vel
-
-
-    def soft_estop_enable_cb(self, data):
-        if data.data == True:
-            self.soft_estop = True
-            cancel_msg=GoalID()
-            self.move_base_cancel.publish(cancel_msg)
-            stop_msg = Bool()
-            stop_msg.data = True
-            self.auto_dock_cancel.publish(stop_msg)
-            rospy.logwarn("[CONTROL_INPUT_MANAGER_NODE] Soft E-Stop Enabled")
-
-    def soft_estop_reset_cb(self, data):
-        if data.data == True:    
-            self.soft_estop = False
-            rospy.logwarn("[CONTROL_INPUT_MANAGER_NODE] Soft E-Stop reset")
-
-    def lock_release_cb(self):
-        self.local_control_lock = False
-        self.remote_control_lock = False
+def main():
+    rospy.init_node('control_input_manager')
+    command_inputs = rospy.get_param('~command_inputs')
+    cim = ControlInputManager(command_inputs)
+    cim.start()
 
 
 if __name__ == '__main__':
-    rospy.init_node("control_input_manager_node")
-    my_manager = CmdVelManager()
-    cmd_managed_timer = rospy.Timer(rospy.Duration(0.1), my_manager.control_input_pub)
-    rospy.spin()
+    print('test')
+    main()
