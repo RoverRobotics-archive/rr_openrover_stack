@@ -27,11 +27,6 @@ Changelog for package rr_openrover_basic
 * Changed default closed_loop_control_on to false
 * Removed low_speed_mode
 
-0.6.0 (2018-12-11)
-------------------
-* Added /rr_openrover_basic/battery_status_a
-* Added /rr_openrover_basic/battery_status_b
-
 0.6.0 (2018-12-08)
 ------------------
 * Added ROS topic /rr_openrover_basic/battery_status_a
