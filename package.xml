@@ -1,0 +1,31 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>rr_openrover_basic</name>
+  <version>0.7.1</version>
+  <description>The rr_openrover_basic package</description>
+
+  <maintainer email="jack@digilabs.io">Jack Kilian</maintainer>
+  <maintainer email="fragale@digilabs.io">Nick Fragale</maintainer>
+
+  <license>BSD</license>
+
+  <url>http://ros.org/wiki/rr_openrover_basic</url>
+  <author>Jack Kilian</author>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <depend>geometry_msgs</depend>
+  <depend>nav_msgs</depend>
+  <depend>sensor_msgs</depend>
+  <depend>std_msgs</depend>
+  <depend>tf</depend>
+
+  <depend>roscpp</depend>
+  <depend>rospy</depend>
+
+  <build_depend>message_generation</build_depend>
+  <build_export_depend>message_runtime</build_export_depend>
+  <exec_depend>message_runtime</exec_depend>
+  <exec_depend>joy</exec_depend>
+
+</package>
