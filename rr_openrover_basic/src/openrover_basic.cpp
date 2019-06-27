@@ -244,8 +244,8 @@ bool OpenRover::start()
 
     cmd_vel_sub = nh_priv_.subscribe("/cmd_vel/managed", 1, &OpenRover::cmdVelCB, this);
     fan_speed_sub = nh_priv_.subscribe("/rr_openrover_basic/fan_speed", 1, &OpenRover::fanSpeedCB, this);
-    e_stop_sub = nh_priv_.subscribe("/soft_e_stop/enable", 1, &OpenRover::eStopCB, this);
-    e_stop_reset_sub = nh_priv_.subscribe("/soft_e_stop/reset", 1, &OpenRover::eStopResetCB, this);
+    e_stop_sub = nh_priv_.subscribe("/soft_estop/enable", 1, &OpenRover::eStopCB, this);
+    e_stop_reset_sub = nh_priv_.subscribe("/soft_estop/reset", 1, &OpenRover::eStopResetCB, this);
     return true;
 }
 
