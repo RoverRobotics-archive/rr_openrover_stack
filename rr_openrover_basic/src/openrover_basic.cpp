@@ -494,7 +494,7 @@ void OpenRover::cmdVelCB(const geometry_msgs::Twist::ConstPtr& msg)
         if (!prev_e_stop_state_)
         {
             prev_e_stop_state_ = true;
-            ROS_WARN("Openrover driver - Soft e-stop onprev_e_stop_state_.");
+            ROS_WARN("Openrover driver - Soft e-stop on.");
         }
         motor_speeds_commanded_[LEFT_MOTOR_INDEX_] = MOTOR_NEUTRAL;
         motor_speeds_commanded_[RIGHT_MOTOR_INDEX_] = MOTOR_NEUTRAL;
@@ -613,7 +613,6 @@ void OpenRover::eStopCB(const std_msgs::Bool::ConstPtr& msg)
     }
 
     prev_e_stop_state_ = msg->data;
-    //ROS_DEBUG("Fan Buffer size is %i, new data is %i", serial_fan_buffer_.size(), msg->data);
     return;
 }
 
@@ -623,7 +622,6 @@ void OpenRover::eStopResetCB(const std_msgs::Bool::ConstPtr& msg)
     {
         e_stop_on_ = false;
     }
-    //ROS_DEBUG("Fan Buffer size is %i, new data is %i", serial_fan_buffer_.size(), msg->data);
     return;
 }
 
