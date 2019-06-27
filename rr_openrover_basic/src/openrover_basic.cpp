@@ -505,6 +505,7 @@ void OpenRover::cmdVelCB(const geometry_msgs::Twist::ConstPtr& msg)
     {
         if (prev_e_stop_state_)
         {
+            prev_e_stop_state_ = false;
             ROS_INFO("Openrover driver - Soft e-stop off.");
         }
     }
