@@ -341,7 +341,6 @@ def joy_cb(Joy):
         drive_cmd = 0
 
         # Turn left/right commands
-        rospy.loginfo(', '.join([str(drive_cmd), str(MAX_VEL_FWD), str(DRIVE_THROTTLE), str(MAX_VEL_TURN), str(Joy.axes[R_STICK_H_AXES])]))
         turn_cmd = (1.1 - (drive_cmd / MAX_VEL_FWD)) * DRIVE_THROTTLE * MAX_VEL_TURN * Joy.axes[
         R_STICK_H_AXES]  # right joystick
     if turn_cmd < TURN_DEADBAND and -TURN_DEADBAND < turn_cmd:
