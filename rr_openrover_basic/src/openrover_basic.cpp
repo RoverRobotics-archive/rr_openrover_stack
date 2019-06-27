@@ -13,7 +13,7 @@
 #include "std_msgs/Int32.h"
 #include "std_msgs/Int32MultiArray.h"
 #include "std_msgs/Float32MultiArray.h"
-#include "geometry_msgs/TwistStamped.h"
+#include "geometry_msgs/Twist.h"
 #include <std_msgs/Bool.h>
 #include "nav_msgs/Odometry.h"
 #include "rr_openrover_basic/RawRrOpenroverBasicFastRateData.h"
@@ -198,7 +198,7 @@ OpenRover::OpenRover( ros::NodeHandle& nh, ros::NodeHandle& nh_priv ) :
     left_vel_measured_(0),
     right_vel_measured_(0),
     e_stop_on_(false),
-
+    prev_e_stop_state_(false),
     LEFT_MOTOR_INDEX_(0),
     RIGHT_MOTOR_INDEX_(1),
     FLIPPER_MOTOR_INDEX_(2)
@@ -245,7 +245,8 @@ bool OpenRover::start()
 
     cmd_vel_sub = nh_priv_.subscribe("/cmd_vel/managed", 1, &OpenRover::cmdVelCB, this);
     fan_speed_sub = nh_priv_.subscribe("/rr_openrover_basic/fan_speed", 1, &OpenRover::fanSpeedCB, this);
-
+    e_stop_sub = nh_priv_.subscribe("/rr_openrover_basic/e_stop", 1, &OpenRover::eStopCB, this);
+    e_stop_reset_sub = nh_priv_.subscribe("/rr_openrover_basic/e_reset_stop", 1, &OpenRover::eStopResetCB, this);
     return true;
 }
 
@@ -470,15 +471,35 @@ void OpenRover::fanSpeedCB(const std_msgs::Int32::ConstPtr& msg)
     return;
 }
 
-void OpenRover::cmdVelCB(const geometry_msgs::TwistStamped::ConstPtr& msg)
+void OpenRover::eStopCB(const std_msgs::Bool::ConstPtr& msg)
+{
+    if(msg->data)
+    {
+        e_stop_on_ = true;
+    }
+    //ROS_DEBUG("Fan Buffer size is %i, new data is %i", serial_fan_buffer_.size(), msg->data);
+    return;
+}
+
+void OpenRover::eStopResetCBCB(const std_msgs::Bool::ConstPtr& msg)
+{
+    if(msg->data)
+    {
+        e_stop_on_ = false;
+    }
+    //ROS_DEBUG("Fan Buffer size is %i, new data is %i", serial_fan_buffer_.size(), msg->data);
+    return;
+}
+
+void OpenRover::cmdVelCB(const geometry_msgs::Twist::ConstPtr& msg)
 {//converts from cmd_vel (m/s and radians/s) into motor speed commands
-    cmd_vel_commanded_ = msg->twist;
+    cmd_vel_commanded_ = *msg;
     float left_motor_speed, right_motor_speed;
     int flipper_motor_speed;
     int motor_speed_deadband_scaled;
-    double turn_rate = msg->twist.angular.z;
-    double linear_rate = msg->twist.linear.x;
-    double flipper_rate = msg->twist.angular.y;
+    double turn_rate = msg->angular.z;
+    double linear_rate = msg->linear.x;
+    double flipper_rate = msg->angular.y;
     std::string frame_id = msg->header.frame_id;
     bool is_moving_forward, is_turning_cw, is_stationary, is_zero_point_turn;
 
@@ -489,11 +510,11 @@ void OpenRover::cmdVelCB(const geometry_msgs::TwistStamped::ConstPtr& msg)
 
     timeout_timer.stop();
 
-    if (frame_id == (std::string) "soft e-stopped")
+    if (e_stop_on_)
     {
-        if (!e_stop_on_)
+        if (!prev_e_stop_state_)
         {
-            e_stop_on_ = true;
+            prev_e_stop_state_ = true;
             ROS_WARN("Openrover driver - Soft e-stop on.");
         }
         motor_speeds_commanded_[LEFT_MOTOR_INDEX_] = MOTOR_NEUTRAL;
@@ -503,7 +524,7 @@ void OpenRover::cmdVelCB(const geometry_msgs::TwistStamped::ConstPtr& msg)
     }
     else
     {
-        if (e_stop_on_)
+        if (prev_e_stop_state_)
         {
             e_stop_on_ = false;
             ROS_INFO("Openrover driver - Soft e-stop off.");

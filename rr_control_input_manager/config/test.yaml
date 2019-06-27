@@ -24,30 +24,25 @@ command_inputs:
 -
   sub_topic: /test/inputD
   pub_topic: /test/outputD
-  timeout: 0
-  stamped: false
--
-  sub_topic: /test/inputE
-  pub_topic: /test/outputE
-  timeout: 1
-  stamped: false
--
-  sub_topic: /test/inputD
-  pub_topic: /test/outputD
-  timeout: -1
-  stamped: false
--
-  sub_topic: /test/inputE
-  pub_topic: /test/outputE
   timeout: -notNum
   stamped: false
+-
+  sub_topic: /test/inputE
+  pub_topic: /test/outputE
+  timeout: 0.0
+  stamped: notBool
 -
   sub_topic: /test/inputF
   pub_topic: /test/outputF
   timeout: 0.0
   stamped: true
 -
-  sub_topic: /test/inputG
-  pub_topic: /test/outputG
-  timeout: 5.0
-  stamped: false
+  sub_topic : /test/inputG
+  pub_topic : /test/outputG
+  timeout   : 0.0
+  stamped   : false
+-
+  sub_topic : /test/inputH
+  pub_topic : /test/outputH
+  timeout   : 1.0
+  stamped   : false

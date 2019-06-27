@@ -1,0 +1,13 @@
+<launch>
+    <node pkg="rr_control_input_manager" type="control_input_manager.py" name="control_input_manager_node" output="screen">
+    <rosparam file="$(find rr_control_input_manager)/config/test.yaml" command="load"/>
+  </node>
+
+  <test pkg="rr_control_input_manager" test-name="test_functional" type="test_functional.py" name="control_input_manager_functional_test_node">
+    <rosparam file="$(find rr_control_input_manager)/config/test.yaml" command="load"/>
+  </test>
+
+  <test pkg="rr_control_input_manager" test-name="test_latency" type="test_latency.py" name="control_input_manager_latency_test_node">
+    <rosparam file="$(find rr_control_input_manager)/config/test.yaml" command="load"/>
+  </test>
+</launch>

@@ -31,7 +31,6 @@ class CommandHandle(object):
                 self.pub.publish(data)
             else:
                 self.pub.publish(data.twist)
-        return
 
     def expired(self, data):
         time_stamp = rospy.Time.now()
@@ -41,11 +40,23 @@ class CommandHandle(object):
 class ControlInputManager:
     def __init__(self, command_inputs):
         input_handles = []
-        for input in command_inputs:
+        for idx, input in enumerate(command_inputs):
             pub_topic = input['pub_topic']
             sub_topic = input['sub_topic']
-            timeout = input['timeout']
+            try:
+                timeout = float(input['timeout'])
+            except ValueError:
+                rospy.logerr('Invalid `timeout` value for command_input {IDX}: {TIMEOUT}'.format(IDX=idx, TIMEOUT=input[
+                    'timeout']))
+                rospy.logerr('command_input manager ({IDX}) was not created.'.format(IDX=idx))
+                continue
             stamped = input['stamped']
+            rospy.logwarn(stamped)
+            if not isinstance(stamped, bool):
+                rospy.logerr(
+                    'Invalid `stamped` value for command_input {IDX}: {STAMPED}'.format(IDX=idx, STAMPED=stamped))
+                rospy.logerr('command_input manager ({IDX}) was not created.'.format(IDX=idx))
+                continue
 
             input_handles.append(CommandHandle(sub_topic, pub_topic, timeout, stamped))
 
@@ -56,7 +67,7 @@ class ControlInputManager:
 def check_params(command_inputs):
     print(command_inputs)
     required_parameters = set(['pub_topic', 'sub_topic', 'timeout', 'stamped'])
-    for input in command_inputs:
+    for idx, input in enumerate(command_inputs):
         params = set(input.keys())
         missing_params = required_parameters - params
         if len(missing_params) != 0:
