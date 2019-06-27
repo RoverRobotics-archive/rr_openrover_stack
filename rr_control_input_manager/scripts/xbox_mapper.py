@@ -341,14 +341,14 @@ def joy_cb(Joy):
         drive_cmd = 0
 
         # Turn left/right commands
-        turn_cmd = (1.1 - (drive_cmd / MAX_VEL_FWD)) * DRIVE_THROTTLE * MAX_VEL_TURN * Joy.axes[
+    turn_cmd = (1.1 - (drive_cmd / MAX_VEL_FWD)) * DRIVE_THROTTLE * MAX_VEL_TURN * Joy.axes[
         R_STICK_H_AXES]  # right joystick
     if turn_cmd < TURN_DEADBAND and -TURN_DEADBAND < turn_cmd:
         turn_cmd = 0
 
     # Flipper up/down commands
     flipper_cmd = (FLIPPER_THROTTLE * MAX_VEL_FLIPPER * Joy.axes[L_TRIG_AXES]) - (
-                FLIPPER_THROTTLE * MAX_VEL_FLIPPER * Joy.axes[R_TRIG_AXES])
+            FLIPPER_THROTTLE * MAX_VEL_FLIPPER * Joy.axes[R_TRIG_AXES])
     if flipper_cmd < FLIPPER_DEADBAND and -FLIPPER_DEADBAND < flipper_cmd:
         flipper_cmd = 0
 
