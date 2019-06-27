@@ -10,15 +10,9 @@ command_inputs:
   sub_topic : cmd_vel/joystick
   pub_topic : /managed/joy
   timeout   : 0.5
-  stamped   : true
+  stamped   : false
 -
-  sub_topic: key
+  sub_topic: keyboard
   pub_topic: /managed/key
   timeout: 0.5
   stamped: false
--
-  sub_topic: test
-  pub_topic: /managed/test
-  timeout: 0.5
-  stamped: false
-

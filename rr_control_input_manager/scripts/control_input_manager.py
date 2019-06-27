@@ -66,7 +66,7 @@ class ControlInputManager:
 
 def check_params(command_inputs):
     print(command_inputs)
-    required_parameters = set(['pub_topic', 'sub_topic', 'timeout', 'stamped'])
+    required_parameters = {'pub_topic', 'sub_topic', 'timeout', 'stamped'}
     for idx, input in enumerate(command_inputs):
         params = set(input.keys())
         missing_params = required_parameters - params

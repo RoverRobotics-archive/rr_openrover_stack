@@ -16,8 +16,8 @@ locks:
   # Same priority as joystick control, so it'll not block it.
   priority: 100
 -
-  name    : loop_closure
-  topic   : stop_closing_loop
+  name    : e_stop
+  topic   : e_stop
   timeout : 0.0
   priority: 200
 -
