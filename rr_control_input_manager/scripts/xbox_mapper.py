@@ -20,6 +20,8 @@ from sensor_msgs.msg import Joy
 from std_msgs.msg import Bool
 from std_msgs.msg import Float32, String
 
+rospy.init_node('xbox_mapper_node', anonymous=True)
+
 cmd = TwistStamped()
 seq = 0
 last_a_button = time.time()
@@ -371,7 +373,6 @@ def joy_cb(Joy):
 # Main Function
 def joystick_main():
     # Initialize driver node
-    rospy.init_node('xbox_mapper_node', anonymous=True)
     r = rospy.Rate(10)  # 10hz
     # publish the latched button initializations
     a_button_pub.publish(a_button_msg)
