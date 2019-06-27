@@ -1,5 +1,0 @@
-<launch>
-  <node pkg="rr_control_input_manager" type="control_input_manager.py" name="control_input_manager_node" output="screen">
-    <rosparam file="$(find rr_control_input_manager)/config/test.yaml" command="load"/>
-  </node>
-</launch>
