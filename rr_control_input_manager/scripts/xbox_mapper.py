@@ -235,7 +235,7 @@ def joy_cb(Joy):
     if A_BUTTON_TOGGLE:
         if Joy.buttons[A_BUTTON] == 1:
             rospy.loginfo((time.time() - last_a_button).to_sec())
-            if (time.time() - last_a_button).to_sec() > 0.5:
+            if time.time() - last_a_button > 0.5:
                 last_a_button = time.time()
                 rospy.loginfo('User button A')
                 a_button_msg.data = not a_button_msg.data
@@ -249,7 +249,7 @@ def joy_cb(Joy):
     # (red/B)
     if B_BUTTON_TOGGLE:
         if Joy.buttons[B_BUTTON] == 1:
-            if (time.time() - last_b_button).to_sec() > 0.5:
+            if time.time() - last_b_button > 0.5:
                 last_b_button = time.time()
                 rospy.loginfo('User button B')
                 b_button_msg.data = not b_button_msg.data
@@ -263,7 +263,7 @@ def joy_cb(Joy):
     # (blue/X)
     if X_BUTTON_TOGGLE:
         if Joy.buttons[X_BUTTON] == 1:
-            if (time.time() - last_x_button).to_sec() > 0.5:
+            if time.time() - last_x_button > 0.5:
                 last_x_button = time.time()
                 rospy.loginfo('User button X')
                 x_button_msg.data = not x_button_msg.data
@@ -276,7 +276,7 @@ def joy_cb(Joy):
 
     # (yellow/Y)
     if Joy.buttons[Y_BUTTON] == 1:
-        if (time.time() - last_y_button).to_sec() > 0.5:
+        if time.time() - last_y_button > 0.5:
             last_y_button = time.time()
             rospy.loginfo('User button Y')
             y_button_msg.data = True
