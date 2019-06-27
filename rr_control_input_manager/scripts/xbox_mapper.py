@@ -232,6 +232,7 @@ def joy_cb(Joy):
     # (green/A)
     if A_BUTTON_TOGGLE:
         if Joy.buttons[A_BUTTON] == 1:
+            rospy.loginfo((time.time() - last_a_button).to_sec())
             if (time.time() - last_a_button).to_sec() > 0.5:
                 last_a_button = time.time()
                 rospy.loginfo('User button A')
