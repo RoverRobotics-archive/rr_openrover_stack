@@ -40,7 +40,9 @@ class CommandHandle(object):
 
 
 class ControlInputManager:
-    """Creates and manages handles for control inputs"""
+    """Creates a handle for each input.  Drop inputs if timeout is not a number or
+    stamped is not a boolean.
+    """
 
     def __init__(self, control_inputs):
         self.input_handles = []
@@ -50,19 +52,15 @@ class ControlInputManager:
             try:
                 timeout = float(input['timeout'])
             except ValueError:
-                rospy.logerr(
-                    'Invalid `timeout` value for control_input {IDX}: {TIMEOUT}'.format(IDX=idx,
-                                                                                        TIMEOUT=
-                                                                                        input[
-                                                                                            'timeout']))
+                rospy.logerr('Invalid `timeout` value for control_input {IDX}: {TIMEOUT}'
+                             .format(IDX=idx, TIMEOUT=input['timeout']))
                 rospy.logerr('control_input manager ({IDX}) was not created.'.format(IDX=idx))
                 continue
             stamped = input['stamped']
             rospy.logwarn(stamped)
             if not isinstance(stamped, bool):
-                rospy.logerr(
-                    'Invalid `stamped` value for control_input {IDX}: {STAMPED}'.format(IDX=idx,
-                                                                                        STAMPED=stamped))
+                rospy.logerr('Invalid `stamped` value for control_input {IDX}: {STAMPED}'
+                             .format(IDX=idx, STAMPED=stamped))
                 rospy.logerr('control_input manager ({IDX}) was not created.'.format(IDX=idx))
                 continue
 
@@ -73,7 +71,6 @@ class ControlInputManager:
 
 
 def check_params(control_inputs):
-    print(control_inputs)
     required_parameters = {'pub_topic', 'sub_topic', 'timeout', 'stamped'}
     for idx, control_input in enumerate(control_inputs):
         params = set(control_input.keys())

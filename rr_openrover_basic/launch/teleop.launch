@@ -1,5 +1,4 @@
 <launch>
-
     <arg name="openrover_node_name" default="rr_openrover_basic" />
     <arg name="config_locks"  default="$(find rr_openrover_basic)/config/twist_mux_locks.yaml"/>
     <arg name="config_topics" default="$(find rr_openrover_basic)/config/twist_mux_topics.yaml"/>
@@ -33,24 +32,17 @@
         <remap from="/joystick/b_button" to="/soft_estop/reset" />
         <remap from="/joystick/y_button" to="/auto_dock/dock" />
         <remap from="/joystick/x_button" to="/datarecorder/enable"/>
-        <param name="a_button_toggle" value="true"/>
         <param name="max_vel_fwd" value="0.4" />
-        <param name="max_vel_turn" value="4.5" />
+        <param name="max_vel_turn" value="0.9" />
         <param name="adjustable_throttle" value="True" />
         <param name="drive_increment" value="20" />
         <param name="flipper_increment" value="20" />
     </node>
 
-    <node pkg="twist_mux" type="twist_mux" name="twist_mux" output="screen">
-        <remap from="cmd_vel_out" to="/cmd_vel/managed"/>
-
-        <rosparam file="$(arg config_locks)"  command="load"/>
-        <rosparam file="$(arg config_topics)" command="load"/>
-    </node>
-
     <!-- Control input manager -->
-    <node pkg="rr_control_input_manager" type="control_input_manager.py" name="control_input_manager_node" output="screen">
-        <rosparam file="$(find rr_control_input_manager)/config/input_topics.yaml" command="load"/>
+    <node pkg="rr_control_input_manager" type="control_input_manager.py" name="rr_control_input_manager_node" output="log" >
+        <param name="driver" value="xboxdrv"/>
+        <param name="wired_or_wireless" value="wireless"/>
     </node>
 
     <!-- Xbox controller driver -->
@@ -58,4 +50,11 @@
         <param name="autorepeat_rate" value="10" />
         <remap from="/joy" to="/joystick" />
     </node>
+
+<!--    <node pkg="usb_cam" type="usb_cam_node" name="usb_cam_node" />
+-->
+
+<!--   <node pkg="web_video_server" type="web_video_server" name="web_video_server" />
+-->
+
 </launch>
