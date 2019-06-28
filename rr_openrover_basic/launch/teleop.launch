@@ -43,6 +43,7 @@
     <node pkg="rr_control_input_manager" type="control_input_manager.py" name="rr_control_input_manager_node" output="log" >
         <param name="driver" value="xboxdrv"/>
         <param name="wired_or_wireless" value="wireless"/>
+        <rosparam file="$(find rr_control_input_manager)/config/input_topics.yaml" command="load"/>
     </node>
 
     <!-- Xbox controller driver -->
