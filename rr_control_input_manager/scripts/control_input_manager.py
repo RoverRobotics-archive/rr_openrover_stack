@@ -83,6 +83,7 @@ def check_params(control_inputs):
 def main():
     rospy.init_node('control_input_manager')
     control_inputs = rospy.get_param('~control_inputs')
+    check_params(control_inputs)
     cim = ControlInputManager(control_inputs)
     cim.start()
 

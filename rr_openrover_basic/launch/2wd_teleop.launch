@@ -39,6 +39,14 @@
         <param name="flipper_increment" value="20" />
     </node>
 
+    <!--  Twist Mux  -->
+    <node pkg="twist_mux" type="twist_mux" name="twist_mux" output="screen">
+        <remap from="cmd_vel_out" to="/cmd_vel/managed"/>
+
+        <rosparam file="$(arg config_locks)"  command="load"/>
+        <rosparam file="$(arg config_topics)" command="load"/>
+    </node>
+
     <!-- Control input manager -->
     <node pkg="rr_control_input_manager" type="control_input_manager.py" name="rr_control_input_manager_node" output="log" >
         <param name="driver" value="xboxdrv"/>
