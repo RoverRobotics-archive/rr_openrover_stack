@@ -230,11 +230,11 @@ bool OpenRover::start()
     slow_timer = nh_priv_.createWallTimer( ros::WallDuration(1.0/slow_rate_), &OpenRover::robotDataSlowCB, this);
     timeout_timer = nh_priv_.createWallTimer( ros::WallDuration(timeout_), &OpenRover::timeoutCB, this, true);
 
-    fast_rate_pub = nh_priv_.advertise<rr_openrover_basic::RawRrOpenroverBasicFastRateData>("raw_fast_rate_data",1);
-    medium_rate_pub = nh_priv_.advertise<rr_openrover_basic::RawRrOpenroverBasicMedRateData>("raw_med_rate_data",1);
-    slow_rate_pub = nh_priv_.advertise<rr_openrover_basic::RawRrOpenroverBasicSlowRateData>("raw_slow_rate_data",1);
-    battery_status_a_pub = nh_priv_.advertise<rr_openrover_basic::SmartBatteryStatus>("battery_status_a",1);
-    battery_status_b_pub = nh_priv_.advertise<rr_openrover_basic::SmartBatteryStatus>("battery_status_b",1);
+    fast_rate_pub = nh_priv_.advertise<rr_openrover_basic_msgs::RawRrOpenroverBasicFastRateData>("raw_fast_rate_data",1);
+    medium_rate_pub = nh_priv_.advertise<rr_openrover_basic_msgs::RawRrOpenroverBasicMedRateData>("raw_med_rate_data",1);
+    slow_rate_pub = nh_priv_.advertise<rr_openrover_basic_msgs::RawRrOpenroverBasicSlowRateData>("raw_slow_rate_data",1);
+    battery_status_a_pub = nh_priv_.advertise<rr_openrover_basic_msgs::SmartBatteryStatus>("battery_status_a",1);
+    battery_status_b_pub = nh_priv_.advertise<rr_openrover_basic_msgs::SmartBatteryStatus>("battery_status_b",1);
     odom_enc_pub = nh_priv_.advertise<nav_msgs::Odometry>("odom_encoder", 1);
     is_charging_pub = nh_priv_.advertise<std_msgs::Bool>("charging", 1);
 
@@ -731,7 +731,7 @@ void OpenRover::publishWheelVels() //Update to publish from OdomControl
 
 void OpenRover::publishFastRateData()
 {
-    rr_openrover_basic::RawRrOpenroverBasicFastRateData msg;
+    rr_openrover_basic_msgs::RawRrOpenroverBasicFastRateData msg;
 
     msg.header.stamp = ros::Time::now();
     msg.header.frame_id = "";
@@ -746,7 +746,7 @@ void OpenRover::publishFastRateData()
 
 void OpenRover::publishMedRateData()
 {
-    rr_openrover_basic::RawRrOpenroverBasicMedRateData med_msg;
+    rr_openrover_basic_msgs::RawRrOpenroverBasicMedRateData med_msg;
     std_msgs::Bool is_charging_msg;
 
     med_msg.header.stamp = ros::Time::now();
@@ -783,8 +783,8 @@ void OpenRover::publishMedRateData()
     return;
 }
 
-rr_openrover_basic::SmartBatteryStatus interpret_battery_status(uint16_t bits) {
-    rr_openrover_basic::SmartBatteryStatus status_msg;
+rr_openrover_basic_msgs::SmartBatteryStatus interpret_battery_status(uint16_t bits) {
+    rr_openrover_basic_msgs::SmartBatteryStatus status_msg;
     status_msg.over_charged_alarm = bool(bits & 0x8000);
     status_msg.terminate_charge_alarm = bool(bits & 0x4000);
     status_msg.over_temp_alarm = bool(bits & 0x1000);
@@ -800,8 +800,8 @@ rr_openrover_basic::SmartBatteryStatus interpret_battery_status(uint16_t bits) {
 
 void OpenRover::publishSlowRateData()
 {
-    rr_openrover_basic::RawRrOpenroverBasicSlowRateData slow_msg;
-    rr_openrover_basic::SmartBatteryStatus batteryStatusA;
+    rr_openrover_basic_msgs::RawRrOpenroverBasicSlowRateData slow_msg;
+    rr_openrover_basic_msgs::SmartBatteryStatus batteryStatusA;
 
     slow_msg.header.stamp = ros::Time::now();
     slow_msg.header.frame_id = "";
