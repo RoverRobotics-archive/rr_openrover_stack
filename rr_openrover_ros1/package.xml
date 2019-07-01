@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>rr_openrover_ros1</name>
+  <version>0.0.0</version>
+  <description>
+    The rr_openrover_ros1 stack allows managing and transmitting multiple command velocities
+    and reading encoder and battery data.
+  </description>
+
+  <maintainer email="padilla@digilabs.io">Nicholas Padilla</maintainer>
+
+
+  <license>BSD</license>
+
+  <exec_depend>rr_openrover_basic</exec_depend>
+  <exec_depend>rr_openrover_basic_msgs</exec_depend>
+  <exec_depend>rr_control_input_manager</exec_depend>
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <export>
+    <metapackage/>
+  </export>
+</package>
