@@ -7,12 +7,12 @@
 
 control_inputs:
 -
-  sub_topic : cmd_vel/joystick
-  pub_topic : /managed/joy
-  timeout   : 0.5
-  stamped   : false
+  sub_topic: cmd_vel/joystick
+  pub_topic: /managed/joy
+  timeout  : 0.5
+  stamped  : false
 -
   sub_topic: keyboard
   pub_topic: /managed/key
-  timeout: 0.5
-  stamped: false
+  timeout  : 0.5
+  stamped  : false
