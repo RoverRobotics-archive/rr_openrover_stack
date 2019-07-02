@@ -33,10 +33,11 @@
         <remap from="/joystick/y_button" to="/auto_dock/dock" />
         <remap from="/joystick/x_button" to="/datarecorder/enable"/>
         <param name="max_vel_fwd" value="0.4" />
-        <param name="max_vel_turn" value="0.9" />
+        <param name="max_vel_turn" value="9.0" />
         <param name="adjustable_throttle" value="True" />
         <param name="drive_increment" value="20" />
         <param name="flipper_increment" value="20" />
+        <param name="a_button_toggle" value="true"/>
     </node>
 
     <!--  Twist Mux  -->

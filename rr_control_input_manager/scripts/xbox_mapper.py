@@ -47,56 +47,39 @@ if driver == 'xpad':
 
 elif wired_or_wireless == 'wired' and driver == 'xboxdrv':
     rospy.loginfo('XBOX CONFIG: wired & xboxdrv')
-    rospy.logwarn('Known bug, that ')
-    L_STICK_H_AXES = 0
-    L_STICK_V_AXES = 1
-    L_TRIG_AXES = 5
-    R_STICK_H_AXES = 2
-    R_STICK_V_AXES = 3
-    R_TRIG_AXES = 4
-    DPAD_H_AXES = 6
-    DPAD_V_AXES = 7
-
-    A_BUTTON = 0
-    B_BUTTON = 1
-    X_BUTTON = 2
-    Y_BUTTON = 3
-    LB_BUTTON = 4
-    RB_BUTTON = 5
-    BACK_BUTTON = 6
-    START_BUTTON = 7
-    POWER_BUTTON = 8
-    L_STICK_BUTTON = 9
-    R_STICK_BUTTON = 10
+    rospy.logwarn('If the wired controller becomes unplugged during operation '
+                  'xboxdrv may continue to publish the last command from the '
+                  'controller, causing the vehicle to run away.')
 
 elif wired_or_wireless == 'wireless' and driver == 'xboxdrv':
     rospy.loginfo('XBOX CONFIG: wireless & xboxdrv')
-    L_STICK_H_AXES = 0
-    L_STICK_V_AXES = 1
-    L_TRIG_AXES = 5
-    R_STICK_H_AXES = 2
-    R_STICK_V_AXES = 3
-    R_TRIG_AXES = 4
-    DPAD_H_AXES = 6
-    DPAD_V_AXES = 7
-
-    A_BUTTON = 0
-    B_BUTTON = 1
-    X_BUTTON = 2
-    Y_BUTTON = 3
-    LB_BUTTON = 4
-    RB_BUTTON = 5
-    BACK_BUTTON = 6
-    START_BUTTON = 7
-    POWER_BUTTON = 8
-    L_STICK_BUTTON = 9
-    R_STICK_BUTTON = 10
 
 else:
     rospy.logfatal('Unsupported controller configuration: {driver}, {connection}'
                    .format(driver=driver, connection=wired_or_wireless))
     rospy.signal_shutdown('Unsupported controller configuration.')
     exit(-1)
+
+L_STICK_H_AXES = 0
+L_STICK_V_AXES = 1
+L_TRIG_AXES = 5
+R_STICK_H_AXES = 2
+R_STICK_V_AXES = 3
+R_TRIG_AXES = 4
+DPAD_H_AXES = 6
+DPAD_V_AXES = 7
+
+A_BUTTON = 0
+B_BUTTON = 1
+X_BUTTON = 2
+Y_BUTTON = 3
+LB_BUTTON = 4
+RB_BUTTON = 5
+BACK_BUTTON = 6
+START_BUTTON = 7
+POWER_BUTTON = 8
+L_STICK_BUTTON = 9
+R_STICK_BUTTON = 10
 
 prev_fwd = 0
 prev_trn = 0
@@ -204,9 +187,9 @@ def joy_cb(Joy):
                 a_button_msg.data = not a_button_msg.data
     else:
         if Joy.buttons[A_BUTTON] == 1:
-            b_button_msg.data = True
+            a_button_msg.data = True
         else:
-            b_button_msg.data = False
+            a_button_msg.data = False
     a_button_pub.publish(a_button_msg)
 
     # (red/B)
@@ -244,7 +227,7 @@ def joy_cb(Joy):
             rospy.loginfo('User button Y')
             y_button_msg.data = True
     else:
-        if Joy.buttons[X_BUTTON] == 1:
+        if Joy.buttons[Y_BUTTON] == 1:
             y_button_msg.data = True
         else:
             y_button_msg.data = False
