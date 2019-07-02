@@ -1,42 +1,61 @@
 #!/usr/bin/env python
-from __future__ import print_function
-
-PKG = 'rr_control_input_manager'
-import roslib
-
-roslib.load_manifest(PKG)  # This line is not needed with Catkin.
-
-import os
-import sys
-import rospkg
 import rospy
-
-rospack = rospkg.RosPack()
-sys.path.append(os.path.join(rospack.get_path(PKG), 'scripts'))
 import unittest
 import rosunit
 from geometry_msgs.msg import Twist, TwistStamped
 
+PKG = 'rr_control_input_manager'
 
-## A sample python unit test
+
 class TestTwistCommand(unittest.TestCase):
     def __init__(self, *args, **kwargs):
         super(TestTwistCommand, self).__init__(*args, **kwargs)
-        rospy.init_node('test_control_input_manager')
-        self.tests = [method for method in list(TestTwistCommand.__dict__) if 'test_' in method]
-        self.message_recieved = dict(zip(self.tests, [False] * len(self.tests)))
-        self.message_stamp = dict(zip(self.tests, [None] * len(self.tests)))
-        self.msg = dict(zip(self.tests, [None] * len(self.tests)))
+        self.message_received = False
+        self.message_stamp = None
+        self.msg = None
+        self.pub = None
+        self.sub = None
 
-    def listener(self, data, test):
-        self.message_stamp[test] = rospy.Time.now()
-        self.message_recieved[test] = True
-        self.msg[test] = data
+    def setUp(self):
+        test_method_name = self._testMethodName
+        subscribers = {'test_manager_unstamped': ('/test/outputA', Twist),
+                       'test_manager_stamped': ('/test/outputF', TwistStamped),
+                       'test_latency_management_zero': ('/test/outputG', Twist),
+                       'test_latency_management_one': ('/test/outputH', Twist),
+                       'test_latency_management_less_than_zero': ('/test/outputC', Twist)
+                       }
+        publishers = {'test_manager_unstamped': ('/test/inputA', TwistStamped),
+                      'test_manager_stamped': ('/test/inputF', TwistStamped),
+                      'test_latency_management_zero': ('/test/inputG', TwistStamped),
+                      'test_latency_management_one': ('/test/inputH', TwistStamped),
+                      'test_latency_management_less_than_zero': ('/test/inputC', TwistStamped)
+                      }
 
-    def reset_message_info(self, test):
-        self.msg[test] = None
-        self.message_recieved[test] = False
-        self.message_stamp[test] = None
+        if test_method_name in subscribers.keys():
+            self.sub = rospy.Subscriber(subscribers[test_method_name][0],
+                                        subscribers[test_method_name][1],
+                                        self.listener,
+                                        queue_size=10)
+        if test_method_name in publishers.keys():
+            self.pub = rospy.Publisher(publishers[test_method_name][0],
+                                       publishers[test_method_name][1],
+                                       queue_size=1)
+
+        # Allow time for the publisher and subscriber to properly connect to endpoints
+        rospy.sleep(1)
+
+    def tearDown(self):
+        if self.sub:
+            self.sub.unregister()
+        if self.pub:
+            self.pub.unregister()
+
+        # rospy.signal_shutdown('Test {test_name} completed'.format(test_name=self._testMethodName))
+
+    def listener(self, data):
+        self.message_stamp = rospy.Time.now()
+        self.message_received = True
+        self.msg = data
 
     def generate_twist(self, x=0, y=0, z=0, rx=0, ry=0, rz=0):
         msg = Twist()
@@ -63,7 +82,7 @@ class TestTwistCommand(unittest.TestCase):
 
         return msg
 
-    def compare_twist_stamped(self, msg1, msg2):
+    def twist_stamped_eq(self, msg1, msg2):
         result = msg1.header.stamp == msg2.header.stamp \
                  and msg1.header.frame_id == msg2.header.frame_id \
                  and msg1.twist == msg2.twist
@@ -90,143 +109,80 @@ class TestTwistCommand(unittest.TestCase):
         print(topics)
 
     def test_manager_unstamped(self):
-        TEST = 'test_manager_unstamped'
         rate = rospy.Rate(100)
 
-        sub = rospy.Subscriber('/test/outputA', Twist, self.listener, TEST, queue_size=10)
-        pub = rospy.Publisher('/test/inputA', TwistStamped, queue_size=10)
-
-        rospy.sleep(1)
-
         msg = self.generate_twist_stamped(rospy.Time.now())
-        pub.publish(msg)
+        self.pub.publish(msg)
 
-        timeout = 0
-        while timeout < 1000 and not self.message_recieved[TEST]:
+        for timeout in range(1000):
+            if self.message_received:
+                break
             rate.sleep()
-            timeout += 1
 
-        try:
-            self.assertEqual(msg.twist, self.msg[TEST])
-            self.reset_message_info(TEST)
-            pub.unregister()
-            sub.unregister()
-        except self.failureException as e:
-            self.reset_message_info(TEST)
-            pub.unregister()
-            sub.unregister()
-            raise self.failureException(e)
+        self.assertEqual(msg.twist, self.msg)
 
     def test_manager_stamped(self):
         TEST = 'test_manager_stamped'
         rate = rospy.Rate(100)
 
-        sub = rospy.Subscriber('/test/outputF', TwistStamped, self.listener, TEST, queue_size=10)
-        pub = rospy.Publisher('/test/inputF', TwistStamped, queue_size=10)
-
-        rospy.sleep(1)
-
         msg = self.generate_twist_stamped(rospy.Time.now(), frame_id=TEST)
-        pub.publish(msg)
+        self.pub.publish(msg)
 
         timeout = 0
-        while timeout < 1000 and not self.message_recieved[TEST]:
+        while timeout < 1000 and not self.message_received:
             rate.sleep()
             timeout += 1
 
-        try:
-            self.assertTrue(self.compare_twist_stamped(msg, self.msg[TEST]))
-            self.reset_message_info(TEST)
-            pub.unregister()
-            sub.unregister()
-        except self.failureException as e:
-            self.reset_message_info(TEST)
-            pub.unregister()
-            sub.unregister()
-            raise self.failureException(e)
+        self.assertTrue(self.twist_stamped_eq(msg, self.msg))
 
     def test_latency_management_zero(self):
-        TEST = 'test_latency_management_zero'
         rate = rospy.Rate(100)
-
-        sub = rospy.Subscriber('/test/outputG', Twist, self.listener, TEST, queue_size=10)
-        pub = rospy.Publisher('/test/inputG', TwistStamped, queue_size=10)
         msg = self.generate_twist_stamped(rospy.Time.now())
 
+        # This is used to simulate latency
         rospy.sleep(10)
 
-        pub.publish(msg)
+        self.pub.publish(msg)
 
         timeout = 0
-        while timeout < 1000 and not self.message_recieved[TEST]:
+        while timeout < 1000 and not self.message_received:
             rate.sleep()
             timeout += 1
 
-        try:
-            self.assertEqual(msg.twist, self.msg[TEST])
-            self.reset_message_info(TEST)
-            pub.unregister()
-            sub.unregister()
-        except self.failureException as e:
-            self.reset_message_info(TEST)
-            pub.unregister()
-            sub.unregister()
-            raise self.failureException(e)
+        self.assertEqual(msg.twist, self.msg)
 
     def test_latency_management_one(self):
-        TEST = 'test_latency_management_one'
         rate = rospy.Rate(100)
-        sub = rospy.Subscriber('/test/outputH', Twist, self.listener, TEST, queue_size=10)
-        pub = rospy.Publisher('/test/inputH', TwistStamped, queue_size=10)
         msg = self.generate_twist_stamped(rospy.Time.now())
 
+        # This is used to simulate latency
         rospy.sleep(10)
 
-        pub.publish(msg)
+        self.pub.publish(msg)
 
         timeout = 0
-        while timeout < 1000 and not self.message_recieved[TEST]:
+        while timeout < 1000 and not self.message_received:
             rate.sleep()
             timeout += 1
 
-        try:
-            self.assertEqual(None, self.msg[TEST])
-            self.reset_message_info(TEST)
-            pub.unregister()
-            sub.unregister()
-        except self.failureException as e:
-            self.reset_message_info(TEST)
-            pub.unregister()
-            sub.unregister()
-            raise self.failureException(e)
+        self.assertEqual(None, self.msg)
 
     def test_latency_management_less_than_zero(self):
-        TEST = 'test_latency_management_less_than_zero'
         rate = rospy.Rate(100)
-
-        sub = rospy.Subscriber('/test/outputC', Twist, self.listener, TEST, queue_size=10)
-        pub = rospy.Publisher('/test/inputC', TwistStamped, queue_size=10)
         msg = self.generate_twist_stamped(rospy.Time.now())
 
+        # This is used to simulate latency
         rospy.sleep(10)
 
-        pub.publish(msg)
+        self.pub.publish(msg)
 
         timeout = 0
-        while timeout < 1000 and not self.message_recieved[TEST]:
+        while timeout < 1000 and not self.message_received:
             rate.sleep()
             timeout += 1
 
-        try:
-            self.assertEqual(msg.twist, self.msg[TEST])
-            self.reset_message_info(TEST)
-            pub.unregister()
-            sub.unregister()
-        except self.failureException as e:
-            self.reset_message_info(TEST)
-            pub.unregister()
-            sub.unregister()
-            raise self.failureException(e)
+        self.assertEqual(msg.twist, self.msg)
 
 
-rosunit.unitrun(PKG, 'test_control_input_manager', TestTwistCommand)
+rospy.init_node('test_control_input_manager_functional_test')
+rosunit.unitrun(PKG, 'test_control_input_manager_functional', TestTwistCommand)
