@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+from __future__ import division
 
 # Author: Nick Fragale
 # Description: This script converts Joystick commands into Joint Velocity commands
@@ -19,6 +20,7 @@ from geometry_msgs.msg import TwistStamped
 from sensor_msgs.msg import Joy
 from std_msgs.msg import Bool
 from std_msgs.msg import Float32, String
+import rosnode
 
 rospy.init_node('xbox_mapper_node', anonymous=True)
 
@@ -38,57 +40,14 @@ button_msg = String()
 driver = rospy.get_param('/xbox_mapper_node/driver', 'xboxdrv')
 wired_or_wireless = rospy.get_param('/xbox_mapper_node/wired_or_wireless', 'wireless')
 
-# TODO
-if wired_or_wireless == "wired" and driver == "xpad":
-    rospy.logwarn("XBOX CONFIG: wired & xpad")
-    L_STICK_H_AXES = 0
-    L_STICK_V_AXES = 1
-    L_TRIG_AXES = 2
-    R_STICK_H_AXES = 3
-    R_STICK_V_AXES = 4
-    R_TRIG_AXES = 5
-    DPAD_H_AXES = 6
-    DPAD_V_AXES = 7
+if driver == 'xpad':
+    rospy.logfatal('[{node_name}] xpad driver not supported.'.format(node_name=rospy.get_name()))
+    rospy.signal_shutdown('xpad driver not supported.')
+    exit(-1)
 
-    A_BUTTON = 0
-    B_BUTTON = 1
-    X_BUTTON = 2
-    Y_BUTTON = 3
-    LB_BUTTON = 4
-    RB_BUTTON = 5
-    BACK_BUTTON = 6
-    START_BUTTON = 7
-    POWER_BUTTON = 8
-    L_STICK_BUTTON = 9
-    R_STICK_BUTTON = 10
-
-# TODO
-elif wired_or_wireless == "wireless" and driver == "xpad":
-    rospy.logwarn("XBOX CONFIG: wireless & xpad")
-    L_STICK_H_AXES = 0
-    L_STICK_V_AXES = 1
-    L_TRIG_AXES = 2
-    R_STICK_H_AXES = 3
-    R_STICK_V_AXES = 4
-    R_TRIG_AXES = 5
-    DPAD_H_AXES = 6
-    DPAD_V_AXES = 7
-
-    A_BUTTON = 0
-    B_BUTTON = 1
-    X_BUTTON = 2
-    Y_BUTTON = 3
-    LB_BUTTON = 4
-    RB_BUTTON = 5
-    BACK_BUTTON = 6
-    START_BUTTON = 7
-    POWER_BUTTON = 8
-    L_STICK_BUTTON = 9
-    R_STICK_BUTTON = 10
-
-# TODO
-elif wired_or_wireless == "wired" and driver == "xboxdrv":
-    rospy.logwarn("XBOX CONFIG: wired & xboxdrv")
+elif wired_or_wireless == 'wired' and driver == 'xboxdrv':
+    rospy.loginfo('XBOX CONFIG: wired & xboxdrv')
+    rospy.logwarn('Known bug, that ')
     L_STICK_H_AXES = 0
     L_STICK_V_AXES = 1
     L_TRIG_AXES = 5
@@ -110,9 +69,8 @@ elif wired_or_wireless == "wired" and driver == "xboxdrv":
     L_STICK_BUTTON = 9
     R_STICK_BUTTON = 10
 
-# TODO
-elif wired_or_wireless == "wireless" and driver == "xboxdrv":
-    rospy.logwarn("XBOX CONFIG: wireless & xboxdrv")
+elif wired_or_wireless == 'wireless' and driver == 'xboxdrv':
+    rospy.loginfo('XBOX CONFIG: wireless & xboxdrv')
     L_STICK_H_AXES = 0
     L_STICK_V_AXES = 1
     L_TRIG_AXES = 5
@@ -133,6 +91,12 @@ elif wired_or_wireless == "wireless" and driver == "xboxdrv":
     POWER_BUTTON = 8
     L_STICK_BUTTON = 9
     R_STICK_BUTTON = 10
+
+else:
+    rospy.logfatal('Unsupported controller configuration: {driver}, {connection}'
+                   .format(driver=driver, connection=wired_or_wireless))
+    rospy.signal_shutdown('Unsupported controller configuration.')
+    exit(-1)
 
 prev_fwd = 0
 prev_trn = 0
@@ -288,14 +252,14 @@ def joy_cb(Joy):
 
     if ADJ_THROTTLE:
         # Increase/Decrease Max Speed
-        if (driver == "xpad"):
+        if (driver == 'xpad'):
             if int(Joy.axes[DPAD_V_AXES]) == 1 and not DPAD_ACTIVE:
                 DRIVE_THROTTLE += (1 / DRIVE_INCREMENTS)
                 DPAD_ACTIVE = True
             if int(Joy.axes[DPAD_V_AXES]) == -1 and not DPAD_ACTIVE:
                 DRIVE_THROTTLE -= (1 / DRIVE_INCREMENTS)
                 DPAD_ACTIVE = True
-        elif (driver == "xboxdrv"):
+        elif (driver == 'xboxdrv'):
             if int(Joy.axes[DPAD_V_AXES]) == 1 and not DPAD_ACTIVE:
                 DRIVE_THROTTLE += (1 / DRIVE_INCREMENTS)
                 DPAD_ACTIVE = True
@@ -330,7 +294,7 @@ def joy_cb(Joy):
         FLIPPER_DEADBAND = 0.2 * FLIPPER_THROTTLE * MAX_VEL_FLIPPER
 
         if DPAD_ACTIVE:
-            rospy.loginfo("Drive Throttle: %f", DRIVE_THROTTLE)
+            rospy.loginfo('Drive Throttle: %f', DRIVE_THROTTLE)
 
         if (Joy.axes[DPAD_V_AXES], Joy.axes[DPAD_H_AXES]) == (0, 0):
             DPAD_ACTIVE = False
@@ -381,7 +345,7 @@ def joystick_main():
 
     while not rospy.is_shutdown():
         # Subscribe to the joystick topic
-        sub_cmds = rospy.Subscriber("joystick", Joy, joy_cb)
+        sub_cmds = rospy.Subscriber('joystick', Joy, joy_cb)
 
         # spin() simply keeps python from exiting until this node is stopped
         rospy.spin()
