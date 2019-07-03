@@ -97,6 +97,7 @@ A_BUTTON_TOGGLE = rospy.get_param('~a_button_toggle', False)
 B_BUTTON_TOGGLE = rospy.get_param('~b_button_toggle', False)
 X_BUTTON_TOGGLE = rospy.get_param('~x_button_toggle', False)
 Y_BUTTON_TOGGLE = rospy.get_param('~y_button_toggle', False)
+MIN_TOGGLE_DUR = 0.5  #
 DRIVE_INCREMENTS = float(20)
 FLIPPER_INCREMENTS = float(20)
 DEADBAND = 0.2
@@ -181,10 +182,11 @@ def joy_cb(Joy):
     # (green/A)
     if A_BUTTON_TOGGLE:
         if Joy.buttons[A_BUTTON] == 1:
-            if time.time() - last_a_button > 0.25:
+            if time.time() - last_a_button > MIN_TOGGLE_DUR:
                 last_a_button = time.time()
-                rospy.loginfo('User button A')
-                a_button_msg.data = not a_button_msg.data
+                a_button_state = not a_button_msg.data
+                rospy.loginfo('A button toggled: {state}'.format(state=a_button_state))
+                a_button_msg.data = a_button_state
     else:
         if Joy.buttons[A_BUTTON] == 1:
             a_button_msg.data = True
@@ -195,10 +197,11 @@ def joy_cb(Joy):
     # (red/B)
     if B_BUTTON_TOGGLE:
         if Joy.buttons[B_BUTTON] == 1:
-            if time.time() - last_b_button > 0.25:
+            if time.time() - last_b_button > MIN_TOGGLE_DUR:
                 last_b_button = time.time()
-                rospy.loginfo('User button B')
-                b_button_msg.data = not b_button_msg.data
+                b_button_state = not b_button_msg.data
+                rospy.loginfo('B button toggled: {state}'.format(state=b_button_state))
+                b_button_msg.data = b_button_state
     else:
         if Joy.buttons[B_BUTTON] == 1:
             b_button_msg.data = True
@@ -209,10 +212,11 @@ def joy_cb(Joy):
     # (blue/X)
     if X_BUTTON_TOGGLE:
         if Joy.buttons[X_BUTTON] == 1:
-            if time.time() - last_x_button > 0.25:
+            if time.time() - last_x_button > MIN_TOGGLE_DUR:
                 last_x_button = time.time()
-                rospy.loginfo('User button X')
-                x_button_msg.data = not x_button_msg.data
+                x_button_state = not x_button_msg.data
+                rospy.loginfo('X button toggled: {state}'.format(state=x_button_state))
+                x_button_msg.data = x_button_state
     else:
         if Joy.buttons[X_BUTTON] == 1:
             x_button_msg.data = True
@@ -221,11 +225,13 @@ def joy_cb(Joy):
     x_button_pub.publish(x_button_msg)
 
     # (yellow/Y)
-    if Joy.buttons[Y_BUTTON] == 1:
-        if time.time() - last_y_button > 0.25:
-            last_y_button = time.time()
-            rospy.loginfo('User button Y')
-            y_button_msg.data = True
+    if Y_BUTTON_TOGGLE:
+        if Joy.buttons[Y_BUTTON] == 1:
+            if time.time() - last_y_button > MIN_TOGGLE_DUR:
+                last_y_button = time.time()
+                y_button_state = not y_button_msg.data
+                rospy.loginfo('Y button toggled: {state}'.format(state=y_button_state))
+                y_button_msg.data = y_button_state
     else:
         if Joy.buttons[Y_BUTTON] == 1:
             y_button_msg.data = True

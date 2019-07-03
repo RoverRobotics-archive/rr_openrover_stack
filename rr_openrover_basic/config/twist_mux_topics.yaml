@@ -8,16 +8,17 @@
 topics:
 -
   name    : navigation
-  topic   : /managed/key
+  topic   : /cmd_vel
   timeout : 0.5
   priority: 10
+-
+  name    : keyboard
+  topic   : /managed/key
+  timeout : 0.5
+  priority: 90
 -
   name    : joystick
   topic   : /managed/joy
   timeout : 0.5
   priority: 100
--
-  name    : keyboard
-  topic   : key_vel
-  timeout : 0.5
-  priority: 90
+

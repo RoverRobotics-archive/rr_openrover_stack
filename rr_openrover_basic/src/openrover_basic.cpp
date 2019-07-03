@@ -607,6 +607,7 @@ void OpenRover::eStopCB(const std_msgs::Bool::ConstPtr& msg)
 {
     static bool prev_e_stop_state_ = false;
 
+    // e-stop only trigger on the rising edge of the signal and only deactivates when reset
     if(msg->data && !prev_e_stop_state_)
     {
         e_stop_on_ = true;

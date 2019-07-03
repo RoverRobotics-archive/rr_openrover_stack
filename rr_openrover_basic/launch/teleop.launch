@@ -30,14 +30,15 @@
         <remap from="joy" to="/joystick" />
         <remap from="/joystick/a_button" to="/soft_estop/enable" />
         <remap from="/joystick/b_button" to="/soft_estop/reset" />
-        <remap from="/joystick/y_button" to="/auto_dock/dock" />
-        <remap from="/joystick/x_button" to="/datarecorder/enable"/>
+        <remap from="/joystick/y_button" to="/joy_priority" />
+        <remap from="/joystick/x_button" to="/pause_navigation"/>
         <param name="max_vel_fwd" value="0.4" />
         <param name="max_vel_turn" value="9.0" />
         <param name="adjustable_throttle" value="True" />
         <param name="drive_increment" value="20" />
         <param name="flipper_increment" value="20" />
-        <param name="a_button_toggle" value="true"/>
+        <param name="x_button_toggle" value="true"/>
+        <param name="y_button_toggle" value="true"/>
     </node>
 
     <!--  Twist Mux  -->
