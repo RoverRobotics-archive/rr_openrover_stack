@@ -15,7 +15,7 @@ class CommandHandle(object):
 
         try:
             self.timeout = float(timeout)
-        except ValueError as e:
+        except ValueError:
             raise ValueError('Invalid `timeout` value for control_input: {TIMEOUT}'
                              .format(TIMEOUT=timeout))
 

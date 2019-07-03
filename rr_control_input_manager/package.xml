@@ -2,7 +2,9 @@
 <package format="2">
   <name>rr_control_input_manager</name>
   <version>0.0.0</version>
-  <description>The rr_control_input_manager package</description>
+  <description>
+    Filter velocity commands by ensuring that message time stamps do not exceed given timeout thresholds.
+  </description>
 
   <!-- One maintainer tag required, multiple allowed, one person per tag -->
   <!-- Example:  -->

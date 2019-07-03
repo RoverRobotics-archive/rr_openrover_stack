@@ -3,8 +3,9 @@
   <name>rr_openrover_ros1</name>
   <version>0.0.0</version>
   <description>
-    The rr_openrover_ros1 stack allows managing and transmitting multiple command velocities
-    and reading encoder and battery data.
+    Packages related to the operation of Rover Robotics rover hardware.  This includes a client
+    for interfacing with the hardware (rr_openrover_basic) and a tool for filtering time stamped
+    velocity commands (rr_control_input_manager).
   </description>
 
   <maintainer email="padilla@digilabs.io">Nicholas Padilla</maintainer>

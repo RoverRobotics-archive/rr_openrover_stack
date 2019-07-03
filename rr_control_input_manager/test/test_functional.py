@@ -83,6 +83,8 @@ class TestTwistCommand(unittest.TestCase):
         return msg
 
     def twist_stamped_eq(self, msg1, msg2):
+        """Tests TwistStamped equality, disregarding header.seq. `seq` can be overwritten
+        when published and is a deprecated feature, so it left out of the equality check.."""
         result = msg1.header.stamp == msg2.header.stamp \
                  and msg1.header.frame_id == msg2.header.frame_id \
                  and msg1.twist == msg2.twist
@@ -128,10 +130,10 @@ class TestTwistCommand(unittest.TestCase):
         msg = self.generate_twist_stamped(rospy.Time.now(), frame_id=TEST)
         self.pub.publish(msg)
 
-        timeout = 0
-        while timeout < 1000 and not self.message_received:
+        for timeout in range(1000):
+            if self.message_received:
+                break
             rate.sleep()
-            timeout += 1
 
         self.assertTrue(self.twist_stamped_eq(msg, self.msg))
 
@@ -144,10 +146,10 @@ class TestTwistCommand(unittest.TestCase):
 
         self.pub.publish(msg)
 
-        timeout = 0
-        while timeout < 1000 and not self.message_received:
+        for timeout in range(1000):
+            if self.message_received:
+                break
             rate.sleep()
-            timeout += 1
 
         self.assertEqual(msg.twist, self.msg)
 
@@ -160,10 +162,10 @@ class TestTwistCommand(unittest.TestCase):
 
         self.pub.publish(msg)
 
-        timeout = 0
-        while timeout < 1000 and not self.message_received:
+        for timeout in range(1000):
+            if self.message_received:
+                break
             rate.sleep()
-            timeout += 1
 
         self.assertEqual(None, self.msg)
 
@@ -176,10 +178,10 @@ class TestTwistCommand(unittest.TestCase):
 
         self.pub.publish(msg)
 
-        timeout = 0
-        while timeout < 1000 and not self.message_received:
+        for timeout in range(1000):
+            if self.message_received:
+                break
             rate.sleep()
-            timeout += 1
 
         self.assertEqual(msg.twist, self.msg)
 

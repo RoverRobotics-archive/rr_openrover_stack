@@ -2,7 +2,11 @@
 <package format="2">
   <name>rr_openrover_basic</name>
   <version>0.7.1</version>
-  <description>The rr_openrover_basic package</description>
+  <description>
+    Provides an interface between ros and Rover Robotics rover hardware. Inputs to rr_openrover_basic
+    include emergency stop and velocity commands.  It outputs diagnostic data such as encoder
+    readings and battery charge.
+  </description>
 
   <maintainer email="jack@digilabs.io">Jack Kilian</maintainer>
   <maintainer email="fragale@digilabs.io">Nick Fragale</maintainer>

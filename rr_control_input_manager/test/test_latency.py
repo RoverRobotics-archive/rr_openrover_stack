@@ -96,18 +96,18 @@ class TestLatency(unittest.TestCase):
             msg = self.generate_twist_stamped(rospy.Time.now(), frame_id=str(i))
             self.pub.publish(msg)
 
-            timeout = 0
-            while timeout < 1000 and not self.message_received:
+            for timeout in range(1000):
+                if self.message_received:
+                    break
                 rate.sleep()
-                timeout += 1
 
             self.assertTrue(self.compare_twist_stamped(msg, self.msg))
             self.msg_latency[i] = (self.message_stamp - msg.header.stamp).to_sec()
             self.reset_message_info()
 
-        self.assertLess(np.max(self.msg_latency), 0.05)
         self.assertGreater(np.min(self.msg_latency), 0.0)
-        self.assertLess(np.mean(self.msg_latency), 0.05)
+        self.assertLess(np.mean(self.msg_latency), 0.01)
+        self.assertLess(np.max(self.msg_latency), 0.05)
 
     def test_twist_unstamped_latency(self):
         rate = rospy.Rate(100)
@@ -116,18 +116,18 @@ class TestLatency(unittest.TestCase):
             msg = self.generate_twist_stamped(rospy.Time.now(), frame_id=str(i))
             self.pub.publish(msg)
 
-            timeout = 0
-            while timeout < 1000 and not self.message_received:
+            for timeout in range(1000):
+                if self.message_received:
+                    break
                 rate.sleep()
-                timeout += 1
 
             self.assertEqual(msg.twist, self.msg)
             self.msg_latency[i] = (self.message_stamp - msg.header.stamp).to_sec()
             self.reset_message_info()
 
-        self.assertLess(np.max(self.msg_latency), 0.05)
         self.assertGreater(np.min(self.msg_latency), 0.0)
-        self.assertLess(np.mean(self.msg_latency), 0.05)
+        self.assertLess(np.mean(self.msg_latency), 0.01)
+        self.assertLess(np.max(self.msg_latency), 0.05)
 
 
 rospy.init_node('test_control_input_manager_latency_test')
