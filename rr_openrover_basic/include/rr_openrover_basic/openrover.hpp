@@ -8,7 +8,7 @@
 #include <stdint.h>
 #include <string>
 
-#include <geometry_msgs/TwistStamped.h>
+#include <geometry_msgs/Twist.h>
 #include <std_msgs/Bool.h>
 #include "rr_openrover_basic_msgs/RawRrOpenroverBasicFastRateData.h"
 #include "rr_openrover_basic_msgs/RawRrOpenroverBasicMedRateData.h"
