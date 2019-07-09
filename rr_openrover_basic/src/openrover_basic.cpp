@@ -13,13 +13,13 @@
 #include "std_msgs/Int32.h"
 #include "std_msgs/Int32MultiArray.h"
 #include "std_msgs/Float32MultiArray.h"
-#include "geometry_msgs/TwistStamped.h"
+#include "geometry_msgs/Twist.h"
 #include <std_msgs/Bool.h>
 #include "nav_msgs/Odometry.h"
-#include "rr_openrover_basic/RawRrOpenroverBasicFastRateData.h"
-#include "rr_openrover_basic/RawRrOpenroverBasicMedRateData.h"
-#include "rr_openrover_basic/RawRrOpenroverBasicSlowRateData.h"
-#include "rr_openrover_basic/SmartBatteryStatus.h"
+#include "rr_openrover_basic_msgs/RawRrOpenroverBasicFastRateData.h"
+#include "rr_openrover_basic_msgs/RawRrOpenroverBasicMedRateData.h"
+#include "rr_openrover_basic_msgs/RawRrOpenroverBasicSlowRateData.h"
+#include "rr_openrover_basic_msgs/SmartBatteryStatus.h"
 
 
 #include "rr_openrover_basic/openrover.hpp"
@@ -198,7 +198,6 @@ OpenRover::OpenRover( ros::NodeHandle& nh, ros::NodeHandle& nh_priv ) :
     left_vel_measured_(0),
     right_vel_measured_(0),
     e_stop_on_(false),
-
     LEFT_MOTOR_INDEX_(0),
     RIGHT_MOTOR_INDEX_(1),
     FLIPPER_MOTOR_INDEX_(2)
@@ -231,11 +230,11 @@ bool OpenRover::start()
     slow_timer = nh_priv_.createWallTimer( ros::WallDuration(1.0/slow_rate_), &OpenRover::robotDataSlowCB, this);
     timeout_timer = nh_priv_.createWallTimer( ros::WallDuration(timeout_), &OpenRover::timeoutCB, this, true);
 
-    fast_rate_pub = nh_priv_.advertise<rr_openrover_basic::RawRrOpenroverBasicFastRateData>("raw_fast_rate_data",1);
-    medium_rate_pub = nh_priv_.advertise<rr_openrover_basic::RawRrOpenroverBasicMedRateData>("raw_med_rate_data",1);
-    slow_rate_pub = nh_priv_.advertise<rr_openrover_basic::RawRrOpenroverBasicSlowRateData>("raw_slow_rate_data",1);
-    battery_status_a_pub = nh_priv_.advertise<rr_openrover_basic::SmartBatteryStatus>("battery_status_a",1);
-    battery_status_b_pub = nh_priv_.advertise<rr_openrover_basic::SmartBatteryStatus>("battery_status_b",1);
+    fast_rate_pub = nh_priv_.advertise<rr_openrover_basic_msgs::RawRrOpenroverBasicFastRateData>("raw_fast_rate_data",1);
+    medium_rate_pub = nh_priv_.advertise<rr_openrover_basic_msgs::RawRrOpenroverBasicMedRateData>("raw_med_rate_data",1);
+    slow_rate_pub = nh_priv_.advertise<rr_openrover_basic_msgs::RawRrOpenroverBasicSlowRateData>("raw_slow_rate_data",1);
+    battery_status_a_pub = nh_priv_.advertise<rr_openrover_basic_msgs::SmartBatteryStatus>("battery_status_a",1);
+    battery_status_b_pub = nh_priv_.advertise<rr_openrover_basic_msgs::SmartBatteryStatus>("battery_status_b",1);
     odom_enc_pub = nh_priv_.advertise<nav_msgs::Odometry>("odom_encoder", 1);
     is_charging_pub = nh_priv_.advertise<std_msgs::Bool>("charging", 1);
 
@@ -245,7 +244,8 @@ bool OpenRover::start()
 
     cmd_vel_sub = nh_priv_.subscribe("/cmd_vel/managed", 1, &OpenRover::cmdVelCB, this);
     fan_speed_sub = nh_priv_.subscribe("/rr_openrover_basic/fan_speed", 1, &OpenRover::fanSpeedCB, this);
-
+    e_stop_sub = nh_priv_.subscribe("/soft_estop/enable", 1, &OpenRover::eStopCB, this);
+    e_stop_reset_sub = nh_priv_.subscribe("/soft_estop/reset", 1, &OpenRover::eStopResetCB, this);
     return true;
 }
 
@@ -470,17 +470,17 @@ void OpenRover::fanSpeedCB(const std_msgs::Int32::ConstPtr& msg)
     return;
 }
 
-void OpenRover::cmdVelCB(const geometry_msgs::TwistStamped::ConstPtr& msg)
+void OpenRover::cmdVelCB(const geometry_msgs::Twist::ConstPtr& msg)
 {//converts from cmd_vel (m/s and radians/s) into motor speed commands
-    cmd_vel_commanded_ = msg->twist;
+    cmd_vel_commanded_ = *msg;
     float left_motor_speed, right_motor_speed;
     int flipper_motor_speed;
     int motor_speed_deadband_scaled;
-    double turn_rate = msg->twist.angular.z;
-    double linear_rate = msg->twist.linear.x;
-    double flipper_rate = msg->twist.angular.y;
-    std::string frame_id = msg->header.frame_id;
+    double turn_rate = msg->angular.z;
+    double linear_rate = msg->linear.x;
+    double flipper_rate = msg->angular.y;
     bool is_moving_forward, is_turning_cw, is_stationary, is_zero_point_turn;
+    static bool prev_e_stop_state_ = false;
 
     double diff_vel_commanded = turn_rate/odom_angular_coef_/odom_traction_factor_;
 
@@ -489,11 +489,11 @@ void OpenRover::cmdVelCB(const geometry_msgs::TwistStamped::ConstPtr& msg)
 
     timeout_timer.stop();
 
-    if (frame_id == (std::string) "soft e-stopped")
+    if (e_stop_on_)
     {
-        if (!e_stop_on_)
+        if (!prev_e_stop_state_)
         {
-            e_stop_on_ = true;
+            prev_e_stop_state_ = true;
             ROS_WARN("Openrover driver - Soft e-stop on.");
         }
         motor_speeds_commanded_[LEFT_MOTOR_INDEX_] = MOTOR_NEUTRAL;
@@ -503,9 +503,9 @@ void OpenRover::cmdVelCB(const geometry_msgs::TwistStamped::ConstPtr& msg)
     }
     else
     {
-        if (e_stop_on_)
+        if (prev_e_stop_state_)
         {
-            e_stop_on_ = false;
+            prev_e_stop_state_ = false;
             ROS_INFO("Openrover driver - Soft e-stop off.");
         }
     }
@@ -600,6 +600,29 @@ void OpenRover::cmdVelCB(const geometry_msgs::TwistStamped::ConstPtr& msg)
         motor_speeds_commanded_[RIGHT_MOTOR_INDEX_] = (unsigned char) right_motor_speed;
     }
     timeout_timer.start();
+    return;
+}
+
+void OpenRover::eStopCB(const std_msgs::Bool::ConstPtr& msg)
+{
+    static bool prev_e_stop_state_ = false;
+
+    // e-stop only trigger on the rising edge of the signal and only deactivates when reset
+    if(msg->data && !prev_e_stop_state_)
+    {
+        e_stop_on_ = true;
+    }
+
+    prev_e_stop_state_ = msg->data;
+    return;
+}
+
+void OpenRover::eStopResetCB(const std_msgs::Bool::ConstPtr& msg)
+{
+    if(msg->data)
+    {
+        e_stop_on_ = false;
+    }
     return;
 }
 
@@ -709,7 +732,7 @@ void OpenRover::publishWheelVels() //Update to publish from OdomControl
 
 void OpenRover::publishFastRateData()
 {
-    rr_openrover_basic::RawRrOpenroverBasicFastRateData msg;
+    rr_openrover_basic_msgs::RawRrOpenroverBasicFastRateData msg;
 
     msg.header.stamp = ros::Time::now();
     msg.header.frame_id = "";
@@ -724,7 +747,7 @@ void OpenRover::publishFastRateData()
 
 void OpenRover::publishMedRateData()
 {
-    rr_openrover_basic::RawRrOpenroverBasicMedRateData med_msg;
+    rr_openrover_basic_msgs::RawRrOpenroverBasicMedRateData med_msg;
     std_msgs::Bool is_charging_msg;
 
     med_msg.header.stamp = ros::Time::now();
@@ -761,8 +784,8 @@ void OpenRover::publishMedRateData()
     return;
 }
 
-rr_openrover_basic::SmartBatteryStatus interpret_battery_status(uint16_t bits) {
-    rr_openrover_basic::SmartBatteryStatus status_msg;
+rr_openrover_basic_msgs::SmartBatteryStatus interpret_battery_status(uint16_t bits) {
+    rr_openrover_basic_msgs::SmartBatteryStatus status_msg;
     status_msg.over_charged_alarm = bool(bits & 0x8000);
     status_msg.terminate_charge_alarm = bool(bits & 0x4000);
     status_msg.over_temp_alarm = bool(bits & 0x1000);
@@ -778,8 +801,8 @@ rr_openrover_basic::SmartBatteryStatus interpret_battery_status(uint16_t bits) {
 
 void OpenRover::publishSlowRateData()
 {
-    rr_openrover_basic::RawRrOpenroverBasicSlowRateData slow_msg;
-    rr_openrover_basic::SmartBatteryStatus batteryStatusA;
+    rr_openrover_basic_msgs::RawRrOpenroverBasicSlowRateData slow_msg;
+    rr_openrover_basic_msgs::SmartBatteryStatus batteryStatusA;
 
     slow_msg.header.stamp = ros::Time::now();
     slow_msg.header.frame_id = "";

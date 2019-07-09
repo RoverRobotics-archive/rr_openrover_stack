@@ -9,12 +9,12 @@
 #include <stdint.h>
 #include <string>
 
-#include <geometry_msgs/TwistStamped.h>
+#include <geometry_msgs/Twist.h>
 #include <std_msgs/Bool.h>
-#include "rr_openrover_basic/RawRrOpenroverBasicFastRateData.h"
-#include "rr_openrover_basic/RawRrOpenroverBasicMedRateData.h"
-#include "rr_openrover_basic/RawRrOpenroverBasicSlowRateData.h"
-#include "rr_openrover_basic/SmartBatteryStatus.h"
+#include "rr_openrover_basic_msgs/RawRrOpenroverBasicFastRateData.h"
+#include "rr_openrover_basic_msgs/RawRrOpenroverBasicMedRateData.h"
+#include "rr_openrover_basic_msgs/RawRrOpenroverBasicSlowRateData.h"
+#include "rr_openrover_basic_msgs/SmartBatteryStatus.h"
 
 
 #include <rr_openrover_basic/odom_control.hpp>
@@ -82,6 +82,8 @@ private:
 
     ros::Subscriber cmd_vel_sub;
     ros::Subscriber fan_speed_sub;
+    ros::Subscriber e_stop_sub;
+    ros::Subscriber e_stop_reset_sub;
 
     //General Class variables
     int baud_; //serial baud rate
@@ -135,8 +137,10 @@ private:
     std::vector<unsigned char> serial_fan_buffer_;
 
     //ROS Subscriber callback functions
-    void cmdVelCB(const geometry_msgs::TwistStamped::ConstPtr& msg);
+    void cmdVelCB(const geometry_msgs::Twist::ConstPtr& msg);
     void fanSpeedCB(const std_msgs::Int32::ConstPtr& msg);
+    void eStopCB(const std_msgs::Bool::ConstPtr& msg);
+    void eStopResetCB(const std_msgs::Bool::ConstPtr& msg);
 
     //ROS Publish Functions (robot_data_[X] to ros topics)
     void publishFastRateData();
@@ -154,7 +158,7 @@ private:
     int readCommand();
 };
 
-rr_openrover_basic::SmartBatteryStatus interpret_battery_status(uint16_t bits);
+rr_openrover_basic_msgs::SmartBatteryStatus interpret_battery_status(uint16_t bits);
 
 }
 #endif /* _openrover_hpp */

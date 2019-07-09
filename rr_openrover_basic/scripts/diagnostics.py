@@ -3,7 +3,7 @@
 import rospy
 from std_msgs.msg import String, Bool
 from nav_msgs.msg import Odometry
-from rr_openrover_basic.msg import RawRrOpenroverBasicSlowRateData, RawRrOpenroverBasicMedRateData, SmartBatteryStatus
+from rr_openrover_basic_msgs.msg import RawRrOpenroverBasicSlowRateData, RawRrOpenroverBasicMedRateData, SmartBatteryStatus
 
 
 class rover_diagnostic():

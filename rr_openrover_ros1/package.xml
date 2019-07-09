@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>rr_openrover_ros1</name>
+  <version>0.0.0</version>
+  <description>
+    Packages related to the operation of Rover Robotics rover hardware.  This includes a client
+    for interfacing with the hardware (rr_openrover_basic) and a tool for filtering time stamped
+    velocity commands (rr_control_input_manager).
+  </description>
+
+  <maintainer email="padilla@digilabs.io">Nicholas Padilla</maintainer>
+
+
+  <license>BSD</license>
+
+  <exec_depend>rr_openrover_basic</exec_depend>
+  <exec_depend>rr_openrover_basic_msgs</exec_depend>
+  <exec_depend>rr_control_input_manager</exec_depend>
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <export>
+    <metapackage/>
+  </export>
+</package>

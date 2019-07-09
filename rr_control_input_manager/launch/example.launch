@@ -1,7 +1,7 @@
 <launch>
 
   <!-- ROS Joystick driver -->
-  <node pkg="joy" type="joy_node" name="joy_node">
+  <node pkg="joy" type="joy_node" name="joy_node" output="screen">
     <param name="autorepeat_rate" value="10" />
     <remap from="joy" to="joystick"/>
   </node>
@@ -15,7 +15,8 @@
 
 
   <!-- Managed control inputs -->
-  <node pkg="rr_control_input_manager" type="control_input_manager.py" name="control_input_manager_node">
+  <node pkg="rr_control_input_manager" type="control_input_manager.py" name="control_input_manager_node" output="screen">
+    <rosparam file="$(find rr_control_input_manager)/config/input_topics.yaml" command="load"/>
   </node>
 
 </launch>

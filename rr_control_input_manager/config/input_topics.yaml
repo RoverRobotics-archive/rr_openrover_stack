@@ -1,0 +1,18 @@
+# Input stamped command velocities
+# For each topic:
+# - sub_topic    : name of topic to subscribe to that publishes geometry_msgs::TwistStamped
+# - pub_topic    : name of topic to publish the managed output
+# - timeout : timeout in seconds to start discarding old messages with expired stamps. 0.0 or less never trigger timeout
+# - stamped : Boolean that specifies whether the output from the relay should be TwistStamped of Twist
+
+control_inputs:
+-
+  sub_topic: cmd_vel/joystick
+  pub_topic: /managed/joy
+  timeout  : 0.5
+  stamped  : false
+-
+  sub_topic: keyboard
+  pub_topic: /managed/key
+  timeout  : 0.5
+  stamped  : false
