@@ -3,7 +3,6 @@ jobs:
     working_directory: /catkin_ws/src
     docker:
       - image: ros:kinetic-ros-core-xenial
-
     steps:
       - checkout
       - run:
