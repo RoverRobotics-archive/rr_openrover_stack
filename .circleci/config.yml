@@ -1,5 +1,9 @@
 jobs:
   build:
+    branches:
+      only:
+        - master
+        - develop
     working_directory: /catkin_ws/src
     docker:
       - image: ros:kinetic-ros-core-xenial
