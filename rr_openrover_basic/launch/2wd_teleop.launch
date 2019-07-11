@@ -1,6 +1,7 @@
 <launch>
-
     <arg name="openrover_node_name" default="rr_openrover_basic" />
+    <arg name="config_locks"  default="$(find rr_openrover_basic)/config/twist_mux_locks.yaml"/>
+    <arg name="config_topics" default="$(find rr_openrover_basic)/config/twist_mux_topics.yaml"/>
 
     <!-- OpenRover Driver -->
     <node pkg="rr_openrover_basic" type="openrover_basic_node" name="$(arg openrover_node_name)" respawn="false" output="screen">
@@ -29,19 +30,30 @@
         <remap from="joy" to="/joystick" />
         <remap from="/joystick/a_button" to="/soft_estop/enable" />
         <remap from="/joystick/b_button" to="/soft_estop/reset" />
-        <remap from="/joystick/y_button" to="/auto_dock/dock" />
-        <remap from="/joystick/x_button" to="/datarecorder/enable"/>
+        <remap from="/joystick/y_button" to="/joy_priority" />
+        <remap from="/joystick/x_button" to="/pause_navigation"/>
         <param name="max_vel_fwd" value="0.4" />
-        <param name="max_vel_turn" value="0.9" />
+        <param name="max_vel_turn" value="9.0" />
         <param name="adjustable_throttle" value="True" />
         <param name="drive_increment" value="20" />
         <param name="flipper_increment" value="20" />
+        <param name="x_button_toggle" value="true"/>
+        <param name="y_button_toggle" value="true"/>
+    </node>
+
+    <!--  Twist Mux  -->
+    <node pkg="twist_mux" type="twist_mux" name="twist_mux" output="screen">
+        <remap from="cmd_vel_out" to="/cmd_vel/managed"/>
+
+        <rosparam file="$(arg config_locks)"  command="load"/>
+        <rosparam file="$(arg config_topics)" command="load"/>
     </node>
 
     <!-- Control input manager -->
     <node pkg="rr_control_input_manager" type="control_input_manager.py" name="rr_control_input_manager_node" output="log" >
         <param name="driver" value="xboxdrv"/>
         <param name="wired_or_wireless" value="wireless"/>
+        <rosparam file="$(find rr_control_input_manager)/config/input_topics.yaml" command="load"/>
     </node>
 
     <!-- Xbox controller driver -->
@@ -55,5 +67,5 @@
 
 <!--   <node pkg="web_video_server" type="web_video_server" name="web_video_server" />
 -->
- 
+
 </launch>

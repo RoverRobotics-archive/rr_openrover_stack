@@ -10,14 +10,7 @@ find_package(catkin REQUIRED COMPONENTS
   geometry_msgs
   nav_msgs
   tf
-)
-
-add_message_files(
-   FILES
-   RawRrOpenroverBasicFastRateData.msg
-   RawRrOpenroverBasicMedRateData.msg
-   RawRrOpenroverBasicSlowRateData.msg
-   SmartBatteryStatus.msg
+  rr_openrover_basic_msgs
 )
 
 generate_messages(
@@ -65,6 +58,12 @@ install(TARGETS odom_control
 install(DIRECTORY launch/
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch
   FILES_MATCHING PATTERN "*.launch"
+)
+
+## Copy config files
+install(DIRECTORY config/
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/config
+  FILES_MATCHING PATTERN "*.yaml"
 )
 
 install(DIRECTORY include/${PROJECT_NAME}/

@@ -1,0 +1,32 @@
+jobs:
+  build:
+    working_directory: /catkin_ws/src
+    docker:
+      - image: ros:kinetic-ros-core-xenial
+    steps:
+      - checkout
+      - run:
+          command: |
+            apt-get update
+            apt-get install -y ros-kinetic-tf
+      - run:
+          command: |
+            source /opt/ros/kinetic/setup.bash
+            catkin_init_workspace
+            cd ..
+            catkin_make run_tests
+            catkin_test_results
+            # Exit code 1 to cause build step failure
+            if [ $(catkin_test_results | awk '/Summary/ {print $6}') != 0 ]; then exit 1; fi
+
+
+workflows:
+  version: 2
+  build-and-test:
+    jobs:
+      - build:
+          filters:
+            branches:
+              only:
+                - master
+                - develop
