@@ -15,7 +15,8 @@ jobs:
             catkin_init_workspace
             cd ..
             catkin_make run_tests
-            # Parse
+            catkin_test_results
+            # Exit code 1 to cause build step failure
             if [ $(catkin_test_results | awk '/Summary/ {print $6}') != 0 ]; then exit 1; fi
 
 
