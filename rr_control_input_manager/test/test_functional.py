@@ -135,7 +135,7 @@ class TestTwistCommand(unittest.TestCase):
                 break
             rate.sleep()
 
-        self.assertFalse(self.twist_stamped_eq(msg, self.msg))
+        self.assertTrue(self.twist_stamped_eq(msg, self.msg))
 
     def test_latency_management_zero(self):
         rate = rospy.Rate(100)
