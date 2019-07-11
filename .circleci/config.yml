@@ -15,6 +15,9 @@ jobs:
             catkin_init_workspace
             cd ..
             catkin_make run_tests
+            # Parse
+            if [ $(catkin_test_results | awk '/Summary/ {print $6}') != 0 ]; then exit 1; fi
+
 
 workflows:
   version: 2
