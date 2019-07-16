@@ -1,4 +1,4 @@
-# rr_openrover_ros1
+# rr_openrover_stack
 
 Master|Develop
 ---|---
