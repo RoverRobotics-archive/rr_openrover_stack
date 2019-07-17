@@ -10,13 +10,13 @@
 
 #include <geometry_msgs/Twist.h>
 #include <std_msgs/Bool.h>
-#include "rr_openrover_basic_msgs/RawRrOpenroverBasicFastRateData.h"
-#include "rr_openrover_basic_msgs/RawRrOpenroverBasicMedRateData.h"
-#include "rr_openrover_basic_msgs/RawRrOpenroverBasicSlowRateData.h"
-#include "rr_openrover_basic_msgs/SmartBatteryStatus.h"
+#include "rr_openrover_driver_msgs/RawRrOpenroverDriverFastRateData.h"
+#include "rr_openrover_driver_msgs/RawRrOpenroverDriverMedRateData.h"
+#include "rr_openrover_driver_msgs/RawRrOpenroverDriverSlowRateData.h"
+#include "rr_openrover_driver_msgs/SmartBatteryStatus.h"
 
-#include <rr_openrover_basic/odom_control.hpp>
-#include <rr_openrover_basic/constants.hpp>
+#include <rr_openrover_driver/odom_control.hpp>
+#include <rr_openrover_driver/constants.hpp>
 
 namespace openrover
 {
@@ -151,6 +151,6 @@ private:
   int readCommand();
 };
 
-rr_openrover_basic_msgs::SmartBatteryStatus interpret_battery_status(uint16_t bits);
+rr_openrover_driver_msgs::SmartBatteryStatus interpret_battery_status(uint16_t bits);
 
 }  // namespace openrover
