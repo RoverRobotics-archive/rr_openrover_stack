@@ -3,18 +3,18 @@
 import rospy
 from std_msgs.msg import String, Bool
 from nav_msgs.msg import Odometry
-from rr_openrover_basic_msgs.msg import RawRrOpenroverBasicSlowRateData, RawRrOpenroverBasicMedRateData, SmartBatteryStatus
+from rr_openrover_driver_msgs.msg import RawRrOpenroverDriverSlowRateData, RawRrOpenroverDriverMedRateData, SmartBatteryStatus
 
 
 class rover_diagnostic():
 
     def __init__(self):
         self.pub = rospy.Publisher('/inorbit/custom_data/0', String, queue_size=5)
-        rospy.Subscriber("/raw_slow_rate_data", RawRrOpenroverBasicSlowRateData, self.slow_data_cb)
-        rospy.Subscriber("/rr_openrover_basic/raw_med_rate_data", RawRrOpenroverBasicMedRateData, self.med_data_cb)
-        rospy.Subscriber("/rr_openrover_basic/battery_status_a", SmartBatteryStatus, self.battery_status_a_cb)
-        rospy.Subscriber("/rr_openrover_basic/battery_status_b", SmartBatteryStatus, self.battery_status_b_cb)
-        rospy.Subscriber('/rr_openrover_basic/charging', Bool, self.openrover_charging_cb)
+        rospy.Subscriber("/raw_slow_rate_data", RawRrOpenroverDriverSlowRateData, self.slow_data_cb)
+        rospy.Subscriber("/rr_openrover_driver/raw_med_rate_data", RawRrOpenroverDriverMedRateData, self.med_data_cb)
+        rospy.Subscriber("/rr_openrover_driver/battery_status_a", SmartBatteryStatus, self.battery_status_a_cb)
+        rospy.Subscriber("/rr_openrover_driver/battery_status_b", SmartBatteryStatus, self.battery_status_b_cb)
+        rospy.Subscriber('/rr_openrover_driver/charging', Bool, self.openrover_charging_cb)
 
     def slow_data_cb(self, data):
         warn_msg = "Battery Levels [" + str(data.reg_robot_rel_soc_a) + ", " + str(

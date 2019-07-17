@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(rr_openrover_basic)
+project(rr_openrover_driver)
 
 add_compile_options(-std=c++11)
 find_package(catkin REQUIRED COMPONENTS
@@ -10,7 +10,7 @@ find_package(catkin REQUIRED COMPONENTS
   geometry_msgs
   nav_msgs
   tf
-  rr_openrover_basic_msgs
+  rr_openrover_driver_msgs
 )
 
 generate_messages(
@@ -37,7 +37,7 @@ include_directories(
 add_library(odom_control src/odom_control.cpp)
 
 add_executable(openrover_basic_node src/openrover_basic.cpp)
-add_dependencies(openrover_basic_node rr_openrover_basic_generate_messages_cpp)
+add_dependencies(openrover_basic_node rr_openrover_driver_generate_messages_cpp)
 target_link_libraries(openrover_basic_node ${catkin_LIBRARIES} odom_control)
 
 
