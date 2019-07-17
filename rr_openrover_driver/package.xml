@@ -1,9 +1,9 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>rr_openrover_basic</name>
+  <name>rr_openrover_driver</name>
   <version>0.7.1</version>
   <description>
-    Provides an interface between ros and Rover Robotics rover hardware. Inputs to rr_openrover_basic
+    Provides an interface between ros and Rover Robotics rover hardware. Inputs to rr_openrover_driver
     include emergency stop and velocity commands.  It outputs diagnostic data such as encoder
     readings and battery charge.
   </description>
@@ -13,7 +13,7 @@
 
   <license>BSD</license>
 
-  <url>http://ros.org/wiki/rr_openrover_basic</url>
+  <url>http://ros.org/wiki/rr_openrover_driver</url>
   <author>Jack Kilian</author>
 
   <buildtool_depend>catkin</buildtool_depend>

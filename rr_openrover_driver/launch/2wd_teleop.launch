@@ -1,10 +1,10 @@
 <launch>
-    <arg name="openrover_node_name" default="rr_openrover_basic" />
-    <arg name="config_locks"  default="$(find rr_openrover_basic)/config/twist_mux_locks.yaml"/>
-    <arg name="config_topics" default="$(find rr_openrover_basic)/config/twist_mux_topics.yaml"/>
+    <arg name="openrover_node_name" default="rr_openrover_driver" />
+    <arg name="config_locks"  default="$(find rr_openrover_driver)/config/twist_mux_locks.yaml"/>
+    <arg name="config_topics" default="$(find rr_openrover_driver)/config/twist_mux_topics.yaml"/>
 
     <!-- OpenRover Driver -->
-    <node pkg="rr_openrover_basic" type="openrover_basic_node" name="$(arg openrover_node_name)" respawn="false" output="screen">
+    <node pkg="rr_openrover_driver" type="openrover_basic_node" name="$(arg openrover_node_name)" respawn="false" output="screen">
         <param name="port" value="/dev/rover" />
         <param name="drive_type" value="2wd" />
         <param name="enable_timeout" type="bool" value="true"/>
@@ -21,7 +21,7 @@
     </node>
 
     <!-- OpenRover Diagnostics -->
-    <node pkg="rr_openrover_basic" type="diagnostics.py" name="rr_openrover_diagnostics_node" output="log">
+    <node pkg="rr_openrover_driver" type="diagnostics.py" name="rr_openrover_diagnostics_node" output="log">
         <remap from="/raw_slow_rate_data" to="/$(arg openrover_node_name)/raw_slow_rate_data"/>
     </node>
 
