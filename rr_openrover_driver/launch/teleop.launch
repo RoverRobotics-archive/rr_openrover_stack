@@ -4,7 +4,7 @@
     <arg name="config_topics" default="$(find rr_openrover_driver)/config/twist_mux_topics.yaml"/>
 
     <!-- OpenRover Driver -->
-    <node pkg="rr_openrover_driver" type="openrover_basic_node" name="$(arg openrover_node_name)" respawn="false" output="screen">
+    <node pkg="rr_openrover_driver" type="openrover_driver_node" name="$(arg openrover_node_name)" respawn="false" output="screen">
         <param name="port" value="/dev/rover" />
         <param name="drive_type" value="2wd" />
         <param name="enable_timeout" type="bool" value="true"/>

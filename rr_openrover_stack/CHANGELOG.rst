@@ -3,10 +3,10 @@ Changelog for package rr_openrover_stack
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 0.7.2 (2019-07-18)
------------
-* changed namings from basic->driver and ros1->stack to reflect compliance with ROS community standards
-* changed namings from basic->driver and ros1->stack to reflect compliance with ROS community standards
-* Contributors: padiln
+------------------
+* Collect the packages to operate the rover platform into a stack
+* Changed repo name from rr_openrover_ros1 to rr_openrover_stack
+* Refactor rr_control_input_manager from a MUX to a TwistStamped latency manager
 
 0.7.1 (2019-06-24)
 ------------------
