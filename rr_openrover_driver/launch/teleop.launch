@@ -34,7 +34,7 @@
         <remap from="/joystick/y_button" to="/joy_priority" />
         <remap from="/joystick/x_button" to="/pause_navigation"/>
         <param name="max_vel_fwd" value="0.4" />
-        <param name="max_vel_turn" value="9.0" />
+        <param name="max_vel_turn" value="7.0" />
         <param name="adjustable_throttle" value="True" />
         <param name="drive_increment" value="20" />
         <param name="flipper_increment" value="20" />
