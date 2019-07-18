@@ -1,9 +1,11 @@
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Changelog for package rr_openrover_driver
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 0.7.2 (2019-07-18)
 ------------------
+* Changed name to rr_openrover_drive from rr_openrover_basic
+* Refactored openrover_driver to accept Twist msgs instead of TwistStamped msgs
 
 0.7.1 (2019-6-24)
 ------------------

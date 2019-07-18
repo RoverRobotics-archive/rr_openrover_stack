@@ -36,9 +36,9 @@ include_directories(
 
 add_library(odom_control src/odom_control.cpp)
 
-add_executable(openrover_basic_node src/openrover_basic.cpp)
-add_dependencies(openrover_basic_node rr_openrover_driver_generate_messages_cpp)
-target_link_libraries(openrover_basic_node ${catkin_LIBRARIES} odom_control)
+add_executable(openrover_driver_node src/openrover_driver.cpp)
+add_dependencies(openrover_driver_node rr_openrover_driver_generate_messages_cpp)
+target_link_libraries(openrover_driver_node ${catkin_LIBRARIES} odom_control)
 
 
 #############
@@ -46,7 +46,7 @@ target_link_libraries(openrover_basic_node ${catkin_LIBRARIES} odom_control)
 #############
 
 ## Mark executables and/or libraries for installation
-install(TARGETS openrover_basic_node
+install(TARGETS openrover_driver_node
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
