@@ -6,8 +6,8 @@
 #include <iostream>
 #include "ros/ros.h"
 
-#include <rr_openrover_basic/odom_control.hpp>
-#include <rr_openrover_basic/constants.hpp>
+#include <rr_openrover_driver/odom_control.hpp>
+#include <rr_openrover_driver/constants.hpp>
 
 namespace openrover
 {

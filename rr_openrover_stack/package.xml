@@ -1,10 +1,10 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>rr_openrover_ros1</name>
-  <version>0.0.0</version>
+  <name>rr_openrover_stack</name>
+  <version>0.7.2</version>
   <description>
     Packages related to the operation of Rover Robotics rover hardware.  This includes a client
-    for interfacing with the hardware (rr_openrover_basic) and a tool for filtering time stamped
+    for interfacing with the hardware (rr_openrover_driver) and a tool for filtering time stamped
     velocity commands (rr_control_input_manager).
   </description>
 
@@ -13,8 +13,8 @@
 
   <license>BSD</license>
 
-  <exec_depend>rr_openrover_basic</exec_depend>
-  <exec_depend>rr_openrover_basic_msgs</exec_depend>
+  <exec_depend>rr_openrover_driver</exec_depend>
+  <exec_depend>rr_openrover_driver_msgs</exec_depend>
   <exec_depend>rr_control_input_manager</exec_depend>
   <buildtool_depend>catkin</buildtool_depend>
 

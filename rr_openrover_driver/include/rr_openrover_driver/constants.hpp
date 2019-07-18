@@ -42,7 +42,7 @@ const int MOTOR_SPEED_ANGULAR_COEF_2WD_HS = 10;
 const int CONTROLLER_DEADBAND_COMP = 0;  // reduce MOTOR_DEADBAND by this amount
 const int MAX_ACCEL_CUTOFF = 20;         // m/s^2
 
-// general openrover_basic platform constants
+// general openrover_driver platform constants
 // the rovers can only go fast enough to get an encoder reading down to ~50 so
 // anything lower is most likely a stall condition being misread. Over 4000 is
 // a rover moving slower than ~1mm/s which is essentially stopped.
