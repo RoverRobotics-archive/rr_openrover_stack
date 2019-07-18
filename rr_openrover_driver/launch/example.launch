@@ -8,13 +8,13 @@
         <param name="drive_type" value="4wd" />
         <param name="enable_timeout" type="bool" value="true"/>
         <param name="timeout" type="double" value="0.3"/>
-        <param name="closed_loop_control_on" type="bool" value="true" />
+        <param name="closed_loop_control_on" type="bool" value="false" />
         <param name="total_weight" type="double" value="20.41"/>
         <param name="traction_factor" value="0.610"/>
         <param name="odom_covariance_0" value="0.01"/>
         <param name="odom_covariance_35" value="0.03"/>
 
-        <param name="fast_data_rate" value="60.0"/>
+        <param name="fast_data_rate" value="10.0"/>
         <param name="medium_data_rate" value="2.0"/>
         <param name="slow_data_rate" value="1.0"/>
     </node>
