@@ -2,6 +2,9 @@
 Changelog for package rr_openrover_driver
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.7.2 (2019-07-18)
+------------------
+
 0.7.1 (2019-6-24)
 ------------------
 * Changed default port to `/dev/rover`
