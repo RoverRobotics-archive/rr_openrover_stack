@@ -18,11 +18,12 @@ generate_messages(
    std_msgs
    geometry_msgs
    nav_msgs
+   rr_openrover_driver_msgs
 )
 
 catkin_package(
   INCLUDE_DIRS include
-  CATKIN_DEPENDS message_runtime
+  CATKIN_DEPENDS message_runtime rr_openrover_driver_msgs
 )
 
 ###########
@@ -37,7 +38,7 @@ include_directories(
 add_library(odom_control src/odom_control.cpp)
 
 add_executable(openrover_driver_node src/openrover_driver.cpp)
-add_dependencies(openrover_driver_node rr_openrover_driver_generate_messages_cpp)
+add_dependencies(openrover_driver_node rr_openrover_driver_generate_messages_cpp ${catkin_EXPORTED_TARGETS})
 target_link_libraries(openrover_driver_node ${catkin_LIBRARIES} odom_control)
 
 
