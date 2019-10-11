@@ -18,6 +18,7 @@
         <param name="fast_data_rate" value="10.0"/>
         <param name="medium_data_rate" value="2.0"/>
         <param name="slow_data_rate" value="1.0"/>
+        <param name="use_legacy" type="bool" value="false" />
     </node>
 
     <!-- OpenRover Diagnostics -->
