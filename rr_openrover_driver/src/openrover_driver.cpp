@@ -10,7 +10,8 @@
 #include <iostream>
 #include <sys/ioctl.h>
 
-#include "tf/tf.h"
+#include "tf2_geometry_msgs/tf2_geometry_msgs.h"
+#include "tf2_geometry_msgs/tf2_geometry_msgs.h"
 #include "std_msgs/Int32.h"
 #include "std_msgs/Int32MultiArray.h"
 #include "std_msgs/Float32MultiArray.h"
@@ -31,6 +32,7 @@ OpenRover::OpenRover(ros::NodeHandle& nh, ros::NodeHandle& nh_priv)
   , nh_priv_(nh_priv)
   , port_("/dev/ttyUSB0")
   , serial_baud_rate_(57600)
+  , use_legacy_(false)
   , fast_rate_hz_(10.0)                                                        // can increase to 60Hz for TX2
   , medium_rate_hz_(2.0)
   , slow_rate_hz_(1.0)
@@ -84,11 +86,23 @@ bool OpenRover::start()
   slow_timer = nh_priv_.createWallTimer(ros::WallDuration(1.0 / slow_rate_hz_), &OpenRover::robotDataSlowCB, this);
   timeout_timer = nh_priv_.createWallTimer(ros::WallDuration(timeout_), &OpenRover::timeoutCB, this, true);
 
-  fast_rate_pub = nh_priv_.advertise<rr_openrover_driver_msgs::RawRrOpenroverDriverFastRateData>("raw_fast_rate_data", 1);
-  medium_rate_pub = nh_priv_.advertise<rr_openrover_driver_msgs::RawRrOpenroverDriverMedRateData>("raw_med_rate_data", 1);
-  slow_rate_pub = nh_priv_.advertise<rr_openrover_driver_msgs::RawRrOpenroverDriverSlowRateData>("raw_slow_rate_data", 1);
+
+  if (!(nh_priv_.getParam("use_legacy", use_legacy_)))
+  {
+    ROS_WARN("Failed to retrieve drive_type from parameter.Defaulting to %s", use_legacy_ ? "true" : "false");
+  }
+
+  if(use_legacy_) {
+    fast_rate_pub = nh_priv_.advertise<rr_openrover_driver_msgs::RawRrOpenroverDriverFastRateData>("raw_fast_rate_data",
+                                                                                                   1);
+    medium_rate_pub = nh_priv_.advertise<rr_openrover_driver_msgs::RawRrOpenroverDriverMedRateData>("raw_med_rate_data",
+                                                                                                    1);
+    slow_rate_pub = nh_priv_.advertise<rr_openrover_driver_msgs::RawRrOpenroverDriverSlowRateData>("raw_slow_rate_data",
+                                                                                                   1);
+  }
   battery_status_a_pub = nh_priv_.advertise<rr_openrover_driver_msgs::SmartBatteryStatus>("battery_status_a", 1);
   battery_status_b_pub = nh_priv_.advertise<rr_openrover_driver_msgs::SmartBatteryStatus>("battery_status_b", 1);
+  battery_state_of_charge_pub = nh_priv_.advertise<std_msgs::Int32>("battery_state_of_charge", 1);
   odom_enc_pub = nh_priv_.advertise<nav_msgs::Odometry>("odom_encoder", 1);
   is_charging_pub = nh_priv_.advertise<std_msgs::Bool>("charging", 1);
 
@@ -381,7 +395,7 @@ void OpenRover::publishOdometry(float left_vel, float right_vel)
   double diff_vel = 0;
   double alpha = 0;
   double dt = 0;
-  tf::Quaternion q_new;
+  tf2::Quaternion q_new;
 
   ros::Time ros_now_time = ros::Time::now();
   double now_time = ros_now_time.toSec();
@@ -405,8 +419,8 @@ void OpenRover::publishOdometry(float left_vel, float right_vel)
     pos_y = pos_y + net_vel * sin(theta) * dt;
     theta = (theta + alpha * dt);
 
-    q_new = tf::createQuaternionFromRPY(0, 0, theta);
-    quaternionTFToMsg(q_new, odom_msg.pose.pose.orientation);
+    q_new.setRPY(0, 0, theta);
+    tf2::convert(q_new, odom_msg.pose.pose.orientation);
   }
 
   odom_msg.header.stamp = ros_now_time;
@@ -470,7 +484,9 @@ void OpenRover::publishFastRateData()
   msg.left_motor = robot_data_[i_ENCODER_INTERVAL_MOTOR_LEFT];
   msg.right_motor = robot_data_[i_ENCODER_INTERVAL_MOTOR_RIGHT];
   msg.flipper_motor = robot_data_[i_ENCODER_INTERVAL_MOTOR_FLIPPER];
-  fast_rate_pub.publish(msg);
+  if(use_legacy_) {
+    fast_rate_pub.publish(msg);
+  }
   publish_fast_rate_values_ = false;
   return;
 }
@@ -510,7 +526,9 @@ void OpenRover::publishMedRateData()
     is_charging_pub.publish(is_charging_msg);
   }
 
-  medium_rate_pub.publish(med_msg);
+  if(use_legacy_) {
+    medium_rate_pub.publish(med_msg);
+  }
   publish_med_rate_values_ = false;
   return;
 }
@@ -557,7 +575,13 @@ void OpenRover::publishSlowRateData()
   battery_status_a_pub.publish(interpret_battery_status(robot_data_[i_BATTERY_STATUS_A]));
   battery_status_b_pub.publish(interpret_battery_status(robot_data_[i_BATTERY_STATUS_B]));
 
-  slow_rate_pub.publish(slow_msg);
+  std_msgs::Int32 soc;
+  soc.data = (robot_data_[i_REG_ROBOT_REL_SOC_A] + robot_data_[i_REG_ROBOT_REL_SOC_B]) / 2;
+  battery_state_of_charge_pub.publish(soc);
+
+  if(use_legacy_) {
+    slow_rate_pub.publish(slow_msg);
+  }
   publish_slow_rate_values_ = false;
   return;
 }

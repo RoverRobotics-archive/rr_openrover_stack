@@ -79,6 +79,7 @@ private:
   ros::Publisher medium_rate_pub;
   ros::Publisher slow_rate_pub;
   ros::Publisher battery_status_a_pub, battery_status_b_pub;
+  ros::Publisher battery_state_of_charge_pub;
 
   ros::Subscriber cmd_vel_sub;
   ros::Subscriber fan_speed_sub;
@@ -95,6 +96,7 @@ private:
   const int RIGHT_MOTOR_INDEX_;
   const int FLIPPER_MOTOR_INDEX_;
   bool is_serial_coms_open_;
+  bool use_legacy_;
   double fast_rate_hz_;  // update rate for encoders, 10Hz recommended
   double medium_rate_hz_;
   double slow_rate_hz_;
