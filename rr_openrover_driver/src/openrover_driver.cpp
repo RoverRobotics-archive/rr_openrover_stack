@@ -10,7 +10,6 @@
 #include <iostream>
 #include <sys/ioctl.h>
 
-//#include "tf/tf.h"
 #include "tf2_geometry_msgs/tf2_geometry_msgs.h"
 #include "tf2_geometry_msgs/tf2_geometry_msgs.h"
 #include "std_msgs/Int32.h"
@@ -396,7 +395,6 @@ void OpenRover::publishOdometry(float left_vel, float right_vel)
   double diff_vel = 0;
   double alpha = 0;
   double dt = 0;
-//  tf::Quaternion q_new;
   tf2::Quaternion q_new;
 
   ros::Time ros_now_time = ros::Time::now();
@@ -423,7 +421,6 @@ void OpenRover::publishOdometry(float left_vel, float right_vel)
 
     q_new.setRPY(0, 0, theta);
     tf2::convert(q_new, odom_msg.pose.pose.orientation);
-//    quaternionTFToMsg(q_new, odom_msg.pose.pose.orientation);
   }
 
   odom_msg.header.stamp = ros_now_time;
