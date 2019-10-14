@@ -6,7 +6,7 @@ Changelog for package rr_openrover_driver_msgs
 ------------------
 
 0.7.2 (2019-07-18)
------------
+------------------
 * Separated rr_openrover_driver_msgs from the main driver package rr_openrover_driver (formerly rr_openrover_basic)
 
 0.7.1 (2019-06-24)
