@@ -2,6 +2,10 @@
 Changelog for package rr_control_input_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.7.3 (2019-10-14)
+------------------
+
+
 0.7.2 (2019-07-18)
 ------------------
 * Changed rr_control_input_manager from a mux with fix input to latency manager for TwistStamped messages.

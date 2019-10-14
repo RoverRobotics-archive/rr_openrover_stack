@@ -2,6 +2,11 @@
 Changelog for package rr_openrover_stack
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.7.3 (2019-10-14)
+------------------
+* Migrating all usage of tf to tf2
+* Simplified rover data messages and only publish rate-based data in legacy mode
+
 0.7.2 (2019-07-18)
 ------------------
 * Collect the packages to operate the rover platform into a stack
