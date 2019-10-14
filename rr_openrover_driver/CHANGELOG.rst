@@ -2,6 +2,11 @@
 Changelog for package rr_openrover_driver
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.7.3 (2019-10-14)
+------------------
+* Migrating all usage of tf to tf2
+* Simplified rover data messages and only publish rate-based data in legacy mode
+
 0.7.2 (2019-07-18)
 ------------------
 * Changed name to rr_openrover_drive from rr_openrover_basic
