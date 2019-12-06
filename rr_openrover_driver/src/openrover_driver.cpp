@@ -712,6 +712,22 @@ void OpenRover::serialManager()
     // Checks timers and subscribers
     ros::spinOnce();
   }
+
+  if ((serial_fast_buffer_.size() == 0) && publish_fast_rate_values_)
+  {
+    publish_fast_rate_values_ = false;
+  }
+
+  if ((serial_medium_buffer_.size() == 0) && publish_med_rate_values_)
+  {
+    publish_med_rate_values_ = false;
+  }
+
+  if ((serial_slow_buffer_.size() == 0) && publish_slow_rate_values_)
+  {
+    publish_slow_rate_values_ = false;
+  }
+
   return;
 }
 
