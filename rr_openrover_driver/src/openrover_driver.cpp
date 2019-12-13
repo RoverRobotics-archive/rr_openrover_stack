@@ -177,6 +177,8 @@ bool OpenRover::setupRobotParams()
 
     motor_speed_linear_coef_ = MOTOR_SPEED_LINEAR_COEF_2WD_HS;
     motor_speed_angular_coef_ = MOTOR_SPEED_ANGULAR_COEF_2WD_HS;
+
+    motor_speed_flipper_coef_ = MOTOR_FLIPPER_COEF;
     motor_speed_deadband_ = MOTOR_DEADBAND;
   }
   else if (drive_type_ == (std::string) "4wd")
@@ -189,6 +191,8 @@ bool OpenRover::setupRobotParams()
 
     motor_speed_linear_coef_ = MOTOR_SPEED_LINEAR_COEF_4WD_HS;
     motor_speed_angular_coef_ = MOTOR_SPEED_ANGULAR_COEF_4WD_HS;
+    
+    motor_speed_flipper_coef_ = MOTOR_FLIPPER_COEF;
     motor_speed_deadband_ = MOTOR_DEADBAND;
   }
   else if (drive_type_ == (std::string) "flippers")
@@ -201,6 +205,8 @@ bool OpenRover::setupRobotParams()
 
     motor_speed_linear_coef_ = MOTOR_SPEED_LINEAR_COEF_F_HS;
     motor_speed_angular_coef_ = MOTOR_SPEED_ANGULAR_COEF_F_HS;
+    
+    motor_speed_flipper_coef_ = MOTOR_FLIPPER_COEF;
     motor_speed_deadband_ = MOTOR_DEADBAND;
   }
   else
@@ -213,6 +219,8 @@ bool OpenRover::setupRobotParams()
 
     motor_speed_linear_coef_ = MOTOR_SPEED_LINEAR_COEF_F_HS;
     motor_speed_angular_coef_ = MOTOR_SPEED_ANGULAR_COEF_F_HS;
+    
+    motor_speed_flipper_coef_ = MOTOR_FLIPPER_COEF;
     motor_speed_deadband_ = MOTOR_DEADBAND;
   }
 
