@@ -1,0 +1,12 @@
+<launch>
+
+    <arg name="config" default="4WD_Rover_with_SLAM_Pack" />
+
+    <param name="robot_description" 
+           command="$(find rr_openrover_description)/scripts/env_run
+                    $(find rr_openrover_description)/urdf/configs/$(arg config)
+                    $(find xacro)/xacro $(find rr_openrover_description)/urdf/4WD_rover.urdf.xacro 
+                    --inorder" />
+    <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" />
+
+</launch>
