@@ -202,7 +202,7 @@
       <param name="dock_aruco_number" value="102"/>
       <param name="cmd_vel_angular_rate" value="0.8" />
       <param name="cmd_search_angular_rate" value="0.4" />
-      <param name="motor_response_delay" value="0.75" />
+      <param name="motor_response_delay" value="0.50" />
       <param name="search_turn_amount" value="0.8" />
     </node>
 
