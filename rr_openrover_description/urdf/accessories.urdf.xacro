@@ -1,0 +1,16 @@
+<?xml version="1.0" ?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <!-- If enabled, generate the SLAM_PACK payload -->
+  <xacro:include filename="$(find rr_openrover_description)/urdf/accessories/SLAM_pack.urdf.xacro" />
+  <xacro:if value="$(optenv SLAM_PACK 0)">
+
+    <joint name="slam_pack_mount_point" type="fixed">
+      <origin xyz="0.025 0 0.185"
+              rpy="0 0 0" />
+      <parent link="chassis_link" />
+      <child link="slam_pack_mount_point" />
+    </joint>
+  </xacro:if>
+
+</robot>

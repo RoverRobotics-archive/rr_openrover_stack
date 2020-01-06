@@ -3,6 +3,8 @@
     <arg name="config_locks"  default="$(find rr_openrover_driver)/config/twist_mux_locks.yaml"/>
     <arg name="config_topics" default="$(find rr_openrover_driver)/config/twist_mux_topics.yaml"/>
 
+    <include file="$(find rr_openrover_description)/launch/description.launch"/>
+
     <!-- OpenRover Driver -->
     <node pkg="rr_openrover_driver" type="openrover_driver_node" name="$(arg openrover_node_name)" respawn="false" output="screen">
         <param name="port" value="/dev/rover" />
