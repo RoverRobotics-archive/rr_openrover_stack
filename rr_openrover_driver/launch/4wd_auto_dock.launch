@@ -1,0 +1,215 @@
+<launch>
+    <include file="$(find rr_openrover_description)/launch/description.launch"/>
+
+    <arg name="openrover_node_name" default="rr_openrover_driver" />
+    <arg name="config_locks"  default="$(find rr_openrover_driver)/config/twist_mux_locks.yaml"/>
+    <arg name="config_topics" default="$(find rr_openrover_driver)/config/twist_mux_topics.yaml"/>
+
+    <!-- OpenRover Driver -->
+    <node pkg="rr_openrover_driver" type="openrover_driver_node" name="$(arg openrover_node_name)" respawn="false" output="screen">
+        <param name="port" value="/dev/rover" />
+        <param name="drive_type" value="4wd" />
+        <param name="enable_timeout" type="bool" value="true"/>
+        <param name="timeout" type="double" value="0.3"/>
+        <param name="closed_loop_control_on" type="bool" value="true" />
+        <param name="total_weight" type="double" value="20.41"/>
+        <param name="traction_factor" value="0.67"/>
+        <param name="odom_covariance_0" value="0.01"/>
+        <param name="odom_covariance_35" value="0.03"/>
+
+        <param name="fast_data_rate" value="10.0"/>
+        <param name="medium_data_rate" value="2.0"/>
+        <param name="slow_data_rate" value="1.0"/>
+        <param name="use_legacy" type="bool" value="false" />
+    </node>
+
+    <!-- OpenRover Diagnostics -->
+    <node pkg="rr_openrover_driver" type="diagnostics.py" name="rr_openrover_diagnostics_node" output="log">
+        <remap from="/raw_slow_rate_data" to="/$(arg openrover_node_name)/raw_slow_rate_data"/>
+    </node>
+
+    <!-- Xbox 360 Controller Button Mapping -->
+    <node pkg="rr_control_input_manager" type="xbox_mapper.py" name="rr_xbox_mapper_node" output="screen" >
+        <remap from="joy" to="/joystick" />
+        <remap from="/joystick/a_button" to="/soft_estop/enable" />
+        <remap from="/joystick/b_button" to="/soft_estop/reset" />
+        <remap from="/joystick/y_button" to="/joy_priority" />
+        <remap from="/joystick/x_button" to="/pause_navigation"/>
+        <param name="max_vel_fwd" value="0.4" />
+        <param name="max_vel_turn" value="9.0" />
+        <param name="adjustable_throttle" value="True" />
+        <param name="drive_increment" value="20" />
+        <param name="flipper_increment" value="20" />
+        <param name="x_button_toggle" value="true"/>
+        <param name="y_button_toggle" value="true"/>
+    </node>
+
+    <!--  Twist Mux  -->
+    <node pkg="twist_mux" type="twist_mux" name="twist_mux" output="screen">
+        <remap from="cmd_vel_out" to="/cmd_vel/managed"/>
+
+        <rosparam file="$(arg config_locks)"  command="load"/>
+        <rosparam file="$(arg config_topics)" command="load"/>
+    </node>
+
+    <!-- Control input manager -->
+    <node pkg="rr_control_input_manager" type="control_input_manager.py" name="rr_control_input_manager_node" output="log" >
+        <param name="driver" value="xboxdrv"/>
+        <param name="wired_or_wireless" value="wireless"/>
+        <rosparam file="$(find rr_control_input_manager)/config/input_topics.yaml" command="load"/>
+    </node>
+
+    <!-- Xbox controller driver -->
+    <node pkg="joy" type="joy_node" name="joy_node" output="screen" respawn="true" >
+        <param name="autorepeat_rate" value="10" />
+        <remap from="/joy" to="/joystick" />
+    </node>
+
+    <arg name="serial_no"           default=""/>
+    <arg name="usb_port_id"         default=""/>
+    <arg name="device_type"         default=""/>
+    <arg name="json_file_path"      default=""/>
+    <arg name="camera"              default="camera"/>
+    <arg name="tf_prefix"           default="$(arg camera)"/>
+    <arg name="external_manager"    default="false"/>
+    <arg name="manager"             default="realsense2_camera_manager"/>
+    <arg name="fisheye_width"       default="640"/>
+    <arg name="fisheye_height"      default="480"/>
+    <arg name="enable_fisheye"      default="true"/>
+
+    <arg name="depth_width"         default="640"/>
+    <arg name="depth_height"        default="480"/>
+    <arg name="enable_depth"        default="true"/>
+
+    <arg name="infra_width"        default="640"/>
+    <arg name="infra_height"       default="480"/>
+    <arg name="enable_infra1"       default="true"/>
+    <arg name="enable_infra2"       default="true"/>
+
+    <arg name="color_width"         default="640"/>
+    <arg name="color_height"        default="480"/>
+    <arg name="enable_color"        default="true"/>
+
+    <arg name="fisheye_fps"         default="30"/>
+    <arg name="depth_fps"           default="30"/>
+    <arg name="infra_fps"           default="30"/>
+    <arg name="color_fps"           default="30"/>
+    <arg name="gyro_fps"            default="400"/>
+    <arg name="accel_fps"           default="250"/>
+    <arg name="enable_gyro"         default="true"/>
+    <arg name="enable_accel"        default="true"/>
+
+    <arg name="enable_pointcloud"         default="false"/>
+    <arg name="pointcloud_texture_stream" default="RS2_STREAM_COLOR"/>
+    <arg name="pointcloud_texture_index"  default="0"/>
+
+    <arg name="enable_sync"               default="false"/>
+    <arg name="align_depth"               default="false"/>
+
+    <arg name="publish_tf"                default="true"/>
+    <arg name="tf_publish_rate"           default="0"/>
+
+    <arg name="filters"                   default=""/>
+    <arg name="clip_distance"             default="-2"/>
+    <arg name="linear_accel_cov"          default="0.01"/>
+    <arg name="initial_reset"             default="false"/>
+    <arg name="unite_imu_method"          default=""/>
+    <arg name="topic_odom_in"             default="odom_in"/>
+    <arg name="calib_odom_file"           default=""/>
+    <arg name="publish_odom_tf"           default="true"/>
+    <arg name="allow_no_texture_points"   default="false"/>
+
+    <group ns="$(arg camera)">
+      <include file="$(find realsense2_camera)/launch/includes/nodelet.launch.xml">
+        <arg name="tf_prefix"                value="$(arg tf_prefix)"/>
+        <arg name="external_manager"         value="$(arg external_manager)"/>
+        <arg name="manager"                  value="$(arg manager)"/>
+        <arg name="serial_no"                value="$(arg serial_no)"/>
+        <arg name="usb_port_id"              value="$(arg usb_port_id)"/>
+        <arg name="device_type"              value="$(arg device_type)"/>
+        <arg name="json_file_path"           value="$(arg json_file_path)"/>
+
+        <arg name="enable_pointcloud"        value="$(arg enable_pointcloud)"/>
+        <arg name="pointcloud_texture_stream" value="$(arg pointcloud_texture_stream)"/>
+        <arg name="pointcloud_texture_index"  value="$(arg pointcloud_texture_index)"/>
+        <arg name="enable_sync"              value="$(arg enable_sync)"/>
+        <arg name="align_depth"              value="$(arg align_depth)"/>
+
+        <arg name="fisheye_width"            value="$(arg fisheye_width)"/>
+        <arg name="fisheye_height"           value="$(arg fisheye_height)"/>
+        <arg name="enable_fisheye"           value="$(arg enable_fisheye)"/>
+
+        <arg name="depth_width"              value="$(arg depth_width)"/>
+        <arg name="depth_height"             value="$(arg depth_height)"/>
+        <arg name="enable_depth"             value="$(arg enable_depth)"/>
+
+        <arg name="color_width"              value="$(arg color_width)"/>
+        <arg name="color_height"             value="$(arg color_height)"/>
+        <arg name="enable_color"             value="$(arg enable_color)"/>
+
+        <arg name="infra_width"              value="$(arg infra_width)"/>
+        <arg name="infra_height"             value="$(arg infra_height)"/>
+        <arg name="enable_infra1"            value="$(arg enable_infra1)"/>
+        <arg name="enable_infra2"            value="$(arg enable_infra2)"/>
+
+        <arg name="fisheye_fps"              value="$(arg fisheye_fps)"/>
+        <arg name="depth_fps"                value="$(arg depth_fps)"/>
+        <arg name="infra_fps"                value="$(arg infra_fps)"/>
+        <arg name="color_fps"                value="$(arg color_fps)"/>
+        <arg name="gyro_fps"                 value="$(arg gyro_fps)"/>
+        <arg name="accel_fps"                value="$(arg accel_fps)"/>
+        <arg name="enable_gyro"              value="$(arg enable_gyro)"/>
+        <arg name="enable_accel"             value="$(arg enable_accel)"/>
+
+        <arg name="publish_tf"               value="$(arg publish_tf)"/>
+        <arg name="tf_publish_rate"          value="$(arg tf_publish_rate)"/>
+
+        <arg name="filters"                  value="$(arg filters)"/>
+        <arg name="clip_distance"            value="$(arg clip_distance)"/>
+        <arg name="linear_accel_cov"         value="$(arg linear_accel_cov)"/>
+        <arg name="initial_reset"            value="$(arg initial_reset)"/>
+        <arg name="unite_imu_method"         value="$(arg unite_imu_method)"/>
+        <arg name="topic_odom_in"            value="$(arg topic_odom_in)"/>
+        <arg name="calib_odom_file"          value="$(arg calib_odom_file)"/>
+        <arg name="publish_odom_tf"          value="$(arg publish_odom_tf)"/>
+        <arg name="allow_no_texture_points"  value="$(arg allow_no_texture_points)"/>
+      </include>
+    </group>
+
+    <!-- namespace for camera input -->
+    <arg name="image" default="color/image_raw"/>
+    <arg name="transport" default="compressed"/>
+    <arg name="fiducial_len" default="0.14"/>
+    <arg name="dictionary" default="7"/>
+    <arg name="do_pose_estimation" default="true"/>
+    <arg name="ignore_fiducials" default="" />
+    <arg name="fiducial_len_override" default="" />
+
+    <node pkg="aruco_detect" name="aruco_detect" type="aruco_detect" output="screen" respawn="false">
+      <param name="image_transport" value="$(arg transport)"/>
+      <param name="publish_images" value="true" />
+      <param name="fiducial_len" value="$(arg fiducial_len)"/>
+      <param name="dictionary" value="$(arg dictionary)"/>
+      <param name="do_pose_estimation" value="$(arg do_pose_estimation)"/>
+      <param name="ignore_fiducials" value="$(arg ignore_fiducials)"/>
+      <param name="fiducial_len_override" value="$(arg fiducial_len_override)"/>
+      <remap from="/camera/compressed"
+          to="$(arg camera)/$(arg image)/$(arg transport)"/>
+      <remap from="/camera_info" to="/camera/color/camera_info"/>
+    </node>
+
+    <node pkg="rr_auto_dock" type="auto_dock.py" name="auto_dock_node">
+      <param name="dock_aruco_number" value="102"/>
+      <param name="cmd_vel_angular_rate" value="0.8" />
+      <param name="cmd_search_angular_rate" value="0.4" />
+      <param name="motor_response_delay" value="0.50" />
+      <param name="search_turn_amount" value="0.8" />
+    </node>
+
+<!--   <node pkg="usb_cam" type="usb_cam_node" name="usb_cam_node" />
+-->
+
+<!--   <node pkg="web_video_server" type="web_video_server" name="web_video_server" />
+-->
+
+</launch>

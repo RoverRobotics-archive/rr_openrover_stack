@@ -11,8 +11,14 @@ control_inputs:
   pub_topic: /managed/joy
   timeout  : 0.5
   stamped  : false
+  publish_redundant_halts: false
 -
   sub_topic: keyboard
   pub_topic: /managed/key
   timeout  : 0.5
+  stamped  : false
+-
+  sub_topic: cmd_vel/auto_dock
+  pub_topic: /managed/auto_dock
+  timeout  : 0.0
   stamped  : false

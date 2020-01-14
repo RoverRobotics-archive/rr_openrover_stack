@@ -56,10 +56,6 @@ OpenRover::OpenRover(ros::NodeHandle& nh, ros::NodeHandle& nh_priv)
   , FLIPPER_MOTOR_INDEX_(2)
 {
   ROS_INFO("Initializing openrover driver.");
-  ROS_INFO("Kp %f", pidGains_.Kp);
-  ROS_INFO("Ki %f", pidGains_.Ki);
-  ROS_INFO("Kd %f", pidGains_.Kd);
-
 }
 
 bool OpenRover::start()
@@ -70,6 +66,7 @@ bool OpenRover::start()
     return false;
   }
 
+  ROS_INFO("%f, %f, %f", pidGains_.Kp, pidGains_.Ki, pidGains_.Kd);
   left_controller_.start(closed_loop_control_on_, pidGains_, MOTOR_SPEED_MAX, MOTOR_SPEED_MIN);
   right_controller_.start(closed_loop_control_on_, pidGains_, MOTOR_SPEED_MAX, MOTOR_SPEED_MIN);
 
@@ -167,6 +164,30 @@ bool OpenRover::setupRobotParams()
     ROS_WARN("Failed to retrieve drive_type from parameter.Defaulting to %s", drive_type_.c_str());
   }
 
+  if (!(nh_priv_.getParam("Kp", pidGains_.Kp)))
+  {
+    ROS_WARN("Failed to retrieve Kp from parameter.Defaulting to %f", pidGains_.Kp);
+  }
+  else{
+    ROS_INFO("Kp: %f", pidGains_.Kp);
+  }
+
+  if (!(nh_priv_.getParam("Ki", pidGains_.Ki)))
+  {
+    ROS_WARN("Failed to retrieve Ki from parameter.Defaulting to %f", pidGains_.Ki);
+  }
+  else{
+    ROS_INFO("Ki: %f", pidGains_.Ki);
+  }
+
+  if (!(nh_priv_.getParam("Kd", pidGains_.Kd)))
+  {
+    ROS_WARN("Failed to retrieve Kd from parameter.Defaulting to %f", pidGains_.Kd);
+  }
+  else{
+    ROS_INFO("Kd: %f", pidGains_.Kd);
+  }
+
   if (drive_type_ == (std::string) "2wd")
   {
     ROS_INFO("2wd parameters loaded.");
@@ -177,6 +198,8 @@ bool OpenRover::setupRobotParams()
 
     motor_speed_linear_coef_ = MOTOR_SPEED_LINEAR_COEF_2WD_HS;
     motor_speed_angular_coef_ = MOTOR_SPEED_ANGULAR_COEF_2WD_HS;
+
+    motor_speed_flipper_coef_ = MOTOR_FLIPPER_COEF;
     motor_speed_deadband_ = MOTOR_DEADBAND;
   }
   else if (drive_type_ == (std::string) "4wd")
@@ -189,6 +212,8 @@ bool OpenRover::setupRobotParams()
 
     motor_speed_linear_coef_ = MOTOR_SPEED_LINEAR_COEF_4WD_HS;
     motor_speed_angular_coef_ = MOTOR_SPEED_ANGULAR_COEF_4WD_HS;
+    
+    motor_speed_flipper_coef_ = MOTOR_FLIPPER_COEF;
     motor_speed_deadband_ = MOTOR_DEADBAND;
   }
   else if (drive_type_ == (std::string) "flippers")
@@ -201,6 +226,8 @@ bool OpenRover::setupRobotParams()
 
     motor_speed_linear_coef_ = MOTOR_SPEED_LINEAR_COEF_F_HS;
     motor_speed_angular_coef_ = MOTOR_SPEED_ANGULAR_COEF_F_HS;
+    
+    motor_speed_flipper_coef_ = MOTOR_FLIPPER_COEF;
     motor_speed_deadband_ = MOTOR_DEADBAND;
   }
   else
@@ -213,6 +240,8 @@ bool OpenRover::setupRobotParams()
 
     motor_speed_linear_coef_ = MOTOR_SPEED_LINEAR_COEF_F_HS;
     motor_speed_angular_coef_ = MOTOR_SPEED_ANGULAR_COEF_F_HS;
+    
+    motor_speed_flipper_coef_ = MOTOR_FLIPPER_COEF;
     motor_speed_deadband_ = MOTOR_DEADBAND;
   }
 
@@ -712,6 +741,22 @@ void OpenRover::serialManager()
     // Checks timers and subscribers
     ros::spinOnce();
   }
+
+  if ((serial_fast_buffer_.size() == 0) && publish_fast_rate_values_)
+  {
+    publish_fast_rate_values_ = false;
+  }
+
+  if ((serial_medium_buffer_.size() == 0) && publish_med_rate_values_)
+  {
+    publish_med_rate_values_ = false;
+  }
+
+  if ((serial_slow_buffer_.size() == 0) && publish_slow_rate_values_)
+  {
+    publish_slow_rate_values_ = false;
+  }
+
   return;
 }
 

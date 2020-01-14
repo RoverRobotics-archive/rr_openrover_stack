@@ -81,6 +81,7 @@ OdomControl::OdomControl(bool use_control, PidGains pid_gains, int max, int min)
 {
   ROS_INFO("odom Kp: %f", K_P_);
   ROS_INFO("odom Ki: %f", K_I_);
+  ROS_INFO("odom Kd: %f", K_D_);
 }
 
 unsigned char OdomControl::run(bool e_stop_on, bool control_on, double commanded_vel, double measured_vel, double dt)

@@ -21,4 +21,8 @@ topics:
   topic   : /managed/joy
   timeout : 0.5
   priority: 100
-
+-
+  name    : autodock
+  topic   : /managed/auto_dock
+  timeout : 0.5
+  priority: 10

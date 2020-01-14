@@ -1,0 +1,171 @@
+<?xml version="1.0" ?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+
+
+    <link name="slam_pack_mount_point">
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <geometry>
+          <box size="0.305 0.178 0.005"/>
+        </geometry>
+        <material name="dark_grey" />
+      </visual>
+    </link>
+
+  <joint name="bottom_plate_link_joint" type="fixed">
+    <parent link="slam_pack_mount_point"/>
+    <child link="bottom_plate_link"/>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+  </joint>
+  <link name="bottom_plate_link"/>
+
+
+
+  <joint name="xavier_link_joint" type="fixed">
+    <parent link="bottom_plate_link"/>
+    <child link="xavier_link"/>
+    <origin xyz="-0.0832 0 0.0275" rpy="0 0 0"/>
+  </joint>
+  <link name="xavier_link">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.105 0.092 0.065"/>
+      </geometry>
+      <material name="light_black"/>
+    </visual>
+    <inertial>
+      <origin xyz="0 0 0" />
+      <mass value="0.64" />
+      <inertia ixx="8.634e-4"
+               ixy="0.0" iyy="7.905e-4"
+               ixz="0.0" iyz="0.0" izz="1.387e-3" />
+    </inertial>
+  </link>
+
+
+
+  <joint name="top_plate_link_joint" type="fixed">
+    <parent link="bottom_plate_link"/>
+    <child link="top_plate_link"/>
+    <origin xyz="0 0 0.12" rpy="0 0 0"/>
+  </joint>
+  <link name="top_plate_link">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.32 0.175 0.005"/>
+      </geometry>
+      <material name="black"/>
+    </visual>
+    <inertial>
+      <origin xyz="0 0 0" />
+      <mass value="0.65" />
+      <inertia ixx="3.496e-3"
+               ixy="0.0" iyy="7.864e-3"
+               ixz="0.0" iyz="0.0" izz="1.136e-2" />
+    </inertial>
+  </link>
+
+
+
+  <joint name="realsense_link_joint" type="fixed">
+    <parent link="top_plate_link"/>
+    <child link="realsense_link"/>
+    <origin xyz="0.145 0 0.0125" rpy="0 0 0"/>
+  </joint>
+  <link name="realsense_link">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.025 0.089 0.025"/>
+      </geometry>
+      <material name="grey"/>
+    </visual>
+  </link>
+
+
+
+  <joint name="lidar_link_joint" type="fixed">
+    <parent link="top_plate_link"/>
+    <child link="lidar_link"/>
+    <origin xyz="0.105 0 0.02" rpy="0 0 0"/>
+  </joint>
+  <link name="lidar_link">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <cylinder length="0.04" radius="0.03"/>
+      </geometry>
+      <material name="light_black"/>
+    </visual>
+    <inertial>
+      <origin xyz="0 0 0" />
+      <mass value="0.220" />
+      <inertia ixx="1.214e-4"
+               ixy="0.0" iyy="1.214e-4"
+               ixz="0.0" iyz="0.0" izz="1.597e-4" />
+    </inertial>
+  </link>
+
+
+
+  <joint name="standoff_fl_joint" type="fixed">
+    <parent link="bottom_plate_link"/>
+    <child link="standoff_fl_link"/>
+    <origin xyz="0.14 -0.074 0.0025" rpy="0 0 0"/>
+  </joint>
+  <link name="standoff_fl_link">
+    <visual>
+      <origin xyz="0 0 0.06" rpy="0 0 0"/>
+      <geometry>
+        <cylinder length="0.12" radius="0.0043"/>
+      </geometry>
+      <material name="grey"/>
+    </visual>
+  </link>  
+  <joint name="standoff_fr_link_joint" type="fixed">
+    <parent link="bottom_plate_link"/>
+    <child link="standoff_fr_link"/>
+    <origin xyz="0.14 0.074 0.0025" rpy="0 0 0"/>
+  </joint>
+  <link name="standoff_fr_link">
+    <visual>
+      <origin xyz="0 0 0.06" rpy="0 0 0"/>
+      <geometry>
+        <cylinder length="0.12" radius="0.0043"/>
+      </geometry>
+      <material name="grey"/>
+    </visual>
+  </link>
+  <joint name="standoff_bl_link_joint" type="fixed">
+    <parent link="bottom_plate_link"/>
+    <child link="standoff_bl_link"/>
+    <origin xyz="-0.14 -0.074 0.0025" rpy="0 0 0"/>
+  </joint>
+  <link name="standoff_bl_link">
+    <visual>
+      <origin xyz="0 0 0.06" rpy="0 0 0"/>
+      <geometry>
+        <cylinder length="0.12" radius="0.0043"/>
+      </geometry>
+      <material name="grey"/>
+    </visual>
+  </link>
+  <joint name="standoff_br_link_joint" type="fixed">
+    <parent link="bottom_plate_link"/>
+    <child link="standoff_br_link"/>
+    <origin xyz="-0.14 0.074 0.0025" rpy="0 0 0"/>
+  </joint>
+  <link name="standoff_br_link">
+    <visual>
+      <origin xyz="0 0 0.06" rpy="0 0 0"/>
+      <geometry>
+        <cylinder length="0.12" radius="0.0043"/>
+      </geometry>
+      <material name="grey"/>
+    </visual>
+  </link>
+
+</robot>
