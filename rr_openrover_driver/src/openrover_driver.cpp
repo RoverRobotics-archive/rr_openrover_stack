@@ -56,10 +56,6 @@ OpenRover::OpenRover(ros::NodeHandle& nh, ros::NodeHandle& nh_priv)
   , FLIPPER_MOTOR_INDEX_(2)
 {
   ROS_INFO("Initializing openrover driver.");
-  ROS_INFO("Kp %f", pidGains_.Kp);
-  ROS_INFO("Ki %f", pidGains_.Ki);
-  ROS_INFO("Kd %f", pidGains_.Kd);
-
 }
 
 bool OpenRover::start()
@@ -165,6 +161,30 @@ bool OpenRover::setupRobotParams()
   if (!(nh_priv_.getParam("drive_type", drive_type_)))
   {
     ROS_WARN("Failed to retrieve drive_type from parameter.Defaulting to %s", drive_type_.c_str());
+  }
+
+  if (!(nh_priv_.getParam("Kp", pidGains_.Kp)))
+  {
+    ROS_WARN("Failed to retrieve Kp from parameter.Defaulting to %f", pidGains_.Kp);
+  }
+  else{
+    ROS_INFO("Kp: %f", pidGains_.Kp);
+  }
+
+  if (!(nh_priv_.getParam("Ki", pidGains_.Ki)))
+  {
+    ROS_WARN("Failed to retrieve Ki from parameter.Defaulting to %f", pidGains_.Ki);
+  }
+  else{
+    ROS_INFO("Ki: %f", pidGains_.Ki);
+  }
+
+  if (!(nh_priv_.getParam("Kd", pidGains_.Ki)))
+  {
+    ROS_WARN("Failed to retrieve Kd from parameter.Defaulting to %f", pidGains_.Kd);
+  }
+  else{
+    ROS_INFO("Kd: %f", pidGains_.Kd);
   }
 
   if (drive_type_ == (std::string) "2wd")
