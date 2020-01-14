@@ -30,7 +30,7 @@
 
     <!-- Xbox 360 Controller Button Mapping -->
     <node pkg="rr_control_input_manager" type="xbox_mapper.py" name="rr_xbox_mapper_node" output="screen" >
-                <remap from="joy" to="/joystick" />
+        <remap from="joy" to="/joystick" />
         <remap from="/joystick/a_button" to="/soft_estop/enable" />
         <remap from="/joystick/b_button" to="/soft_estop/reset" />
         <remap from="/joystick/y_button" to="/joy_priority" />
