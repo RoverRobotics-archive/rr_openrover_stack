@@ -66,6 +66,7 @@ bool OpenRover::start()
     return false;
   }
 
+  ROS_INFO("%f, %f, %f", pidGains_.Kp, pidGains_.Ki, pidGains_.Kd);
   left_controller_.start(closed_loop_control_on_, pidGains_, MOTOR_SPEED_MAX, MOTOR_SPEED_MIN);
   right_controller_.start(closed_loop_control_on_, pidGains_, MOTOR_SPEED_MAX, MOTOR_SPEED_MIN);
 
@@ -179,7 +180,7 @@ bool OpenRover::setupRobotParams()
     ROS_INFO("Ki: %f", pidGains_.Ki);
   }
 
-  if (!(nh_priv_.getParam("Kd", pidGains_.Ki)))
+  if (!(nh_priv_.getParam("Kd", pidGains_.Kd)))
   {
     ROS_WARN("Failed to retrieve Kd from parameter.Defaulting to %f", pidGains_.Kd);
   }
