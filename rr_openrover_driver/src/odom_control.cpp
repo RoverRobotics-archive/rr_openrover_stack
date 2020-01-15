@@ -63,7 +63,8 @@ OdomControl::OdomControl(bool use_control, PidGains pid_gains, int max, int min,
   ROS_INFO("odom Kd: %f", K_D_);
 
   if (fs_ != nullptr && fs_->is_open()) {
-    *fs_ << "time,Kp,Ki,Kd,error,error_integral,error_filtered,meas_vel,filt_vel,cmd_vel,dt,motor_cmd";
+    *fs_ << "time,Kp,Ki,Kd,error,error_integral,error_filtered,meas_vel,filt_vel,cmd_vel,dt,motor_cmd\n";
+    fs_->flush();
   }
 }
 
@@ -135,12 +136,13 @@ unsigned char OdomControl::run(bool e_stop_on, bool control_on, double commanded
 
   motor_speed_ = boundMotorSpeed(motor_speed_, MOTOR_MAX_, MOTOR_MIN_);
 
-  if (fs_ != nullptr && !fs_->is_open()){
+  if (fs_ != nullptr && fs_->is_open()){
     *fs_ << ros::Time::now() << ",";
     *fs_ << K_P_ << "," << K_I_ << "," << K_D_ << ",";
     *fs_ << commanded_vel - measured_vel << "," << integral_value_ << "," << velocity_error_ << ",";
     *fs_ << measured_vel << "," << velocity_filtered_ << "," << commanded_vel << ",";
     *fs_ << dt << "," << motor_speed_ << "\n";
+    fs_->flush();
   }
 
   return (unsigned char)motor_speed_;

@@ -224,7 +224,7 @@ bool OpenRover::setupRobotParams()
   }
 
   if (!r_pid_csv_file_.empty()){
-    r_fs_.open(l_pid_csv_file_, std::ofstream::out);
+    r_fs_.open(r_pid_csv_file_, std::ofstream::out);
     if(!r_fs_.is_open()){
       ROS_WARN("Could not open file: %s", r_pid_csv_file_.c_str());
     }
@@ -825,7 +825,7 @@ void OpenRover::updateMeasuredVelocities()
     left_vel_measured_ = -odom_encoder_coef_ / left_enc;
   }
 
-  // Bound left_encoder readings to range of normal operation.
+  // Bound right_encoder readings to range of normal operation.
   if (right_enc < ENCODER_MIN)
   {
     right_vel_measured_ = 0;
