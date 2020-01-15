@@ -54,6 +54,8 @@ OdomControl::OdomControl(bool use_control, PidGains pid_gains, int max, int min,
   , at_max_motor_speed_(false)
   , at_min_motor_speed_(false)
 {
+  fs_.open(log_filename);
+  fs_ << "time,Kp,Ki,Kd,error,error_integral,error_filtered,meas_vel,filt_vel,cmd_vel,dt,motor_cmd";
 }
 
 OdomControl::OdomControl(bool use_control, PidGains pid_gains, int max, int min)
@@ -124,6 +126,14 @@ unsigned char OdomControl::run(bool e_stop_on, bool control_on, double commanded
 
   motor_speed_ = boundMotorSpeed(motor_speed_, MOTOR_MAX_, MOTOR_MIN_);
 
+  if (!fs_.empty()){
+    fs_ << time.now().seconds() << ",";
+    fs_ << K_P_ << "," << K_I_ << "," << K_D_ << ",";
+    fs_ << commanded_vel - measured_vel << "," << integral_value_ << "," << velocity_error_ << ",";
+    fs_ << measured_vel << "," << velocity_filtered_ << "," << commanded_vel << ",";
+    fs_ << dt << "," << motor_speed_ << "\n";
+  }
+
   return (unsigned char)motor_speed_;
 }
 
@@ -175,9 +185,9 @@ double OdomControl::I(double error, double dt)
 {
   if (!stop_integrating_)
   {
-    integral_value_ += (K_I_ * error) * dt;
+    integral_value_ += error * dt;
   }
-  return integral_value_;
+  return K_I_ * integral_value_;
 }
 
 double OdomControl::P(double error, double dt)
