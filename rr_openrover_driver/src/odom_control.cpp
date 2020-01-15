@@ -25,6 +25,7 @@ OdomControl::OdomControl()
   , MAX_ACCEL_CUTOFF_(20.0)
   , MIN_VELOCITY_(0.03)
   , MAX_VELOCITY_(5)
+  , fs_(nullptr)
   , K_P_(0)
   , K_I_(0)
   , K_D_(0)
@@ -34,9 +35,12 @@ OdomControl::OdomControl()
   , at_max_motor_speed_(false)
   , at_min_motor_speed_(false)
 {
+  ROS_INFO("odom Kp: %f", K_P_);
+  ROS_INFO("odom Ki: %f", K_I_);
+  ROS_INFO("odom Kd: %f", K_D_);
 }
 
-OdomControl::OdomControl(bool use_control, PidGains pid_gains, int max, int min, std::string log_filename)
+OdomControl::OdomControl(bool use_control, PidGains pid_gains, int max, int min, std::ofstream* fs)
   : MOTOR_MAX_(max)
   , MOTOR_MIN_(min)
   , MOTOR_DEADBAND_(9)
@@ -44,7 +48,7 @@ OdomControl::OdomControl(bool use_control, PidGains pid_gains, int max, int min,
   , MIN_VELOCITY_(0.03)
   , MAX_VELOCITY_(3)
   , enable_file_logging_(false)  // not implemented
-  , log_filename_(log_filename)
+  , fs_(fs)
   , K_P_(pid_gains.Kp)
   , K_I_(pid_gains.Ki)
   , K_D_(pid_gains.Kd)
@@ -54,8 +58,13 @@ OdomControl::OdomControl(bool use_control, PidGains pid_gains, int max, int min,
   , at_max_motor_speed_(false)
   , at_min_motor_speed_(false)
 {
-  fs_.open(log_filename);
-  fs_ << "time,Kp,Ki,Kd,error,error_integral,error_filtered,meas_vel,filt_vel,cmd_vel,dt,motor_cmd";
+  ROS_INFO("odom Kp: %f", K_P_);
+  ROS_INFO("odom Ki: %f", K_I_);
+  ROS_INFO("odom Kd: %f", K_D_);
+
+  if (fs_ != nullptr && fs_->is_open()) {
+    *fs_ << "time,Kp,Ki,Kd,error,error_integral,error_filtered,meas_vel,filt_vel,cmd_vel,dt,motor_cmd";
+  }
 }
 
 OdomControl::OdomControl(bool use_control, PidGains pid_gains, int max, int min)
@@ -65,7 +74,7 @@ OdomControl::OdomControl(bool use_control, PidGains pid_gains, int max, int min)
   , MAX_ACCEL_CUTOFF_(20.0)
   , MIN_VELOCITY_(0.03)
   , MAX_VELOCITY_(3)
-  , enable_file_logging_(false)  // not implemented
+  , fs_(nullptr)
   , K_P_(pid_gains.Kp)
   , K_I_(pid_gains.Ki)
   , K_D_(pid_gains.Kd)
@@ -126,12 +135,12 @@ unsigned char OdomControl::run(bool e_stop_on, bool control_on, double commanded
 
   motor_speed_ = boundMotorSpeed(motor_speed_, MOTOR_MAX_, MOTOR_MIN_);
 
-  if (!fs_.empty()){
-    fs_ << time.now().seconds() << ",";
-    fs_ << K_P_ << "," << K_I_ << "," << K_D_ << ",";
-    fs_ << commanded_vel - measured_vel << "," << integral_value_ << "," << velocity_error_ << ",";
-    fs_ << measured_vel << "," << velocity_filtered_ << "," << commanded_vel << ",";
-    fs_ << dt << "," << motor_speed_ << "\n";
+  if (fs_ != nullptr && !fs_->is_open()){
+    *fs_ << ros::Time::now() << ",";
+    *fs_ << K_P_ << "," << K_I_ << "," << K_D_ << ",";
+    *fs_ << commanded_vel - measured_vel << "," << integral_value_ << "," << velocity_error_ << ",";
+    *fs_ << measured_vel << "," << velocity_filtered_ << "," << commanded_vel << ",";
+    *fs_ << dt << "," << motor_speed_ << "\n";
   }
 
   return (unsigned char)motor_speed_;
