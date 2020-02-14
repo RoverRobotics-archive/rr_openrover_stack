@@ -30,7 +30,6 @@ public:
   double MIN_VELOCITY_;      // 0.04
   double MAX_VELOCITY_;      // 2.5ish?
 
-  bool enable_file_logging_;
   bool use_control_;
 
   // Can poll these values to see if motor speed is saturating
@@ -45,7 +44,8 @@ public:
   double K_P_;
   double K_I_;
   double K_D_;
-  double integral_value_;
+  double integral_error_;
+  double differential_error_;
   double velocity_error_;
 
   // Returned value
@@ -56,6 +56,7 @@ public:
   double velocity_commanded_;
   double velocity_measured_;
   double velocity_filtered_;
+  std::vector<double> velocity_filtered_history_;
   std::vector<double> velocity_history_;
   bool velocity_control_on_;
   bool skip_measurement_;

@@ -1,0 +1,79 @@
+<launch>
+    <arg name="openrover_node_name" default="rr_openrover_driver" />
+    <arg name="config_locks"  default="$(find rr_openrover_driver)/config/twist_mux_locks.yaml"/>
+    <arg name="config_topics" default="$(find rr_openrover_driver)/config/twist_mux_topics.yaml"/>
+
+    <include file="$(find rr_openrover_description)/launch/description.launch"/>
+
+    <!-- OpenRover Driver -->
+    <node pkg="rr_openrover_driver" type="openrover_driver_node" name="$(arg openrover_node_name)" respawn="false" output="screen">
+        <param name="port" value="/dev/rover" />
+        <param name="drive_type" value="4wd" />
+        <param name="enable_timeout" type="bool" value="true"/>
+        <param name="timeout" type="double" value="0.3"/>
+        <param name="closed_loop_control_on" type="bool" value="true" />
+        <param name="total_weight" type="double" value="20.41"/>
+        <param name="traction_factor" value="0.90"/>
+        <param name="odom_covariance_0" value="0.01"/>
+        <param name="odom_covariance_35" value="0.03"/>
+
+        <param name="fast_data_rate" value="30.0"/>
+        <param name="medium_data_rate" value="2.0"/>
+        <param name="slow_data_rate" value="1.0"/>
+        <param name="use_legacy" type="bool" value="false" />
+        <param name="Kp" value="40.0"/>
+        <param name="Ki" value="150.0"/>
+        <param name="Kd" value="0.0"/>
+        <param name="right_motor_pid_csv" value="/home/nickp/Desktop/GE/right-pid.csv"/>
+        <param name="left_motor_pid_csv" value="/home/nickp/Desktop/GE/left-pid.csv"/>
+    </node>
+
+    <!-- OpenRover Diagnostics -->
+    <node pkg="rr_openrover_driver" type="diagnostics.py" name="rr_openrover_diagnostics_node" output="log">
+        <remap from="/raw_slow_rate_data" to="/$(arg openrover_node_name)/raw_slow_rate_data"/>
+    </node>
+
+    <!-- Xbox 360 Controller Button Mapping -->
+    <node pkg="rr_control_input_manager" type="xbox_mapper.py" name="rr_xbox_mapper_node" output="screen" >
+        <remap from="joy" to="/joystick" />
+        <remap from="/joystick/a_button" to="/soft_estop/enable" />
+        <remap from="/joystick/b_button" to="/soft_estop/reset" />
+        <remap from="/joystick/y_button" to="/joy_priority" />
+        <remap from="/joystick/x_button" to="/pause_navigation"/>
+        <param name="max_vel_fwd" value="0.4" />
+        <param name="max_vel_turn" value="9.0" />
+        <param name="adjustable_throttle" value="True" />
+        <param name="drive_increment" value="20" />
+        <param name="flipper_increment" value="20" />
+        <param name="x_button_toggle" value="true"/>
+        <param name="y_button_toggle" value="true"/>
+    </node>
+
+    <!--  Twist Mux  -->
+    <node pkg="twist_mux" type="twist_mux" name="twist_mux" output="screen">
+        <remap from="cmd_vel_out" to="/cmd_vel/managed"/>
+
+        <rosparam file="$(arg config_locks)"  command="load"/>
+        <rosparam file="$(arg config_topics)" command="load"/>
+    </node>
+
+    <!-- Control input manager -->
+    <node pkg="rr_control_input_manager" type="control_input_manager.py" name="rr_control_input_manager_node" output="log" >
+        <param name="driver" value="xboxdrv"/>
+        <param name="wired_or_wireless" value="wireless"/>
+        <rosparam file="$(find rr_control_input_manager)/config/input_topics.yaml" command="load"/>
+    </node>
+
+    <!-- Xbox controller driver -->
+    <node pkg="joy" type="joy_node" name="joy_node" output="screen" respawn="true" >
+        <param name="autorepeat_rate" value="10" />
+        <remap from="/joy" to="/joystick" />
+    </node>
+
+<!--   <node pkg="usb_cam" type="usb_cam_node" name="usb_cam_node" />
+-->
+
+<!--   <node pkg="web_video_server" type="web_video_server" name="web_video_server" />
+-->
+
+</launch>
