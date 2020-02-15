@@ -14,7 +14,7 @@ public:
   OdomControl();  // default
 
   OdomControl(bool use_control, PidGains pid_gains, int max, int min,
-              std::string log_filename);                                // max min values for returned value
+              std::ofstream* fs);                                // max min values for returned value
   OdomControl(bool use_control, PidGains pid_gains, int max, int min);  // max min values for returned value
 
   unsigned char run(bool e_stop_on, bool control_on, double commanded_vel, double measured_vel,
@@ -22,15 +22,14 @@ public:
   void start(bool use_control, PidGains pid_gains, int max, int min);
   void reset();
 
-  const int MOTOR_MAX_;       // 250
-  const int MOTOR_MIN_;       // 0
-  const int MOTOR_DEADBAND_;  // = 9;
+  int MOTOR_MAX_;       // 250
+  int MOTOR_MIN_;       // 0
+  int MOTOR_DEADBAND_;  // = 9;
 
-  const double MAX_ACCEL_CUTOFF_;  // 20
-  const double MIN_VELOCITY_;      // 0.04
-  const double MAX_VELOCITY_;      // 2.5ish?
+  double MAX_ACCEL_CUTOFF_;  // 20
+  double MIN_VELOCITY_;      // 0.04
+  double MAX_VELOCITY_;      // 2.5ish?
 
-  bool enable_file_logging_;
   bool use_control_;
 
   // Can poll these values to see if motor speed is saturating
@@ -38,16 +37,15 @@ public:
   bool at_min_motor_speed_;
   bool stop_integrating_;
 
-  std::string log_filename_;
-
   //.csv Debuggin
-  std::ofstream fs_;
+  std::ofstream* fs_;
 
   // General Class variables
   double K_P_;
   double K_I_;
   double K_D_;
-  double integral_value_;
+  double integral_error_;
+  double differential_error_;
   double velocity_error_;
 
   // Returned value
@@ -58,6 +56,7 @@ public:
   double velocity_commanded_;
   double velocity_measured_;
   double velocity_filtered_;
+  std::vector<double> velocity_filtered_history_;
   std::vector<double> velocity_history_;
   bool velocity_control_on_;
   bool skip_measurement_;

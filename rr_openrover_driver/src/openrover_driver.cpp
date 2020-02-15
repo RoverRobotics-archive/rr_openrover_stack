@@ -54,6 +54,8 @@ OpenRover::OpenRover(ros::NodeHandle& nh, ros::NodeHandle& nh_priv)
   , LEFT_MOTOR_INDEX_(0)
   , RIGHT_MOTOR_INDEX_(1)
   , FLIPPER_MOTOR_INDEX_(2)
+  , l_pid_csv_file_("")
+  , r_pid_csv_file_("")
 {
   ROS_INFO("Initializing openrover driver.");
 }
@@ -67,6 +69,15 @@ bool OpenRover::start()
   }
 
   ROS_INFO("%f, %f, %f", pidGains_.Kp, pidGains_.Ki, pidGains_.Kd);
+
+  if (l_fs_.is_open()) {
+    left_controller_ = OdomControl(closed_loop_control_on_, pidGains_, MOTOR_SPEED_MAX, MOTOR_SPEED_MIN, &l_fs_);
+  }
+
+  if (r_fs_.is_open()) {
+    right_controller_ = OdomControl(closed_loop_control_on_, pidGains_, MOTOR_SPEED_MAX, MOTOR_SPEED_MIN, &r_fs_);
+  }
+
   left_controller_.start(closed_loop_control_on_, pidGains_, MOTOR_SPEED_MAX, MOTOR_SPEED_MIN);
   right_controller_.start(closed_loop_control_on_, pidGains_, MOTOR_SPEED_MAX, MOTOR_SPEED_MIN);
 
@@ -110,6 +121,7 @@ bool OpenRover::start()
   fan_speed_sub = nh_priv_.subscribe("/rr_openrover_driver/fan_speed", 1, &OpenRover::fanSpeedCB, this);
   e_stop_sub = nh_priv_.subscribe("/soft_estop/enable", 1, &OpenRover::eStopCB, this);
   e_stop_reset_sub = nh_priv_.subscribe("/soft_estop/reset", 1, &OpenRover::eStopResetCB, this);
+
   return true;
 }
 
@@ -186,6 +198,36 @@ bool OpenRover::setupRobotParams()
   }
   else{
     ROS_INFO("Kd: %f", pidGains_.Kd);
+  }
+
+  if (!(nh_priv_.getParam("left_motor_pid_csv", l_pid_csv_file_)))
+  {
+    ROS_INFO("Not logging left motor PID");
+  }
+  else{
+    ROS_INFO("Recording left motor PID data to %s", l_pid_csv_file_.c_str());
+  }
+
+  if (!(nh_priv_.getParam("right_motor_pid_csv", r_pid_csv_file_)))
+  {
+    ROS_INFO("Not logging right motor PID");
+  }
+  else{
+    ROS_INFO("Recording right motor PID data to %s", r_pid_csv_file_.c_str());
+  }
+
+  if (!l_pid_csv_file_.empty()){
+    l_fs_.open(l_pid_csv_file_, std::ofstream::out);
+    if(!l_fs_.is_open()){
+      ROS_WARN("Could not open file: %s", l_pid_csv_file_.c_str());
+    }
+  }
+
+  if (!r_pid_csv_file_.empty()){
+    r_fs_.open(r_pid_csv_file_, std::ofstream::out);
+    if(!r_fs_.is_open()){
+      ROS_WARN("Could not open file: %s", r_pid_csv_file_.c_str());
+    }
   }
 
   if (drive_type_ == (std::string) "2wd")
@@ -783,7 +825,7 @@ void OpenRover::updateMeasuredVelocities()
     left_vel_measured_ = -odom_encoder_coef_ / left_enc;
   }
 
-  // Bound left_encoder readings to range of normal operation.
+  // Bound right_encoder readings to range of normal operation.
   if (right_enc < ENCODER_MIN)
   {
     right_vel_measured_ = 0;
