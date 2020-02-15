@@ -24,8 +24,8 @@
         <param name="Kp" value="40.0"/>
         <param name="Ki" value="150.0"/>
         <param name="Kd" value="0.0"/>
-        <param name="right_motor_pid_csv" value="/home/nickp/Desktop/GE/right-pid.csv"/>
-        <param name="left_motor_pid_csv" value="/home/nickp/Desktop/GE/left-pid.csv"/>
+        <!-- <param name="right_motor_pid_csv" value="/home/user/Desktop/catkin_ws/right-pid.csv"/> -->
+        <!-- <param name="left_motor_pid_csv" value="/home/user/Desktop/catkin_ws/left-pid.csv"/> -->
     </node>
 
     <!-- OpenRover Diagnostics -->
