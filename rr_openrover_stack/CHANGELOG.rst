@@ -2,6 +2,11 @@
 Changelog for package rr_openrover_stack
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Changed maintainership of all packages
+* Fixed PID overwrite issue
+
 0.7.3 (2019-10-14)
 ------------------
 * Migrating all usage of tf to tf2
