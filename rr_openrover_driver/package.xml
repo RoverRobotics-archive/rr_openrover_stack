@@ -8,8 +8,7 @@
     readings and battery charge.
   </description>
 
-  <maintainer email="jack@digilabs.io">Jack Kilian</maintainer>
-  <maintainer email="fragale@digilabs.io">Nick Fragale</maintainer>
+  <maintainer email="nickpadilla@roverrobotics.com">Nick Padilla</maintainer>
 
   <license>BSD</license>
 
