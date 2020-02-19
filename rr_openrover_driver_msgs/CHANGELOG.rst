@@ -2,8 +2,8 @@
 Changelog for package rr_openrover_driver_msgs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.7.4 (2020-02-19)
+------------------
 * Changed maintainership of all packages
 * Fixed PID overwrite issue
 

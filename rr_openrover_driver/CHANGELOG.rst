@@ -2,8 +2,8 @@
 Changelog for package rr_openrover_driver
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.7.4 (2020-02-19)
+------------------
 * changed maintainership of all packages to nick padilla
 * Hotfix, remove integral gain overwrite
 * fix variable setting error affecting PID

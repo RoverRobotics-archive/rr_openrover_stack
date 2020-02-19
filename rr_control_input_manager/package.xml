@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package format="2">
   <name>rr_control_input_manager</name>
-  <version>0.7.3</version>
+  <version>0.7.4</version>
   <description>
     Filter velocity commands by ensuring that message time stamps do not exceed given timeout thresholds.
   </description>
