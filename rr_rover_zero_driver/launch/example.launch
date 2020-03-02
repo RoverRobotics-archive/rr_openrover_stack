@@ -1,0 +1,6 @@
+ <launch>
+    <!-- Rover Zero Node -->
+    <node pkg="rr_rover_zero_driver" type="rover_zero.py" name="rover_zero_driver_node" output="screen">
+        <param name="dev" value="/dev/rover-zero"/>
+    </node>
+</launch>
