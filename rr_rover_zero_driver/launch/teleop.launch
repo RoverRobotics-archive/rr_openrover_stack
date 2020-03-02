@@ -5,7 +5,14 @@
 
     <!-- Rover Zero Node -->
     <node pkg="rr_rover_zero_driver" type="rover_zero.py" name="rover_zero_driver_node" output="screen">
-        <param name="dev" value="/dev/ttyACM0"/>
+        <param name="dev" value="/dev/rover-zero"/>
+        <param name="baud" value="115200"/>
+        <param name="timeout" value="0.1"/>
+        <param name="attempts" value="1"/>
+        <param name="max_vel" value="5.0"/>
+        <param name="effort_coef" value="0.09"/>
+        <param name="max_turn" value="6.28"/>
+        <param name="diag_frequency" value="1.0"/>
     </node>
 
     <!-- Xbox 360 Controller Button Mapping -->
