@@ -7,6 +7,7 @@
 #include <vector>
 #include <stdint.h>
 #include <string>
+#include <fstream>
 
 #include <geometry_msgs/Twist.h>
 #include <std_msgs/Bool.h>
@@ -49,8 +50,11 @@ public:
   bool e_stop_on_;
 
 private:
-  //.csv Debugging
-  std::ofstream fs_;
+  // PID debug variables
+  std::string l_pid_csv_file_;
+  std::string r_pid_csv_file_;
+  std::ofstream l_fs_;
+  std::ofstream r_fs_;
 
   // ROS Parameters
   std::string port_;
