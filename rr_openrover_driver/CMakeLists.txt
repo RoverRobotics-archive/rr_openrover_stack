@@ -9,7 +9,7 @@ find_package(catkin REQUIRED COMPONENTS
   message_generation
   geometry_msgs
   nav_msgs
-  tf
+  tf2
   rr_openrover_driver_msgs
 )
 

@@ -32,8 +32,8 @@ class RoverZeroNode:
         self._turn_coeff = rospy.get_param('~turn_coefficient', 1.5)
         self._linear_coeff = rospy.get_param('~linear_coefficient', 3.0)
         self._diag_frequency = rospy.get_param('~diag_frequency', 1.0)
-        self._wheel_base = 0.358775
-        self._wheel_radius = 0.127
+        self._wheel_base = 0.358775  # Distance between center of wheels
+        self._wheel_radius = 0.127   # Radius of wheel
 
         # ROS Publishers
         self._pub_diag = rospy.Publisher('/diagnostics', DiagnosticArray, queue_size=1)

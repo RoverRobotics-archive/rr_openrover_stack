@@ -2,6 +2,20 @@
 Changelog for package rr_openrover_driver
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.7.4 (2020-02-19)
+------------------
+* changed maintainership of all packages to nick padilla
+* Hotfix, remove integral gain overwrite
+* fix variable setting error affecting PID
+* exposed PID gains as ros parameters
+* added autodocking launch file and descriptions
+* Adding description and 4WD code
+* The coefficient that scaled the flipper motor commands wasn't being initialized properly so the flipper motor commands sent to the robot were flicking all over the place with the smallest change in commanded velocity. Solution: initialize the motor speed coefficients in every wheel configuration.
+* fix rover message buffer race condition
+* Updating the openerrover_driver to clean up how rover data is published. The current state of the driver data read from the rover is categorized as fast, medium, and slow rate data. All data types for a given rate are published in the same message. This requires users to parse the topic message to find the field for the desired information in the message. This pull request eliminates the rate based messages and instead publishes odometry, battery_state_of_charge and separate topics. For backwards compatibility the boolean parameter "use_legacy" publishes the rate topics if set to true.
+  Additionally, all uses of tf have been updated to use tf2.
+* Contributors: Jack Kilian, padiln
+
 0.7.3 (2019-10-14)
 ------------------
 * Migrating all usage of tf to tf2
