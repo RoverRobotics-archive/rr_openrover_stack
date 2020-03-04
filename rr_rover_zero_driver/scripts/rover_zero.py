@@ -39,7 +39,7 @@ class RoverZeroNode:
         self._pub_diag = rospy.Publisher('/diagnostics', DiagnosticArray, queue_size=1)
 
         # ROS Subscribers
-        self._twist_sub = rospy.Subscriber("/cmd_vel/managed", Twist, self._twist_cb, queue_size=1)
+        self._twist_sub = rospy.Subscriber("/cmd_vel", Twist, self._twist_cb, queue_size=1)
 
         # ROS Timers
         rospy.Timer(rospy.Duration(self._diag_frequency), self._diag_cb)
