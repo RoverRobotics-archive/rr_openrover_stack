@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package format="2">
   <name>rr_openrover_description</name>
-  <version>0.7.4</version>
+  <version>0.8.0</version>
   <description>The rr_openrover_description package</description>
 
   <!-- One maintainer tag required, multiple allowed, one person per tag -->
