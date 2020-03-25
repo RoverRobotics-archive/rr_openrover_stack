@@ -2,6 +2,9 @@
 Changelog for package rr_openrover_driver_msgs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.8.0 (2020-03-25)
+------------------
+
 0.7.4 (2020-02-19)
 ------------------
 * Changed maintainership of all packages
