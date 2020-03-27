@@ -2,6 +2,9 @@
 Changelog for package rr_control_input_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.8.0 (2020-03-25)
+------------------
+
 0.7.4 (2020-02-19)
 ------------------
 * changed maintainership
