@@ -60,6 +60,7 @@
     <!-- Xbox controller driver -->
     <node pkg="joy" type="joy_node" name="joy_node" output="screen" respawn="true" >
         <param name="autorepeat_rate" value="10" />
+        <param name="dev" value="/dev/input/jsX" />
         <remap from="/joy" to="/joystick" />
     </node>
 
