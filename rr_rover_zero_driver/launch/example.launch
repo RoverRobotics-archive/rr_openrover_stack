@@ -1,7 +1,7 @@
  <launch>
     <!-- Rover Zero Node -->
     <node pkg="rr_rover_zero_driver" type="rover_zero.py" name="rover_zero_driver_node" output="screen">
-        <param name="dev" value="/dev/ttyACM0"/>
+        <param name="dev" value="/dev/rover-zero"/>
         <param name="baud" value="115200"/>
         <param name="timeout" value="0.1"/>
         <param name="attempts" value="1"/>
