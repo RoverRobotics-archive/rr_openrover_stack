@@ -371,6 +371,9 @@ void OpenRover::timeoutCB(const ros::WallTimerEvent& e)
   motor_speeds_commanded_[LEFT_MOTOR_INDEX_] = MOTOR_NEUTRAL;
   motor_speeds_commanded_[RIGHT_MOTOR_INDEX_] = MOTOR_NEUTRAL;
   motor_speeds_commanded_[FLIPPER_MOTOR_INDEX_] = MOTOR_NEUTRAL;
+  left_vel_commanded_ = 0.0;
+  right_vel_commanded_ = 0.0;
+
   return;
 }
 

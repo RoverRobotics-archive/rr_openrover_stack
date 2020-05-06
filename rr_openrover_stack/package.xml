@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package format="2">
   <name>rr_openrover_stack</name>
-  <version>0.7.3</version>
+  <version>0.8.0</version>
   <description>
     Packages related to the operation of Rover Robotics rover hardware.  This includes a client
     for interfacing with the hardware (rr_openrover_driver) and a tool for filtering time stamped
