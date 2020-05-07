@@ -1,7 +1,7 @@
  <launch>
     <arg name="openrover_node_name" default="rr_openrover_driver" />
-    <arg name="config_locks"  default="$(find rr_openrover_driver)/config/twist_mux_locks.yaml"/>
-    <arg name="config_topics" default="$(find rr_openrover_driver)/config/twist_mux_topics.yaml"/>
+    <arg name="config_locks"  default="$(find rr_rover_zero_driver)/config/twist_mux_locks.yaml"/>
+    <arg name="config_topics" default="$(find rr_rover_zero_driver)/config/twist_mux_topics.yaml"/>
 
     <!-- Rover Zero Node -->
     <node pkg="rr_rover_zero_driver" type="rover_zero.py" name="rover_zero_driver_node" output="screen">
@@ -13,6 +13,7 @@
         <param name="effort_coef" value="0.09"/>
         <param name="max_turn" value="6.28"/>
         <param name="diag_frequency" value="1.0"/>
+        <param name="cmd_vel_timeout" value="0.3"/>
         <remap from="/cmd_vel" to="/cmd_vel/managed"/>
     </node>
 
@@ -51,6 +52,6 @@
     <node pkg="joy" type="joy_node" name="joy_node" output="screen" respawn="true" >
         <param name="autorepeat_rate" value="10" />
         <remap from="/joy" to="/joystick" />
-        <param name="dev" value="/dev/input/js0"/>
+        <param name="dev" value="/dev/input/jsX"/>
     </node>
 </launch>

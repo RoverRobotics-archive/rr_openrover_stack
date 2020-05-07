@@ -13,6 +13,7 @@ class RoverZeroNode:
         self._left_effort = 64
         self._right_effort = 64
         self._safety_lock = Lock()
+        self._last_cmd_vel_received = rospy.get_rostime()
 
         # Diagnostic Parameters
         self._firmware_version = None
@@ -32,6 +33,7 @@ class RoverZeroNode:
         self._turn_coeff = rospy.get_param('~turn_coefficient', 1.5)
         self._linear_coeff = rospy.get_param('~linear_coefficient', 3.0)
         self._diag_frequency = rospy.get_param('~diag_frequency', 1.0)
+        self._cmd_vel_timeout = rospy.get_param('~cmd_vel_timeout', 0.5)
         self._wheel_base = 0.358775  # Distance between center of wheels
         self._wheel_radius = 0.127   # Radius of wheel
 
@@ -43,6 +45,7 @@ class RoverZeroNode:
 
         # ROS Timers
         rospy.Timer(rospy.Duration(self._diag_frequency), self._diag_cb)
+        rospy.Timer(rospy.Duration(self._cmd_vel_timeout), self._cmd_vel_timeout_cb)
 
         # Initialize Roboclaw Serial
         self._roboclaw = Roboclaw(self._port, self._baud)
@@ -71,6 +74,7 @@ class RoverZeroNode:
     def _twist_cb(self, cmd):
         self._left_effort, self._right_effort = self._twist_to_esc_effort(cmd.linear.x, cmd.angular.z)
         self._safety_lock.acquire()
+        self._last_cmd_vel_received = rospy.get_rostime()
         self.set_effort(self._left_effort, self._right_effort)
         self._safety_lock.release()
 
@@ -95,6 +99,13 @@ class RoverZeroNode:
             effort = 127
         return effort
 
+    def _cmd_vel_timeout_cb(self, event):
+        self._safety_lock.acquire()
+        now = rospy.get_rostime()
+        if now.to_sec() - self._last_cmd_vel_received.to_sec() > self._cmd_vel_timeout:
+            self.set_effort(64, 64)
+        self._safety_lock.release()
+
     def _diagnostics(self):
         self.get_battery_voltage()
         self.get_motor_current()
@@ -106,7 +117,7 @@ class RoverZeroNode:
         self._safety_lock.release()
         darr = DiagnosticArray()
         darr.status = [
-            DiagnosticStatus(name='Firmware Version', message=self._firmware_version),
+            DiagnosticStatus(name='Firmware Version', message=str(self._firmware_version)),
             DiagnosticStatus(name='Left Motor Current', message=''),
             DiagnosticStatus(name='Right Motor Current', message=''),
             DiagnosticStatus(name='Battery Voltage', message='{VOLTAGE}V'.format(VOLTAGE=str(self._battery_voltage)))
