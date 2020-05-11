@@ -3,14 +3,14 @@ from __future__ import division
 
 # Author: Nick Fragale
 # Description: This script converts Joystick commands into Joint Velocity commands
-# Monitors A, B, X and Y buttons and toggles their state (False on startup) publishes 
+# Monitors A, B, X and Y buttons and toggles their state (False on startup) publishes
 # a latched Bool() to /joystick/<button> where button is A, B, Y, or X
 # these can be remapped to different topics to control various things like E-stoping the robot
 # or starting to record a bagfile, or taking a picture.
 
 # Xbox controller mapping:
 #   axes: [l-stick horz,l-stick vert, l-trigger, r-stick horz, r-stick vert, r-trigger]
-#   buttons: [a,b,x,y,lb,rb,back,start,xbox,l-stick,r-stick,l-pad,r-pad,u-pad,d-pad]  
+#   buttons: [a,b,x,y,lb,rb,back,start,xbox,l-stick,r-stick,l-pad,r-pad,u-pad,d-pad]
 
 import time
 
@@ -114,7 +114,7 @@ x_button_msg.data = False
 y_button_msg = Bool()
 y_button_msg.data = False
 
-# define publishers  
+# define publishers
 pub = rospy.Publisher('/cmd_vel/joystick', TwistStamped, queue_size=3)
 a_button_pub = rospy.Publisher('/joystick/a_button', Bool, queue_size=1, latch=True)
 b_button_pub = rospy.Publisher('/joystick/b_button', Bool, queue_size=1, latch=True)
@@ -295,7 +295,7 @@ def joy_cb(Joy):
 
         # Turn left/right commands
     turn_cmd = (1.1 - (drive_cmd / MAX_VEL_FWD)) * DRIVE_THROTTLE * MAX_VEL_TURN * Joy.axes[
-        R_STICK_H_AXES]  # right joystick
+        L_STICK_H_AXES]  # left joystick
     if turn_cmd < TURN_DEADBAND and -TURN_DEADBAND < turn_cmd:
         turn_cmd = 0
 
