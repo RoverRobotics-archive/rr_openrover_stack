@@ -4,6 +4,9 @@
 # - pub_topic    : name of topic to publish the managed output
 # - timeout : timeout in seconds to start discarding old messages with expired stamps. 0.0 or less never trigger timeout
 # - stamped : Boolean that specifies whether the output from the relay should be TwistStamped of Twist
+#
+# The cmd_vel/freedom topic is specifically dedicated for the use by https://www.freedomrobotics.ai.
+# The timeout is set to 0.0 because network latency can vary greatly and should be set to meet your needs.
 
 control_inputs:
 -
@@ -20,5 +23,10 @@ control_inputs:
 -
   sub_topic: cmd_vel/auto_dock
   pub_topic: /managed/auto_dock
+  timeout  : 0.0
+  stamped  : false
+-
+  sub_topic: cmd_vel/freedom
+  pub_topic: /managed/freedom
   timeout  : 0.0
   stamped  : false
