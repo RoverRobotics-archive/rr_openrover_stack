@@ -20,13 +20,11 @@
   <!-- Load the URDF into the ROS Parameter Server -->
   <param name="robot_description" command="$(find rr_openrover_description)/scripts/env_run
                     $(find rr_openrover_description)/urdf/configs/$(arg config)
-                    $(find xacro)/xacro '$(find rr_openrover_description)/urdf/2WD_rover.urdf.xacro'" />
+                    $(find xacro)/xacro '$(find rr_openrover_description)/urdf/2WD_Rover/2WD_rover.urdf.xacro'" />
 
   <!-- Run a python script to the send a service call to gazebo_ros to spawn a URDF robot -->
   <node name="urdf_spawner" pkg="gazebo_ros" type="spawn_model" respawn="false" output="screen"
-    args="-urdf -model rrbot -param robot_description"/>
+    args="-urdf -model 2WD_rover -param robot_description"/>
 
-  <!-- ros_control rrbot launch file -->
-  <!--include file="$(find rrbot_control)/launch/rrbot_control.launch" /-->
-
+  <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" />
 </launch>
