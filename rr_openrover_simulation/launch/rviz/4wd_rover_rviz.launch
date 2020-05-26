@@ -6,8 +6,8 @@
                     $(find rr_openrover_description)/urdf/configs/$(arg config)
                     $(find xacro)/xacro '$(find rr_openrover_description)/urdf/4WD_Rover/4WD_rover.urdf.xacro'" />
 
-  <node type="rviz" name="rviz" pkg="rviz" />
-
   <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" />
   <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher"/>
+
+  <node type="rviz" name="rviz" pkg="rviz" />
 </launch>
