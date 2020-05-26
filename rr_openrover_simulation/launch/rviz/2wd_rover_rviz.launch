@@ -1,0 +1,13 @@
+<launch>
+  <arg name="config" default="4WD_Rover_with_SLAM_Pack" />
+
+  <!-- Load the URDF into the ROS Parameter Server -->
+  <param name="robot_description" command="$(find rr_openrover_description)/scripts/env_run
+                    $(find rr_openrover_description)/urdf/configs/$(arg config)
+                    $(find xacro)/xacro '$(find rr_openrover_description)/urdf/2WD_Rover/2WD_rover.urdf.xacro'" />
+
+  <node type="rviz" name="rviz" pkg="rviz" />
+
+  <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" />
+  <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher"/>
+</launch>
