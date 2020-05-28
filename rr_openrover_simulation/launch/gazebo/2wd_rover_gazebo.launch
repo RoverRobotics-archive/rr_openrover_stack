@@ -2,6 +2,7 @@
   <arg name="config" default="4WD_Rover_with_SLAM_Pack" />
 
   <!-- these are the arguments you can pass this launch file, for example paused:=true -->
+  <arg name="world_name" default="worlds/empty.world"/>
   <arg name="paused" default="false"/>
   <arg name="use_sim_time" default="true"/>
   <arg name="gui" default="true"/>
@@ -10,6 +11,7 @@
 
   <!-- We resume the logic in empty_world.launch, changing only the name of the world to be launched -->
   <include file="$(find gazebo_ros)/launch/empty_world.launch">
+    <arg name="world_name" value="$(arg world_name)"/>
     <arg name="debug" value="$(arg debug)" />
     <arg name="gui" value="$(arg gui)" />
     <arg name="paused" value="$(arg paused)"/>
