@@ -124,6 +124,9 @@ class RoverZeroNode:
         ]
         self._pub_diag.publish(darr)
 
+    def _odom_cb(self, msg):
+        pass
+
 
 if __name__ == '__main__':
     rz = RoverZeroNode()
