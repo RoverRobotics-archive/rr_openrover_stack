@@ -5,6 +5,7 @@ from geometry_msgs.msg import Twist
 from threading import Lock
 from diagnostic_msgs.msg import DiagnosticArray, DiagnosticStatus
 
+
 class RoverZeroNode:
     def __init__(self):
         self._node = rospy.init_node('Rover_Zero_Controller', anonymous=True)
@@ -42,6 +43,14 @@ class RoverZeroNode:
         self._linear_coeff = rospy.get_param('~linear_coefficient', 3.0)
         self._diag_frequency = rospy.get_param('~diag_frequency', 1.0)
         self._cmd_vel_timeout = rospy.get_param('~cmd_vel_timeout', 0.5)
+        self._m1_v_p = rospy.get_param('~m1_v_p', 0.5)
+        self._m1_v_i = rospy.get_param('~m1_v_i', 0.5)
+        self._m1_v_d = rospy.get_param('~m1_v_d', 0.5)
+        self._m1_v_qpps = rospy.get_param('~m1_v_qpps', 0.5)
+        self._m2_v_p = rospy.get_param('~m2_v_p', 0.5)
+        self._m2_v_i = rospy.get_param('~m2_v_i', 0.5)
+        self._m2_v_d = rospy.get_param('~m2_v_d', 0.5)
+        self._m2_v_qpps = rospy.get_param('~m2_v_qpps', 0.5)
         self._wheel_base = 0.358775  # Distance between center of wheels
         self._wheel_radius = 0.127   # Radius of wheel
         self._v_pid_overwrite = rospy.get_param('~v_pid_overwrite', 0)
@@ -62,7 +71,6 @@ class RoverZeroNode:
         self.init_motor_controller()
 
         # Get Roboclaw Firmware Version
-        
 
     def get_battery_voltage(self):
         self._battery_voltage = self._roboclaw.ReadMainBatteryVoltage(self._address)
@@ -72,43 +80,34 @@ class RoverZeroNode:
         if res:
             self._left_motor_current = m1_current
             self._right_motor_current = m2_current
-    
+
     def get_V_PID(self):
-        (res, P, I , D , QPPS) = self._roboclaw.ReadM1VelocityPID(self._address)
+        (res, p, i, d, qpps) = self._roboclaw.ReadM1VelocityPID(self._address)
         if res:
-            self._m1_v_p = P
-            self._m1_v_i = I
-            self._m1_v_d = D
+            self._m1_v_p = p
+            self._m1_v_i = i
+            self._m1_v_d = d
             self._m1_v_qpps = qpps
 
-        (res, P , I, D , QPPS) = self._roboclaw.ReadM1VelocityPID(self._address)
+        (res, p, i, d, qpps) = self._roboclaw.ReadM1VelocityPID(self._address)
         if res:
-            self._m2_v_p = P
-            self._m2_v_i = I
-            self._m2_v_d = D
+            self._m2_v_p = p
+            self._m2_v_i = i
+            self._m2_v_d = d
             self._m2_v_qpps = qpps
 
-    def set_m1_v_pid(self,P,I,D,QPPS):
-        SetM1VelocityPID(self._address,P,I,D,QPPS):
+    def set_m1_v_pid(self, p, i, d, qpps):
+        SetM1VelocityPID(self._address, p, i, d, qpps):
 
-    def set_m2_v_pid(self,P,I,D,QPPS):
-        SetM2VelocityPID(self._address,P,I,D,QPPS):
-
+    def set_m2_v_pid(self, p, i, d, qpps):
+        SetM2VelocityPID(self._address, p, i, d, qpps):
 
     def init_motor_controller():
-        self._firmware_version =self._roboclaw.ReadVersion(self._address)
+        self._firmware_version = self._roboclaw.ReadVersion(self._address)
         if self._v_pid_overwrite:
-            self._m1_v_p = rospy.get_param('~m1_v_p', 0.5)
-            self._m1_v_i = rospy.get_param('~m1_v_i', 0.5)
-            self._m1_v_d = rospy.get_param('~m1_v_d', 0.5)
-            self._m1_v_qpps = rospy.get_param('~m1_v_qpps', 0.5)
-            self._m2_v_p = rospy.get_param('~m2_v_p', 0.5)
-            self._m2_v_i = rospy.get_param('~m2_v_i', 0.5)
-            self._m2_v_d = rospy.get_param('~m2_v_d', 0.5)
-            self._m2_v_qpps = rospy.get_param('~m2_v_qpps', 0.5)
             set_m1_v_pid(self._m1_v_p, self._m1_v_i, self._m1_v_d, self._m1_v_qpps)
             set_m1_v_pid(self._m2_v_p, self._m2_v_i, self._m2_v_d, self._m2_v_qpps)
-        else
+        else:
             get_V_PID()
 
     def set_effort(self, left_effort, right_effort):
