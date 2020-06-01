@@ -4,16 +4,19 @@ import rospy
 from geometry_msgs.msg import Twist
 from threading import Lock
 from diagnostic_msgs.msg import DiagnosticArray, DiagnosticStatus
+from std_msgs.msg import Bool
+
 
 class RoverZeroNode:
     def __init__(self):
         self._node = rospy.init_node('Rover_Zero_Controller', anonymous=True)
-
         # Class Variables
         self._left_effort = 64
         self._right_effort = 64
         self._safety_lock = Lock()
+        self._global_var_lock = Lock()
         self._last_cmd_vel_received = rospy.get_rostime()
+        self.e_stop_on_ = False
 
         # Diagnostic Parameters
         self._firmware_version = None
@@ -42,6 +45,8 @@ class RoverZeroNode:
 
         # ROS Subscribers
         self._twist_sub = rospy.Subscriber("/cmd_vel", Twist, self._twist_cb, queue_size=1)
+        self._estop_on_sub = rospy.Subscriber("/soft_estop/enable", Bool, self.eStopCB, queue_size=1)
+        self._estop_off_sub = rospy.Subscriber("/soft_estop/reset", Bool, self.eStopResetCB, queue_size=1)
 
         # ROS Timers
         rospy.Timer(rospy.Duration(self._diag_frequency), self._diag_cb)
@@ -53,7 +58,7 @@ class RoverZeroNode:
             rospy.logfatal('Could not open serial at ' + self._port)
 
         # Get Roboclaw Firmware Version
-        self._firmware_version =self._roboclaw.ReadVersion(self._address)
+        self._firmware_version = self._roboclaw.ReadVersion(self._address)
 
     def get_battery_voltage(self):
         self._battery_voltage = self._roboclaw.ReadMainBatteryVoltage(self._address)
@@ -64,15 +69,31 @@ class RoverZeroNode:
             self._left_motor_current = m1_current
             self._right_motor_current = m2_current
 
+    def eStopCB(self, estopstate):
+        self._global_var_lock.acquire()
+        if estopstate.data:
+            self.e_stop_on_ = True
+        self._global_var_lock.release()
+
+    def eStopResetCB(self, estopstate):
+        self._global_var_lock.acquire()
+        if estopstate.data:
+            self.e_stop_on_ = False
+        self._global_var_lock.release()
+
     def set_effort(self, left_effort, right_effort):
-        self._roboclaw.ForwardBackwardM1(self._address, left_effort)
-        self._roboclaw.ForwardBackwardM2(self._address, right_effort)
+            self._roboclaw.ForwardBackwardM1(self._address, left_effort)
+            self._roboclaw.ForwardBackwardM2(self._address, right_effort)
 
     def spin(self):
         rospy.spin()
 
     def _twist_cb(self, cmd):
-        self._left_effort, self._right_effort = self._twist_to_esc_effort(cmd.linear.x, cmd.angular.z)
+
+        if self.e_stop_on_:
+            self._left_effort, self._right_effort = 64, 64
+        else:
+            self._left_effort, self._right_effort = self._twist_to_esc_effort(cmd.linear.x, cmd.angular.z)
         self._safety_lock.acquire()
         self._last_cmd_vel_received = rospy.get_rostime()
         self.set_effort(self._left_effort, self._right_effort)
