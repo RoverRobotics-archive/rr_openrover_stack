@@ -43,5 +43,5 @@
     </node>
 
     <!-- Gazebo Components -->
-    <include file="$(find rr_openrover_simluation)/launch/4wd_rover_gazebo.launch"/>
+    <include file="$(find rr_openrover_simulation)/launch/gazebo/4wd_rover_gazebo.launch"/>
 </launch>
