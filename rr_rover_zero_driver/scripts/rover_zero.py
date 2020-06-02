@@ -7,6 +7,7 @@ from diagnostic_msgs.msg import DiagnosticArray, DiagnosticStatus
 from nav_msgs.msg import Odometry
 from tf.transformations import quaternion_from_euler
 import math
+from std_msgs.msg import Bool
 
 class RoverZeroNode:
     def __init__(self):
@@ -16,7 +17,10 @@ class RoverZeroNode:
         self._left_effort = 64
         self._right_effort = 64
         self._serial_lock = Lock()
+        self._global_var_lock = Lock()
+        self._safety_lock = Lock()
         self._last_cmd_vel_received = rospy.get_rostime()
+        self.e_stop_on_ = False
 
         # Diagnostic Parameters
         self._firmware_version = None
@@ -60,7 +64,8 @@ class RoverZeroNode:
 
         # ROS Subscribers
         self._twist_sub = rospy.Subscriber("/cmd_vel", Twist, self._twist_cb, queue_size=1)
-
+        self._estop_on_sub = rospy.Subscriber("/soft_estop/enable", Bool, self._eStopCB, queue_size=1)
+        self._estop_off_sub = rospy.Subscriber("/soft_estop/reset", Bool, self._eStopResetCB, queue_size=1)
         # ROS Timers
         rospy.Timer(rospy.Duration(self._diag_frequency), self._diag_cb)
         rospy.Timer(rospy.Duration(self._odom_frequency), self._odom_cb)
@@ -86,6 +91,35 @@ class RoverZeroNode:
             self._left_motor_current = m1_current / 100.0
             self._right_motor_current = m2_current / 100.0
 
+    def get_V_PID(self):
+        (res, p, i, d, qpps) = self._roboclaw.ReadM1VelocityPID(self._address)
+        if res:
+            self._m1_v_p = p
+            self._m1_v_i = i
+            self._m1_v_d = d
+            self._m1_v_qpps = qpps
+
+        (res, p, i, d, qpps) = self._roboclaw.ReadM2VelocityPID(self._address)
+        if res:
+            self._m2_v_p = p
+            self._m2_v_i = i
+            self._m2_v_d = d
+            self._m2_v_qpps = qpps
+
+    def set_m1_v_pid(self, p, i, d, qpps):
+        self._roboclaw.SetM1VelocityPID(self._address, p, i, d, qpps)
+
+    def set_m2_v_pid(self, p, i, d, qpps):
+        self._roboclaw.SetM2VelocityPID(self._address, p, i, d, qpps)
+
+    def init_motor_controller(self):
+        self._firmware_version = self._roboclaw.ReadVersion(self._address)
+        if self._v_pid_overwrite:
+            self.set_m1_v_pid(self._m1_v_p, self._m1_v_i, self._m1_v_d, self._m1_v_qpps)
+            self.set_m2_v_pid(self._m2_v_p, self._m2_v_i, self._m2_v_d, self._m2_v_qpps)
+        else:
+            self.get_V_PID()
+
     def set_effort(self, left_effort, right_effort):
         self._roboclaw.ForwardBackwardM1(self._address, left_effort)
         self._roboclaw.ForwardBackwardM2(self._address, right_effort)
@@ -97,7 +131,10 @@ class RoverZeroNode:
         rospy.spin()
 
     def _twist_cb(self, cmd):
-        self._left_effort, self._right_effort = self._twist_to_esc_effort(cmd.linear.x, cmd.angular.z)
+        if self.e_stop_on_:
+            self._left_effort, self._right_effort = 64, 64
+        else:
+            self._left_effort, self._right_effort = self._twist_to_esc_effort(cmd.linear.x, cmd.angular.z)
         self._serial_lock.acquire()
         self._last_cmd_vel_received = rospy.get_rostime()
         self.set_effort(self._left_effort, self._right_effort)
@@ -206,6 +243,19 @@ class RoverZeroNode:
         odom_msg.twist.covariance[0] = 1e-3
         odom_msg.twist.covariance[35] = 1e-4
         self._pub_odom.publish(odom_msg)
+
+    def _eStopCB(self, estopstate):
+        self._global_var_lock.acquire()
+        if estopstate.data:
+            self.e_stop_on_ = True
+        self._global_var_lock.release()
+
+    def _eStopResetCB(self, estopstate):
+        self._global_var_lock.acquire()
+        if estopstate.data:
+            self.e_stop_on_ = False
+        self._global_var_lock.release()
+
 
 if __name__ == '__main__':
     rz = RoverZeroNode()
