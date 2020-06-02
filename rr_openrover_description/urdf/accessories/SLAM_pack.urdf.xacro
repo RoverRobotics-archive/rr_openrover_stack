@@ -1,8 +1,5 @@
 <?xml version="1.0" ?>
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro">
-
-
-
     <link name="slam_pack_mount_point">
       <visual>
         <origin xyz="0 0 0" rpy="0 0 0" />
@@ -19,8 +16,6 @@
     <origin xyz="0 0 0" rpy="0 0 0"/>
   </joint>
   <link name="bottom_plate_link"/>
-
-
 
   <joint name="xavier_link_joint" type="fixed">
     <parent link="bottom_plate_link"/>
@@ -44,8 +39,6 @@
     </inertial>
   </link>
 
-
-
   <joint name="top_plate_link_joint" type="fixed">
     <parent link="bottom_plate_link"/>
     <child link="top_plate_link"/>
@@ -68,13 +61,6 @@
     </inertial>
   </link>
 
-
-
-  <joint name="realsense_link_joint" type="fixed">
-    <parent link="top_plate_link"/>
-    <child link="realsense_link"/>
-    <origin xyz="0.145 0 0.0125" rpy="0 0 0"/>
-  </joint>
   <link name="realsense_link">
     <visual>
       <origin xyz="0 0 0" rpy="0 0 0"/>
@@ -85,13 +71,30 @@
     </visual>
   </link>
 
-
-
-  <joint name="lidar_link_joint" type="fixed">
+  <joint name="realsense_link_joint" type="fixed">
     <parent link="top_plate_link"/>
-    <child link="lidar_link"/>
-    <origin xyz="0.105 0 0.02" rpy="0 0 0"/>
+    <child link="realsense_link"/>
+    <origin xyz="0.145 0 0.0125" rpy="0 0 0"/>
   </joint>
+
+  <link name="depth_image_link"/>
+
+  <joint name="depth_image_link_joint" type="fixed">
+    <parent link="realsense_link"/>
+    <child link="depth_image_link"/>
+    <origin xyz="0 0 0" rpy="-${pi /2} 0 -${pi /2}"/>
+  </joint>
+
+  <gazebo reference="realsense_link">
+    <sensor name="gazebo_realsense_435" type="depth">
+      <plugin name="gazebo_realsense_435_controller" filename="libgazebo_ros_openni_kinect.so">
+        <alwayson>true</alwayson>
+        <updaterate>30.0</updaterate>
+        <frameName>depth_image_link</frameName>
+      </plugin>
+    </sensor>
+  </gazebo>
+
   <link name="lidar_link">
     <visual>
       <origin xyz="0 0 0" rpy="0 0 0"/>
@@ -109,13 +112,85 @@
     </inertial>
   </link>
 
+  <joint name="lidar_link_joint" type="fixed">
+    <parent link="top_plate_link"/>
+    <child link="lidar_link"/>
+    <origin xyz="0.105 0 0.02" rpy="0 0 0"/>
+  </joint>
 
+  <gazebo reference="lidar_link">
+    <sensor name="gazebo_lidar" type="ray">
+      <update_rate>12.0</update_rate>
+      <plugin name="gazebo_lidar" filename="libgazebo_ros_laser.so">
+        <topicName>scan</topicName>
+        <namespace></namespace>
+        <outputType>sensor_msgs/LaserScan</outputType>
+        <frameName>lidar_link</frameName>
+      </plugin>
+      <ray>
+        <scan>
+          <horizontal>
+            <samples>360</samples>
+            <resolution>1</resolution>
+            <min_angle>-3.14159</min_angle>
+            <max_angle>3.14159</max_angle>
+          </horizontal>
+        </scan>
+        <range>
+          <min>0.120</min>
+          <max>20</max>
+          <resolution>0.015</resolution>
+        </range>
+        <noise>
+          <type>gaussian</type>
+          <mean>0.0</mean>
+          <stddev>0.01</stddev>
+        </noise>
+      </ray>
+    </sensor>
+    <material>Gazebo/DarkGrey</material>
+  </gazebo>
+
+  <link name="imu_link">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.01 0.01 0.002"/>
+      </geometry>
+      <material name="blue"/>
+    </visual>
+    <inertial>
+      <origin xyz="0 0 0" />
+      <mass value="0.04" />
+      <inertia ixx="3.467e-7"
+               ixy="0.0" iyy="3.467e-7"
+               ixz="0.0" iyz="0.0" izz="6.667e-7" />
+    </inertial>
+  </link>
+
+  <joint name="imu_link_joint" type="fixed">
+    <parent link="bottom_plate_link"/>
+    <child link="imu_link"/>
+    <origin xyz="0.1365 0 0.0026" rpy="0 0 0"/>
+  </joint>
+
+  <gazebo reference="imu_link">
+    <sensor name="gazebo_imu" type="imu">
+      <plugin name="gazebo_imu" filename="libgazebo_ros_imu_sensor.so">
+        <updateRateHZ>30.0</updateRateHZ>
+        <topicName>/imu</topicName>
+        <frameName>imu_link</frameName>
+      </plugin>
+    </sensor>
+    <material>Gazebo/Blue</material>
+  </gazebo>
 
   <joint name="standoff_fl_joint" type="fixed">
     <parent link="bottom_plate_link"/>
     <child link="standoff_fl_link"/>
     <origin xyz="0.14 -0.074 0.0025" rpy="0 0 0"/>
   </joint>
+
   <link name="standoff_fl_link">
     <visual>
       <origin xyz="0 0 0.06" rpy="0 0 0"/>
@@ -124,12 +199,14 @@
       </geometry>
       <material name="grey"/>
     </visual>
-  </link>  
+  </link>
+
   <joint name="standoff_fr_link_joint" type="fixed">
     <parent link="bottom_plate_link"/>
     <child link="standoff_fr_link"/>
     <origin xyz="0.14 0.074 0.0025" rpy="0 0 0"/>
   </joint>
+
   <link name="standoff_fr_link">
     <visual>
       <origin xyz="0 0 0.06" rpy="0 0 0"/>
@@ -139,11 +216,13 @@
       <material name="grey"/>
     </visual>
   </link>
+
   <joint name="standoff_bl_link_joint" type="fixed">
     <parent link="bottom_plate_link"/>
     <child link="standoff_bl_link"/>
     <origin xyz="-0.14 -0.074 0.0025" rpy="0 0 0"/>
   </joint>
+
   <link name="standoff_bl_link">
     <visual>
       <origin xyz="0 0 0.06" rpy="0 0 0"/>
@@ -153,11 +232,13 @@
       <material name="grey"/>
     </visual>
   </link>
+
   <joint name="standoff_br_link_joint" type="fixed">
     <parent link="bottom_plate_link"/>
     <child link="standoff_br_link"/>
     <origin xyz="-0.14 0.074 0.0025" rpy="0 0 0"/>
   </joint>
+
   <link name="standoff_br_link">
     <visual>
       <origin xyz="0 0 0.06" rpy="0 0 0"/>
