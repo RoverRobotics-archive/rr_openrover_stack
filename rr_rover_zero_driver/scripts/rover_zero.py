@@ -89,7 +89,7 @@ class RoverZeroNode:
             self._m1_v_d = d
             self._m1_v_qpps = qpps
 
-        (res, p, i, d, qpps) = self._roboclaw.ReadM1VelocityPID(self._address)
+        (res, p, i, d, qpps) = self._roboclaw.ReadM2VelocityPID(self._address)
         if res:
             self._m2_v_p = p
             self._m2_v_i = i
@@ -97,18 +97,18 @@ class RoverZeroNode:
             self._m2_v_qpps = qpps
 
     def set_m1_v_pid(self, p, i, d, qpps):
-        SetM1VelocityPID(self._address, p, i, d, qpps):
+        SetM1VelocityPID(self._address, p, i, d, qpps)
 
     def set_m2_v_pid(self, p, i, d, qpps):
-        SetM2VelocityPID(self._address, p, i, d, qpps):
+        SetM2VelocityPID(self._address, p, i, d, qpps)
 
-    def init_motor_controller():
+    def init_motor_controller(self):
         self._firmware_version = self._roboclaw.ReadVersion(self._address)
         if self._v_pid_overwrite:
             set_m1_v_pid(self._m1_v_p, self._m1_v_i, self._m1_v_d, self._m1_v_qpps)
             set_m1_v_pid(self._m2_v_p, self._m2_v_i, self._m2_v_d, self._m2_v_qpps)
         else:
-            get_V_PID()
+            self.get_V_PID()
 
     def set_effort(self, left_effort, right_effort):
         self._roboclaw.ForwardBackwardM1(self._address, left_effort)
