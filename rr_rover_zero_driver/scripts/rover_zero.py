@@ -6,15 +6,16 @@ from threading import Lock
 from diagnostic_msgs.msg import DiagnosticArray, DiagnosticStatus
 from std_msgs.msg import Bool
 
-
 class RoverZeroNode:
     def __init__(self):
         self._node = rospy.init_node('Rover_Zero_Controller', anonymous=True)
+
         # Class Variables
         self._left_effort = 64
         self._right_effort = 64
         self._serial_lock = Lock()
         self._global_var_lock = Lock()
+        self._safety_lock = Lock()
         self._last_cmd_vel_received = rospy.get_rostime()
         self.e_stop_on_ = False
 
@@ -45,9 +46,8 @@ class RoverZeroNode:
 
         # ROS Subscribers
         self._twist_sub = rospy.Subscriber("/cmd_vel", Twist, self._twist_cb, queue_size=1)
-        self._estop_on_sub = rospy.Subscriber("/soft_estop/enable", Bool, self.eStopCB, queue_size=1)
-        self._estop_off_sub = rospy.Subscriber("/soft_estop/reset", Bool, self.eStopResetCB, queue_size=1)
-
+        self._estop_on_sub = rospy.Subscriber("/soft_estop/enable", Bool, self._eStopCB, queue_size=1)
+        self._estop_off_sub = rospy.Subscriber("/soft_estop/reset", Bool, self._eStopResetCB, queue_size=1)
         # ROS Timers
         rospy.Timer(rospy.Duration(self._diag_frequency), self._diag_cb)
         rospy.Timer(rospy.Duration(self._cmd_vel_timeout), self._cmd_vel_timeout_cb)
@@ -58,7 +58,7 @@ class RoverZeroNode:
             rospy.logfatal('Could not open serial at ' + self._port)
 
         # Get Roboclaw Firmware Version
-        self._firmware_version = self._roboclaw.ReadVersion(self._address)
+        self._firmware_version =self._roboclaw.ReadVersion(self._address)
 
     def get_battery_voltage(self):
         self._battery_voltage = self._roboclaw.ReadMainBatteryVoltage(self._address)
@@ -69,27 +69,43 @@ class RoverZeroNode:
             self._left_motor_current = m1_current
             self._right_motor_current = m2_current
 
-    def eStopCB(self, estopstate):
-        self._global_var_lock.acquire()
-        if estopstate.data:
-            self.e_stop_on_ = True
-        self._global_var_lock.release()
+    def get_V_PID(self):
+        (res, p, i, d, qpps) = self._roboclaw.ReadM1VelocityPID(self._address)
+        if res:
+            self._m1_v_p = p
+            self._m1_v_i = i
+            self._m1_v_d = d
+            self._m1_v_qpps = qpps
 
-    def eStopResetCB(self, estopstate):
-        self._global_var_lock.acquire()
-        if estopstate.data:
-            self.e_stop_on_ = False
-        self._global_var_lock.release()
+        (res, p, i, d, qpps) = self._roboclaw.ReadM2VelocityPID(self._address)
+        if res:
+            self._m2_v_p = p
+            self._m2_v_i = i
+            self._m2_v_d = d
+            self._m2_v_qpps = qpps
+
+    def set_m1_v_pid(self, p, i, d, qpps):
+        SetM1VelocityPID(self._address, p, i, d, qpps)
+
+    def set_m2_v_pid(self, p, i, d, qpps):
+        SetM2VelocityPID(self._address, p, i, d, qpps)
+
+    def init_motor_controller(self):
+        self._firmware_version = self._roboclaw.ReadVersion(self._address)
+        if self._v_pid_overwrite:
+            set_m1_v_pid(self._m1_v_p, self._m1_v_i, self._m1_v_d, self._m1_v_qpps)
+            set_m1_v_pid(self._m2_v_p, self._m2_v_i, self._m2_v_d, self._m2_v_qpps)
+        else:
+            self.get_V_PID()
 
     def set_effort(self, left_effort, right_effort):
-            self._roboclaw.ForwardBackwardM1(self._address, left_effort)
-            self._roboclaw.ForwardBackwardM2(self._address, right_effort)
+        self._roboclaw.ForwardBackwardM1(self._address, left_effort)
+        self._roboclaw.ForwardBackwardM2(self._address, right_effort)
 
     def spin(self):
         rospy.spin()
 
     def _twist_cb(self, cmd):
-
         if self.e_stop_on_:
             self._left_effort, self._right_effort = 64, 64
         else:
@@ -145,6 +161,17 @@ class RoverZeroNode:
         ]
         self._pub_diag.publish(darr)
 
+    def _eStopCB(self, estopstate):
+        self._global_var_lock.acquire()
+        if estopstate.data:
+            self.e_stop_on_ = True
+        self._global_var_lock.release()
+
+    def _eStopResetCB(self, estopstate):
+        self._global_var_lock.acquire()
+        if estopstate.data:
+            self.e_stop_on_ = False
+        self._global_var_lock.release()
 
 if __name__ == '__main__':
     rz = RoverZeroNode()
