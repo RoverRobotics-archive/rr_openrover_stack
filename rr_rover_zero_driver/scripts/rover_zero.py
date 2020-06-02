@@ -53,7 +53,7 @@ class RoverZeroNode:
         self._m2_v_qpps = rospy.get_param('~m2_v_qpps', 0.5)
         self._wheel_base = 0.358775  # Distance between center of wheels
         self._wheel_radius = 0.127   # Radius of wheel
-        self._v_pid_overwrite = rospy.get_param('~v_pid_overwrite', 0)
+        self._v_pid_overwrite = rospy.get_param('~v_pid_overwrite', False)
         # ROS Publishers
         self._pub_diag = rospy.Publisher('/diagnostics', DiagnosticArray, queue_size=1)
 
