@@ -29,5 +29,4 @@
     args="-urdf -model 2WD_rover -param robot_description"/>
 
   <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" />
-
 </launch>
