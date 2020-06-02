@@ -4,6 +4,7 @@ import rospy
 from geometry_msgs.msg import Twist
 from threading import Lock
 from diagnostic_msgs.msg import DiagnosticArray, DiagnosticStatus
+from std_msgs.msg import Bool
 
 class RoverZeroNode:
     def __init__(self):
@@ -12,8 +13,11 @@ class RoverZeroNode:
         # Class Variables
         self._left_effort = 64
         self._right_effort = 64
+        self._serial_lock = Lock()
+        self._global_var_lock = Lock()
         self._safety_lock = Lock()
         self._last_cmd_vel_received = rospy.get_rostime()
+        self.e_stop_on_ = False
 
         # Diagnostic Parameters
         self._firmware_version = None
@@ -42,7 +46,8 @@ class RoverZeroNode:
 
         # ROS Subscribers
         self._twist_sub = rospy.Subscriber("/cmd_vel", Twist, self._twist_cb, queue_size=1)
-
+        self._estop_on_sub = rospy.Subscriber("/soft_estop/enable", Bool, self._eStopCB, queue_size=1)
+        self._estop_off_sub = rospy.Subscriber("/soft_estop/reset", Bool, self._eStopResetCB, queue_size=1)
         # ROS Timers
         rospy.Timer(rospy.Duration(self._diag_frequency), self._diag_cb)
         rospy.Timer(rospy.Duration(self._cmd_vel_timeout), self._cmd_vel_timeout_cb)
@@ -101,11 +106,14 @@ class RoverZeroNode:
         rospy.spin()
 
     def _twist_cb(self, cmd):
-        self._left_effort, self._right_effort = self._twist_to_esc_effort(cmd.linear.x, cmd.angular.z)
-        self._safety_lock.acquire()
+        if self.e_stop_on_:
+            self._left_effort, self._right_effort = 64, 64
+        else:
+            self._left_effort, self._right_effort = self._twist_to_esc_effort(cmd.linear.x, cmd.angular.z)
+        self._serial_lock.acquire()
         self._last_cmd_vel_received = rospy.get_rostime()
         self.set_effort(self._left_effort, self._right_effort)
-        self._safety_lock.release()
+        self._serial_lock.release()
 
     def _twist_to_esc_effort(self, linear_rate, angular_rate):
         if linear_rate > self._max_vel:
@@ -129,11 +137,11 @@ class RoverZeroNode:
         return effort
 
     def _cmd_vel_timeout_cb(self, event):
-        self._safety_lock.acquire()
+        self._serial_lock.acquire()
         now = rospy.get_rostime()
         if now.to_sec() - self._last_cmd_vel_received.to_sec() > self._cmd_vel_timeout:
             self.set_effort(64, 64)
-        self._safety_lock.release()
+        self._serial_lock.release()
 
     def _diagnostics(self):
         self.get_battery_voltage()
@@ -141,9 +149,9 @@ class RoverZeroNode:
 
     def _diag_cb(self, event):
         # rospy is not thread safe.  This prevents serial interference
-        self._safety_lock.acquire()
+        self._serial_lock.acquire()
         self._diagnostics()
-        self._safety_lock.release()
+        self._serial_lock.release()
         darr = DiagnosticArray()
         darr.status = [
             DiagnosticStatus(name='Firmware Version', message=str(self._firmware_version)),
@@ -153,6 +161,17 @@ class RoverZeroNode:
         ]
         self._pub_diag.publish(darr)
 
+    def _eStopCB(self, estopstate):
+        self._global_var_lock.acquire()
+        if estopstate.data:
+            self.e_stop_on_ = True
+        self._global_var_lock.release()
+
+    def _eStopResetCB(self, estopstate):
+        self._global_var_lock.acquire()
+        if estopstate.data:
+            self.e_stop_on_ = False
+        self._global_var_lock.release()
 
 if __name__ == '__main__':
     rz = RoverZeroNode()
