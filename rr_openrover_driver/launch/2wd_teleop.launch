@@ -37,6 +37,7 @@
         <param name="max_vel_turn" value="9.0" />
         <param name="adjustable_throttle" value="True" />
         <param name="drive_increment" value="20" />
+        <param name="enable_flippers" value="False" />
         <param name="flipper_increment" value="20" />
         <param name="x_button_toggle" value="true"/>
         <param name="y_button_toggle" value="true"/>

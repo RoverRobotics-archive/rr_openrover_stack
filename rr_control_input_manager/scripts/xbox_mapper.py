@@ -3,14 +3,14 @@ from __future__ import division
 
 # Author: Nick Fragale
 # Description: This script converts Joystick commands into Joint Velocity commands
-# Monitors A, B, X and Y buttons and toggles their state (False on startup) publishes 
+# Monitors A, B, X and Y buttons and toggles their state (False on startup) publishes
 # a latched Bool() to /joystick/<button> where button is A, B, Y, or X
 # these can be remapped to different topics to control various things like E-stoping the robot
 # or starting to record a bagfile, or taking a picture.
 
 # Xbox controller mapping:
 #   axes: [l-stick horz,l-stick vert, l-trigger, r-stick horz, r-stick vert, r-trigger]
-#   buttons: [a,b,x,y,lb,rb,back,start,xbox,l-stick,r-stick,l-pad,r-pad,u-pad,d-pad]  
+#   buttons: [a,b,x,y,lb,rb,back,start,xbox,l-stick,r-stick,l-pad,r-pad,u-pad,d-pad]
 
 import time
 
@@ -39,6 +39,7 @@ button_msg = String()
 # 3) xpad module uses 2, xboxdrv uses 3
 driver = rospy.get_param('/xbox_mapper_node/driver', 'xboxdrv')
 wired_or_wireless = rospy.get_param('/xbox_mapper_node/wired_or_wireless', 'wireless')
+enable_flippers = rospy.get_param('/xbox_mapper_node/flippers_enabled', 'False')
 
 if driver == 'xpad':
     rospy.logfatal('[{node_name}] xpad driver not supported.'.format(node_name=rospy.get_name()))
@@ -91,7 +92,8 @@ MAX_VEL_FWD = rospy.get_param('~max_vel_drive', 2.6)
 MAX_VEL_TURN = rospy.get_param('~max_vel_turn', 9.0)
 MAX_VEL_FLIPPER = rospy.get_param('~max_vel_flipper', 1.4)
 DRIVE_THROTTLE = rospy.get_param('~default_drive_throttle', 0.15)
-FLIPPER_THROTTLE = rospy.get_param('~default_flipper_throttle', 0.6)
+if enable_flippers:
+    FLIPPER_THROTTLE = rospy.get_param('~default_flipper_throttle', 0.6)
 ADJ_THROTTLE = rospy.get_param('~adjustable_throttle', True)
 A_BUTTON_TOGGLE = rospy.get_param('~a_button_toggle', False)
 B_BUTTON_TOGGLE = rospy.get_param('~b_button_toggle', False)
@@ -114,7 +116,7 @@ x_button_msg.data = False
 y_button_msg = Bool()
 y_button_msg.data = False
 
-# define publishers  
+# define publishers
 pub = rospy.Publisher('/cmd_vel/joystick', TwistStamped, queue_size=3)
 a_button_pub = rospy.Publisher('/joystick/a_button', Bool, queue_size=1, latch=True)
 b_button_pub = rospy.Publisher('/joystick/b_button', Bool, queue_size=1, latch=True)
@@ -255,32 +257,35 @@ def joy_cb(Joy):
             if int(Joy.axes[DPAD_V_AXES]) == -1 and not DPAD_ACTIVE:
                 DRIVE_THROTTLE -= (1 / DRIVE_INCREMENTS)
                 DPAD_ACTIVE = True
-
-        if Joy.buttons[LB_BUTTON] == 1:
-            FLIPPER_THROTTLE -= (1 / FLIPPER_INCREMENTS)
-            rospy.loginfo(FLIPPER_THROTTLE)
-        if Joy.buttons[RB_BUTTON] == 1:
-            FLIPPER_THROTTLE += (1 / FLIPPER_INCREMENTS)
-            rospy.loginfo(FLIPPER_THROTTLE)
+        if enable_flippers:
+            if Joy.buttons[LB_BUTTON] == 1:
+                FLIPPER_THROTTLE -= (1 / FLIPPER_INCREMENTS)
+                rospy.loginfo(FLIPPER_THROTTLE)
+            if Joy.buttons[RB_BUTTON] == 1:
+                FLIPPER_THROTTLE += (1 / FLIPPER_INCREMENTS)
+                rospy.loginfo(FLIPPER_THROTTLE)
 
         # If the user tries to decrease full throttle to 0
         # Then set it back up to 0.2 m/s
         if DRIVE_THROTTLE <= 0.001:
             DRIVE_THROTTLE = (1 / DRIVE_INCREMENTS)
-        if FLIPPER_THROTTLE <= 0.001:
-            FLIPPER_THROTTLE = (1 / FLIPPER_INCREMENTS)
+        if enable_flippers:
+            if FLIPPER_THROTTLE <= 0.001:
+                FLIPPER_THROTTLE = (1 / FLIPPER_INCREMENTS)
 
         # If the user tries to increase the velocity limit when its at max
         # then set velocity limit to max allowed velocity
         if DRIVE_THROTTLE >= 1:
             DRIVE_THROTTLE = 1
-        if FLIPPER_THROTTLE >= 1:
-            FLIPPER_THROTTLE = 1
+        if enable_flippers:
+            if FLIPPER_THROTTLE >= 1:
+                FLIPPER_THROTTLE = 1
 
         # Update DEADBAND
         FWD_DEADBAND = 0.2 * DRIVE_THROTTLE * MAX_VEL_FWD
         TURN_DEADBAND = 0.2 * DRIVE_THROTTLE * MAX_VEL_TURN
-        FLIPPER_DEADBAND = 0.2 * FLIPPER_THROTTLE * MAX_VEL_FLIPPER
+        if enable_flippers:
+            FLIPPER_DEADBAND = 0.2 * FLIPPER_THROTTLE * MAX_VEL_FLIPPER
 
         if DPAD_ACTIVE:
             rospy.loginfo('Drive Throttle: %f', DRIVE_THROTTLE)
@@ -300,10 +305,10 @@ def joy_cb(Joy):
         turn_cmd = 0
 
     # Flipper up/down commands
-    flipper_cmd = (FLIPPER_THROTTLE * MAX_VEL_FLIPPER * Joy.axes[L_TRIG_AXES]) - (
-            FLIPPER_THROTTLE * MAX_VEL_FLIPPER * Joy.axes[R_TRIG_AXES])
-    if flipper_cmd < FLIPPER_DEADBAND and -FLIPPER_DEADBAND < flipper_cmd:
-        flipper_cmd = 0
+    if enable_flippers:
+        flipper_cmd = (FLIPPER_THROTTLE * MAX_VEL_FLIPPER * Joy.axes[L_TRIG_AXES]) - (FLIPPER_THROTTLE * MAX_VEL_FLIPPER * Joy.axes[R_TRIG_AXES])
+        if flipper_cmd < FLIPPER_DEADBAND and -FLIPPER_DEADBAND < flipper_cmd:
+            flipper_cmd = 0
 
     # Limit acceleration
     # drive_cmd, turn_cmd = limit_acc(drive_cmd, turn_cmd)
@@ -316,7 +321,8 @@ def joy_cb(Joy):
     cmd.header.seq = seq
     cmd.header.stamp = rospy.Time.now()
     cmd.twist.linear.x = drive_cmd
-    cmd.twist.angular.y = flipper_cmd
+    if enable_flippers:
+        cmd.twist.angular.y = flipper_cmd
     cmd.twist.angular.z = turn_cmd
     pub.publish(cmd)
     seq += 1
