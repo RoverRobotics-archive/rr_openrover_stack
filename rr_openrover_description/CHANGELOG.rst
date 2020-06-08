@@ -2,6 +2,10 @@
 Changelog for package rr_openrover_description
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.1.0 (2020-06-08)
+------------------
+* release to melodic
+
 1.0.0 (2020-06-08)
 ------------------
 * Merge branch 'develop' into feature/padiln/rviz_gazebo_sim

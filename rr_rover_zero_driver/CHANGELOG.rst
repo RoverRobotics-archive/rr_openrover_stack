@@ -2,6 +2,10 @@
 Changelog for package rr_rover_zero_driver
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.1.0 (2020-06-08)
+------------------
+* release to melodic
+
 1.0.0 (2020-06-08)
 ------------------
 * add all ros parameters to launch files

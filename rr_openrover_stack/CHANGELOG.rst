@@ -2,6 +2,10 @@
 Changelog for package rr_openrover_stack
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.1.0 (2020-06-08)
+------------------
+* release to melodic
+
 1.0.0 (2020-06-08)
 ------------------
 * Merge pull request `#76 <https://github.com/RoverRobotics/rr_openrover_stack/issues/76>`_ from RoverRobotics/feature/padiln/expose_odometry
