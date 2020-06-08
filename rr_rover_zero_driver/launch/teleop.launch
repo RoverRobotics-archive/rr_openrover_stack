@@ -6,14 +6,35 @@
     <!-- Rover Zero Node -->
     <node pkg="rr_rover_zero_driver" type="rover_zero.py" name="rover_zero_driver_node" output="screen">
         <param name="dev" value="/dev/rover-zero"/>
+        <param name="address" value="128"/>
         <param name="baud" value="115200"/>
-        <param name="timeout" value="0.1"/>
-        <param name="attempts" value="1"/>
         <param name="max_vel" value="5.0"/>
-        <param name="effort_coef" value="0.09"/>
-        <param name="max_turn" value="6.28"/>
-        <param name="diag_frequency" value="1.0"/>
-        <param name="cmd_vel_timeout" value="0.3"/>
+        <param name="max_turn_rate" value="6.28"/>
+        <param name="speed_to_duty_coef" value="1.02"/>
+        <param name="diag_frequency_hz" value="1.0"/>
+        <param name="motor_cmd_frequency_hz" value="30.0"/>
+        <param name="odom_frequency_hz" value="30.0"/>
+        <param name="cmd_vel_timeout" value="0.5"/>
+        <param name="enable_encoder_odom" value="False"/>
+        <param name="enable_esc_feedback_controls" value="True"/>
+        <param name="v_pid_overwrite" value="False"/>
+        <param name="save_motor_controller_settings" value="False"/>
+        <param name="m1_v_p" value="3.0"/>
+        <param name="m1_v_i" value="0.35"/>
+        <param name="m1_v_d" value="0.0"/>
+        <param name="m1_v_qpps" value="10000"/>
+        <param name="m2_v_p" value="3.0"/>
+        <param name="m2_v_i" value="0.35"/>
+        <param name="m2_v_d" value="0.0"/>
+        <param name="m2_v_qpps" value="10000"/>
+        <param name="encoder_pulses_per_turn" value="5400.0"/>
+        <param name="left_motor_max_current" value="10.0"/>
+        <param name="right_motor_max_current" value="10.0"/>
+        <param name="active_brake_timeout" value="1.0"/>
+        <param name="odom_frame" value="odom"/>
+        <param name="base_link_frame" value="base_link"/>
+        <param name="wheel_base" value="0.358775"/>  # Distance between center of wheels
+        <param name="wheel_radius" value="0.127"/>
         <remap from="/cmd_vel" to="/cmd_vel/managed"/>
     </node>
 

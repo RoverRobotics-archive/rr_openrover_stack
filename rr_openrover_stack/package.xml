@@ -14,8 +14,11 @@
   <license>BSD</license>
 
   <exec_depend>rr_openrover_driver</exec_depend>
+  <exec_depend>rr_rover_zero_driver</exec_depend>
   <exec_depend>rr_openrover_driver_msgs</exec_depend>
   <exec_depend>rr_control_input_manager</exec_depend>
+  <exec_depend>rr_openrover_description</exec_depend>
+  <exec_depend>rr_openrover_simulation</exec_depend>
   <buildtool_depend>catkin</buildtool_depend>
 
   <export>

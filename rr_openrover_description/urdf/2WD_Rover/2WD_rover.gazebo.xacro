@@ -1,0 +1,83 @@
+<?xml version="1.0"?>
+<robot name="2WD_rover" xmlns:xacro="http://ros.org/wiki/xacro">
+
+  <gazebo reference="chassis_link">
+    <material>Gazebo/FlatBlack</material>
+  </gazebo>
+
+  <gazebo reference="left_front_wheel_link">
+    <mu1>1.0</mu1>
+    <mu2>1.0</mu2>
+    <kp>300000.0</kp>
+    <material>Gazebo/Black</material>
+  </gazebo>
+
+  <gazebo reference="right_front_wheel_link">
+    <mu1>1.0</mu1>
+    <mu2>1.0</mu2>
+    <kp>300000.0</kp>
+    <material>Gazebo/Black</material>
+  </gazebo>
+
+  <gazebo reference="left_rear_castor_housing_link">
+    <material>Gazebo/Grey</material>
+  </gazebo>
+
+  <gazebo reference="left_rear_castor_wheel_link">
+    <mu1>0.6</mu1>
+    <mu2>0.6</mu2>
+    <kp>200000.0</kp>
+    <material>Gazebo/Grey</material>
+  </gazebo>
+
+  <gazebo reference="right_rear_castor_housing_link">
+    <material>Gazebo/Grey</material>
+  </gazebo>
+
+  <gazebo reference="right_rear_castor_wheel_link">
+    <mu1>0.6</mu1>
+    <mu2>0.6</mu2>
+    <kp>200000.0</kp>
+    <material>Gazebo/Grey</material>
+  </gazebo>
+
+  <gazebo>
+    <plugin name="gazebo_base_controller" filename="libgazebo_ros_diff_drive.so">
+      <robotNamespace>/</robotNamespace>
+      <odometryFrame>odom</odometryFrame>
+      <odometryTopic>odom</odometryTopic>
+      <commandTopic>cmd_vel/managed</commandTopic>
+      <publishOdom>true</publishOdom>
+      <publishOdomTF>false</publishOdomTF>
+      <robotBaseFrame>base_footprint</robotBaseFrame>
+      <publishWheelTF>false</publishWheelTF>
+      <updateRate>15.0</updateRate>
+      <leftJoint>left_front_wheel_joint</leftJoint>
+      <rightJoint>right_front_wheel_joint</rightJoint>
+      <wheelSeparation>0.358</wheelSeparation>
+      <wheelDiameter>0.254</wheelDiameter>
+      <wheelAcceleration>0.7</wheelAcceleration>
+      <wheelTorque>8</wheelTorque>
+      <publishWheelJointState>false</publishWheelJointState>
+      <ros>
+        <argument>odom:=odom_raw</argument>
+      </ros>
+    </plugin>
+  </gazebo>
+
+  <gazebo>
+    <plugin name="gazebo_joint_publisher" filename="libgazebo_ros_joint_state_publisher.so">
+      <robotNamespace>/</robotNamespace>
+      <jointName>
+        left_front_wheel_joint,
+        right_front_wheel_joint,
+        left_rear_castor_housing_joint,
+        left_rear_castor_wheel_joint,
+        right_rear_castor_housing_joint,
+        right_rear_castor_wheel_joint
+      </jointName>
+      <alwaysOn>true</alwaysOn>
+      <updateRate>30.0</updateRate>
+    </plugin>
+  </gazebo>
+</robot>

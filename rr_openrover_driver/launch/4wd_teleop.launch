@@ -64,11 +64,4 @@
         <param name="autorepeat_rate" value="10" />
         <remap from="/joy" to="/joystick" />
     </node>
-
-<!--   <node pkg="usb_cam" type="usb_cam_node" name="usb_cam_node" />
--->
-
-<!--   <node pkg="web_video_server" type="web_video_server" name="web_video_server" />
--->
-
 </launch>
