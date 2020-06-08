@@ -1,5 +1,4 @@
 <launch>
-
     <arg name="openrover_node_name" default="rr_openrover_driver" />
 
     <!-- OpenRover Driver -->
@@ -23,5 +22,4 @@
     <node pkg="rr_openrover_driver" type="diagnostics.py" name="rr_openrover_diagnostics_node">
         <remap from="/raw_slow_rate_data" to="/$(arg openrover_node_name)/raw_slow_rate_data"/>
     </node>
-
 </launch>

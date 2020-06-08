@@ -46,7 +46,7 @@
       <robotNamespace>/</robotNamespace>
       <odometryFrame>odom</odometryFrame>
       <odometryTopic>odom</odometryTopic>
-      <commandTopic>cmd_vel</commandTopic>
+      <commandTopic>cmd_vel/managed</commandTopic>
       <publishOdom>true</publishOdom>
       <publishOdomTF>false</publishOdomTF>
       <robotBaseFrame>base_footprint</robotBaseFrame>
