@@ -50,11 +50,11 @@
   <!--   <doc_depend>doxygen</doc_depend> -->
   <buildtool_depend>catkin</buildtool_depend>
   <exec_depend>std_msgs</exec_depend>
-  <exec_depend>gazebo-msgs</exec_depend>
-  <exec_depend>gazebo-plugins</exec_depend>
-  <exec_depend>gazebo-ros</exec_depend>
-  <exec_depend>gazebo-ros-control</exec_depend>
-  <exec_depend>gazebo-ros-pkgs</exec_depend>
+  <exec_depend>gazebo_msgs</exec_depend>
+  <exec_depend>gazebo_plugins</exec_depend>
+  <exec_depend>gazebo_ros</exec_depend>
+  <exec_depend>gazebo_ros_control</exec_depend>
+  <exec_depend>gazebo_ros_pkgs</exec_depend>
 
 
 

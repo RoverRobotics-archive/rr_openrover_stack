@@ -4,6 +4,10 @@ Changelog for package rr_openrover_description
 
 1.0.0 (2020-06-08)
 ------------------
+* Merge branch 'develop' into feature/padiln/rviz_gazebo_sim
+* adding rviz and gazebo simulation to rr_openrover stack
+* added support for gazebo and rviz simulation for 2wd and 4wd rovers
+* Contributors: padiln
 
 0.8.0 (2020-03-25)
 ------------------

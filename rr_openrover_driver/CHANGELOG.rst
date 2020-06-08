@@ -4,6 +4,8 @@ Changelog for package rr_openrover_driver
 
 1.0.0 (2020-06-08)
 ------------------
+* Update teleop.launch
+* Contributors: Nick Fragale, padiln
 
 0.8.0 (2020-03-25)
 ------------------

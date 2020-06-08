@@ -4,6 +4,16 @@ Changelog for package rr_openrover_stack
 
 1.0.0 (2020-06-08)
 ------------------
+* Merge pull request `#76 <https://github.com/RoverRobotics/rr_openrover_stack/issues/76>`_ from RoverRobotics/feature/padiln/expose_odometry
+  Feature/padiln/expose odometry
+* Merge branch 'develop' into feature/padiln/rviz_gazebo_sim
+* Merge pull request `#51 <https://github.com/RoverRobotics/rr_openrover_stack/issues/51>`_ from RoverRobotics/master
+  Sync with master
+* Merge pull request `#43 <https://github.com/RoverRobotics/rr_openrover_stack/issues/43>`_ from RoverRobotics/kinetic-devel
+  Merging change log update from bloom release
+* Merge pull request `#40 <https://github.com/RoverRobotics/rr_openrover_stack/issues/40>`_ from RoverRobotics/kinetic-devel
+  Kinetic devel
+* Contributors: padiln
 
 0.8.0 (2020-03-25)
 ------------------

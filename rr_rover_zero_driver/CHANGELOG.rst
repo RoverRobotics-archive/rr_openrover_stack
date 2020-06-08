@@ -4,6 +4,26 @@ Changelog for package rr_rover_zero_driver
 
 1.0.0 (2020-06-08)
 ------------------
+* add all ros parameters to launch files
+* updated rr_rover_zero_driver to support pid and encoders
+* merge with develop branch
+* Merge pull request `#75 <https://github.com/RoverRobotics/rr_openrover_stack/issues/75>`_ from RoverRobotics/feature/rook/rover_zero_driver_estop
+  Feature/rook/rover zero driver estop
+* Fixed estop merge issue
+* changed lock name to be more descriptive
+* Merge pull request `#72 <https://github.com/RoverRobotics/rr_openrover_stack/issues/72>`_ from RoverRobotics/feature/rookrobotic/rover_zer_pid_get_set
+  fix syntax issues
+* Merge branch 'develop' into feature/rookrobotic/rover_zer_pid_get_set
+* fix syntax issues
+* Update rover_zero.py
+  make _v_pid_overwrite a boolean.
+* added odometry data to rover_zero.py
+* Estop Handler in Roboclaw
+* fix variable names
+* getter and setter for Velocity Pid
+* start odometry callback
+* Default Twist message subscriber to /cmd_vel
+* Contributors: William Rook, padiln
 
 0.8.0 (2020-03-25)
 ------------------

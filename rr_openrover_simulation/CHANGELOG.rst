@@ -4,7 +4,7 @@ Changelog for package rr_openrover_simulation
 
 1.0.0 (2020-06-08)
 ------------------
-* merge with develop branch
+* update simulation package version
 * Merge pull request `#69 <https://github.com/RoverRobotics/rr_openrover_stack/issues/69>`_ from RoverRobotics/feature/rook/gazebo-xcontroller
   Xbox controller input for Gazebo simulation
 * clean up launch files
@@ -13,8 +13,6 @@ Changelog for package rr_openrover_simulation
 * Xbox controller input for Gazebo simulation
 * add world_name args to gazebo launch files
 * cleanup simulation launch files
-* Merge pull request `#65 <https://github.com/RoverRobotics/rr_openrover_stack/issues/65>`_ from RoverRobotics/feature/padiln/rviz_gazebo_sim
-  Feature/padiln/rviz_gazebo_sim
 * adding rviz and gazebo simulation to rr_openrover stack
 * added support for gazebo and rviz simulation for 2wd and 4wd rovers
 * Contributors: William Rook, padiln

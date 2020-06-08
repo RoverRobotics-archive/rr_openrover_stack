@@ -4,6 +4,7 @@ Changelog for package rr_openrover_driver_msgs
 
 1.0.0 (2020-06-08)
 ------------------
+* Contributors: padiln
 
 0.8.0 (2020-03-25)
 ------------------
