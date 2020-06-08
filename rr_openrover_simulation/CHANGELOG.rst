@@ -2,7 +2,7 @@
 Changelog for package rr_openrover_simulation
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-_1.1.0 (2020-06-08)
+1.1.0 (2020-06-08)
 ------------------
 * release to melodic
 
