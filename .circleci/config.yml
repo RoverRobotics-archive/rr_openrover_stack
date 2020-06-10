@@ -29,10 +29,10 @@ jobs:
           command: |
             apt-get update
             apt-get install -y build-essential
-            apt-get install -y ros-kinetic-tf
+            apt-get install -y ros-melodic-tf
       - run:
           command: |
-            source /opt/ros/kinetic/setup.bash
+            source /opt/ros/melodic/setup.bash
             catkin_init_workspace
             cd ..
             catkin_make run_tests
