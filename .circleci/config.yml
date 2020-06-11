@@ -1,5 +1,5 @@
 jobs:
-  build:
+  build-kinetic:
     working_directory: /catkin_ws/src
     docker:
       - image: ros:kinetic-ros-core-xenial
@@ -8,10 +8,31 @@ jobs:
       - run:
           command: |
             apt-get update
+            apt-get install -y build-essential
             apt-get install -y ros-kinetic-tf
       - run:
           command: |
             source /opt/ros/kinetic/setup.bash
+            catkin_init_workspace
+            cd ..
+            catkin_make run_tests
+            catkin_test_results
+            # Exit code 1 to cause build step failure
+            if [ $(catkin_test_results | awk '/Summary/ {print $6}') != 0 ]; then exit 1; fi
+  build-melodic:
+    working_directory: /catkin_ws/src
+    docker:
+      - image: ros:melodic-ros-core-bionic
+    steps:
+      - checkout
+      - run:
+          command: |
+            apt-get update
+            apt-get install -y build-essential
+            apt-get install -y ros-melodic-tf
+      - run:
+          command: |
+            source /opt/ros/melodic/setup.bash
             catkin_init_workspace
             cd ..
             catkin_make run_tests
@@ -24,11 +45,17 @@ workflows:
   version: 2
   build-and-test:
     jobs:
-      - build:
+      - build-kinetic:
           filters:
             branches:
               only:
                 - master
                 - develop
                 - kinetic-devel
+      - build-melodic:
+          filters:
+            branches:
+              only:
+                - master
+                - develop
                 - melodic-devel

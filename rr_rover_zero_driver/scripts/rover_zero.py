@@ -5,7 +5,7 @@ from geometry_msgs.msg import Twist, Quaternion
 from threading import Lock
 from diagnostic_msgs.msg import DiagnosticArray, DiagnosticStatus, KeyValue
 from nav_msgs.msg import Odometry
-from tf.transformations import quaternion_from_euler
+import PyKDL
 import math
 from std_msgs.msg import Bool
 
@@ -344,7 +344,8 @@ class RoverZeroNode:
         odom_msg.header.frame_id = self._odom_frame
         odom_msg.header.stamp = rospy.Time.now()
 
-        quat = quaternion_from_euler(0, 0, self._odom_orientation_theta)
+        quat = [0, 0, 0, 0]
+        PyKDL.RPY(0, 0, self._odom_orientation_theta).GetQuaternion(quat[0], quat[1], quat[2], quat[3])
 
         odom_msg.pose.pose.position.x = self._odom_position_x
         odom_msg.pose.pose.position.y = self._odom_position_y
