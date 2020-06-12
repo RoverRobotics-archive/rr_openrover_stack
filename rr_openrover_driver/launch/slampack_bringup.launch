@@ -3,24 +3,21 @@
     <arg name="config_locks"  default="$(find rr_openrover_driver)/config/twist_mux_locks.yaml"/>
     <arg name="config_topics" default="$(find rr_openrover_driver)/config/twist_mux_topics.yaml"/>
 
-    <include file="$(find rr_openrover_description)/launch/description.launch"/>
-
     <!-- OpenRover Driver -->
     <node pkg="rr_openrover_driver" type="openrover_driver_node" name="$(arg openrover_node_name)" respawn="false" output="screen">
         <param name="port" value="/dev/rover" />
-        <param name="drive_type" value="4wd" />
+        <param name="drive_type" value="2wd" />
         <param name="enable_timeout" type="bool" value="true"/>
         <param name="timeout" type="double" value="0.3"/>
         <param name="closed_loop_control_on" type="bool" value="false" />
+        <!--<param name="closed_loop_control_on" type="bool" value="true" />--><!-- Requires fast_data_rate >= 60 -->
         <param name="total_weight" type="double" value="20.41"/>
-        <param name="traction_factor" value="0.67"/>
+        <param name="traction_factor" value="0.610"/>
         <param name="odom_covariance_0" value="0.01"/>
         <param name="odom_covariance_35" value="0.03"/>
-
         <param name="fast_data_rate" value="10.0"/>
         <param name="medium_data_rate" value="2.0"/>
         <param name="slow_data_rate" value="1.0"/>
-        <param name="use_legacy" type="bool" value="false" />
     </node>
 
     <!-- OpenRover Diagnostics -->
@@ -36,7 +33,7 @@
         <remap from="/joystick/y_button" to="/joy_priority" />
         <remap from="/joystick/x_button" to="/pause_navigation"/>
         <param name="max_vel_fwd" value="0.4" />
-        <param name="max_vel_turn" value="9.0" />
+        <param name="max_vel_turn" value="7.0" />
         <param name="adjustable_throttle" value="True" />
         <param name="drive_increment" value="20" />
         <param name="flipper_increment" value="20" />
@@ -62,6 +59,28 @@
     <!-- Xbox controller driver -->
     <node pkg="joy" type="joy_node" name="joy_node" output="screen" respawn="true" >
         <param name="autorepeat_rate" value="10" />
+        <param name="dev" value="/dev/input/jsX" />
         <remap from="/joy" to="/joystick" />
     </node>
+
+    <!-- RPLidar driver -->
+    <node name="rplidarNode"          pkg="rplidar_ros"  type="rplidarNode" output="screen">
+        <param name="serial_port"         type="string" value="/dev/rplidar"/>  
+        <param name="serial_baudrate"     type="int"    value="256000"/>
+        <param name="frame_id"            type="string" value="lidar_link"/>
+        <param name="inverted"            type="bool"   value="false"/>
+        <param name="angle_compensate"    type="bool"   value="true"/>
+    </node>
+
+
+    <arg name="config" default="4WD_Rover_with_SLAM_Pack" />
+    <param name="robot_description"
+           command="$(find rr_openrover_description)/scripts/env_run
+                    $(find rr_openrover_description)/urdf/configs/$(arg config)
+                    $(find xacro)/xacro $(find rr_openrover_description)/urdf/4WD_Rover/4WD_rover.urdf.xacro" />
+
+    <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher" />
+    <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" />
+
+
 </launch>
