@@ -344,8 +344,7 @@ class RoverZeroNode:
         odom_msg.header.frame_id = self._odom_frame
         odom_msg.header.stamp = rospy.Time.now()
 
-        quat = [0, 0, 0, 0]
-        PyKDL.RPY(0, 0, self._odom_orientation_theta).GetQuaternion(quat[0], quat[1], quat[2], quat[3])
+        quat = PyKDL.Rotation.RPY(0, 0, self._odom_orientation_theta).GetQuaternion()
 
         odom_msg.pose.pose.position.x = self._odom_position_x
         odom_msg.pose.pose.position.y = self._odom_position_y
