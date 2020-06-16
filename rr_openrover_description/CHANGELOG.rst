@@ -2,6 +2,11 @@
 Changelog for package rr_openrover_description
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.0.1 (2020-06-15)
+------------------
+* updating packge dependencies
+* update package.xml rr_openrover_simulation to properly list gazebo rosdep
+
 1.0.0 (2020-06-08)
 ------------------
 * Merge branch 'develop' into feature/padiln/rviz_gazebo_sim

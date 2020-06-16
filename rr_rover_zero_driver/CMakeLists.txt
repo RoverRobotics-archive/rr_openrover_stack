@@ -4,6 +4,9 @@ project(rr_rover_zero_driver)
 find_package(catkin REQUIRED COMPONENTS
   rospy
   std_msgs
+  geometry_msgs
+  diagnostic_msgs
+  nav_msgs
 )
 
 catkin_python_setup()

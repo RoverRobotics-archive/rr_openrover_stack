@@ -2,6 +2,12 @@
 Changelog for package rr_rover_zero_driver
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.0.1 (2020-06-15)
+------------------
+* fixing kdl call
+* push dependency fix
+* Contributors: Nick Fragale, padiln
+
 1.0.0 (2020-06-08)
 ------------------
 * add all ros parameters to launch files

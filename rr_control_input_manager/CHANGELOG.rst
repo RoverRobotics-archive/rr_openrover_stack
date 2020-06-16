@@ -2,6 +2,9 @@
 Changelog for package rr_control_input_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.0.1 (2020-06-15)
+------------------
+
 1.0.0 (2020-06-08)
 ------------------
 * adding support for freedom robotics and add watchdog timer to rover zero driver
