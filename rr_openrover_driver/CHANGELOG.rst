@@ -2,6 +2,11 @@
 Changelog for package rr_openrover_driver
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.1.1 (2020-06-15)
+------------------
+* Flip orrientation of Lidar, and rename launch file names
+* Contributors: 1102
+
 1.1.0 (2020-06-08)
 ------------------
 * release to melodic

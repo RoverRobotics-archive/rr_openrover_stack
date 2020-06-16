@@ -2,6 +2,15 @@
 Changelog for package rr_rover_zero_driver
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.1.1 (2020-06-15)
+------------------
+* correct find_packge for rover zero cmakelists
+* fixing pyKDL RPY to Quat conversion
+* fix rospy dependency issue
+* proper depend tag
+* add pyserial to package.xml
+* Contributors: 1102, padiln
+
 1.1.0 (2020-06-08)
 ------------------
 * release to melodic
