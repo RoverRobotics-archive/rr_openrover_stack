@@ -3,6 +3,7 @@
 A ROS1 stack that handles communication between Rover Robotics rover platforms and computer payloads.
 The rover platform accept velocity commands and publishes wheel encoder data and power information.
 
+Documentation for this package can be found at http://wiki.ros.org/rr_openrover_stack
 
 Master|Develop|Kinetic-Devel
 ---|---|---
