@@ -45,7 +45,7 @@
       <wheelDiameter>0.254</wheelDiameter>
       <robotBaseFrame>base_footprint</robotBaseFrame>
       <torque>8</torque>
-      <topicName>cmd_vel</topicName>
+      <commandTopic>cmd_vel/managed</commandTopic>
       <broadcastTF>false</broadcastTF>
     </plugin>
   </gazebo>
