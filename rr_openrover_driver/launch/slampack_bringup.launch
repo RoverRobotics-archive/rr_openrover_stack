@@ -73,6 +73,10 @@
     </node>
 
 
+    <!-- Intel RealSense D435i Driver -->
+    <include file="$(find realsense2_camera)/launch/rs_camera.launch" />
+
+
     <arg name="config" default="4WD_Rover_with_SLAM_Pack" />
     <param name="robot_description"
            command="$(find rr_openrover_description)/scripts/env_run

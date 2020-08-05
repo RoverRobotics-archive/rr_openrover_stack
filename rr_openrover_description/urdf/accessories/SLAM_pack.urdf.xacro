@@ -61,7 +61,7 @@
     </inertial>
   </link>
 
-  <link name="realsense_link">
+  <link name="camera_link">
     <visual>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
@@ -71,21 +71,21 @@
     </visual>
   </link>
 
-  <joint name="realsense_link_joint" type="fixed">
+  <joint name="camera_link_joint" type="fixed">
     <parent link="top_plate_link"/>
-    <child link="realsense_link"/>
+    <child link="camera_link"/>
     <origin xyz="0.145 0 0.0125" rpy="0 0 0"/>
   </joint>
 
   <link name="depth_image_link"/>
 
   <joint name="depth_image_link_joint" type="fixed">
-    <parent link="realsense_link"/>
+    <parent link="camera_link"/>
     <child link="depth_image_link"/>
     <origin xyz="0 0 0" rpy="-${pi /2} 0 -${pi /2}"/>
   </joint>
 
-  <gazebo reference="realsense_link">
+  <gazebo reference="camera_link">
     <sensor name="gazebo_realsense_435" type="depth">
       <plugin name="gazebo_realsense_435_controller" filename="libgazebo_ros_openni_kinect.so">
         <alwayson>true</alwayson>
