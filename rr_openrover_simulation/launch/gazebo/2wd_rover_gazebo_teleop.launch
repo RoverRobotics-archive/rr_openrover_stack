@@ -22,7 +22,7 @@
 
     <!--  Twist Mux  -->
     <node pkg="twist_mux" type="twist_mux" name="twist_mux" output="screen">
-        <remap from="cmd_vel_out" to="/cmd_vel"/>
+        <remap from="cmd_vel_out" to="/cmd_vel/managed"/>
 
         <rosparam file="$(arg config_locks)"  command="load"/>
         <rosparam file="$(arg config_topics)" command="load"/>

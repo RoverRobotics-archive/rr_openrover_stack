@@ -3,14 +3,14 @@ from __future__ import division
 
 # Author: Nick Fragale
 # Description: This script converts Joystick commands into Joint Velocity commands
-# Monitors A, B, X and Y buttons and toggles their state (False on startup) publishes 
+# Monitors A, B, X and Y buttons and toggles their state (False on startup) publishes
 # a latched Bool() to /joystick/<button> where button is A, B, Y, or X
 # these can be remapped to different topics to control various things like E-stoping the robot
 # or starting to record a bagfile, or taking a picture.
 
 # Xbox controller mapping:
 #   axes: [l-stick horz,l-stick vert, l-trigger, r-stick horz, r-stick vert, r-trigger]
-#   buttons: [a,b,x,y,lb,rb,back,start,xbox,l-stick,r-stick,l-pad,r-pad,u-pad,d-pad]  
+#   buttons: [a,b,x,y,lb,rb,back,start,xbox,l-stick,r-stick,l-pad,r-pad,u-pad,d-pad]
 
 import time
 
@@ -97,9 +97,9 @@ A_BUTTON_TOGGLE = rospy.get_param('~a_button_toggle', False)
 B_BUTTON_TOGGLE = rospy.get_param('~b_button_toggle', False)
 X_BUTTON_TOGGLE = rospy.get_param('~x_button_toggle', False)
 Y_BUTTON_TOGGLE = rospy.get_param('~y_button_toggle', False)
-MIN_TOGGLE_DUR = 0.5  #
-DRIVE_INCREMENTS = float(20)
-FLIPPER_INCREMENTS = float(20)
+MIN_TOGGLE_DUR = 0.5
+DRIVE_INCREMENTS = rospy.get_param('~drive_increment', 20.0)
+FLIPPER_INCREMENTS = rospy.get_param('~drive_increment', 20.0)
 DEADBAND = 0.2
 FWD_ACC_LIM = 0.2
 TRN_ACC_LIM = 0.4
