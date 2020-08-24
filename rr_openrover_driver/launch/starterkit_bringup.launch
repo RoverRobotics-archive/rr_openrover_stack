@@ -26,21 +26,19 @@
         <remap from="/raw_slow_rate_data" to="/$(arg openrover_node_name)/raw_slow_rate_data"/>
     </node>
 
-    <!-- Xbox 360 Controller Button Mapping -->
-    <node pkg="rr_control_input_manager" type="xbox_mapper.py" name="rr_xbox_mapper_node" output="screen" >
-        <remap from="joy" to="/joystick" />
-        <remap from="/joystick/a_button" to="/soft_estop/enable" />
-        <remap from="/joystick/b_button" to="/soft_estop/reset" />
-        <remap from="/joystick/y_button" to="/joy_priority" />
-        <remap from="/joystick/x_button" to="/pause_navigation"/>
-        <param name="max_vel_fwd" value="0.4" />
-        <param name="max_vel_turn" value="7.0" />
-        <param name="adjustable_throttle" value="True" />
-        <param name="drive_increment" value="20" />
-        <param name="flipper_increment" value="20" />
-        <param name="x_button_toggle" value="true"/>
-        <param name="y_button_toggle" value="true"/>
+
+    <!-- PS4 Ubuntu Driver -->
+    <include file="$(find ds4_driver)/launch/ds4_driver.launch" >
+        <arg name="addr" value="" />
+        <arg name="use_standard_msgs" value="false" />
+    </include>
+
+    <!-- PS4 Controller ROS Driver -->
+    <node pkg="ds4_driver" type="ds4_twist_node.py" name="ds4_twist" output="screen" >
+        <rosparam command="load" file="$(find rr_openrover_driver)/config/ps4_controller_config.yaml" />
+        <param name="stamped" value="false" />
     </node>
+
 
     <!--  Twist Mux  -->
     <node pkg="twist_mux" type="twist_mux" name="twist_mux" output="screen">
@@ -57,10 +55,4 @@
         <rosparam file="$(find rr_control_input_manager)/config/input_topics.yaml" command="load"/>
     </node>
 
-    <!-- Xbox controller driver -->
-    <node pkg="joy" type="joy_node" name="joy_node" output="screen" respawn="true" >
-        <param name="autorepeat_rate" value="10" />
-        <param name="dev" value="/dev/input/jsX" />
-        <remap from="/joy" to="/joystick" />
-    </node>
 </launch>
