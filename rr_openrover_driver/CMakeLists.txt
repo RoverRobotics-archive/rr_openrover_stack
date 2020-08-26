@@ -24,7 +24,7 @@ generate_messages(
 
 catkin_package(
   INCLUDE_DIRS include
-  CATKIN_DEPENDS message_runtime rr_openrover_driver_msgs sensor_msgs
+  CATKIN_DEPENDS message_runtime rr_openrover_driver_msgs sensor_msgs ds4_driver
 )
 
 ###########

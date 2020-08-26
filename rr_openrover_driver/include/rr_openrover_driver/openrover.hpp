@@ -9,7 +9,6 @@
 #include <string>
 #include <fstream>
 
-#include <sensor_msgs/Joy.h>
 #include <geometry_msgs/Twist.h>
 #include <std_msgs/Bool.h>
 #include "rr_openrover_driver_msgs/RawRrOpenroverDriverFastRateData.h"
@@ -132,7 +131,7 @@ private:
   float total_weight_;  // in kg
   // int motor_speed_diff_max_; ---WIP
   geometry_msgs::Twist cmd_vel_commanded_;
-  sensor_msgs::Joy joy_commands_;
+  ds4_driver::Joy joy_commands_;
 
   std::vector<unsigned char> serial_fast_buffer_;
   std::vector<unsigned char> serial_medium_buffer_;
@@ -140,7 +139,7 @@ private:
   std::vector<unsigned char> serial_fan_buffer_;
 
   // ROS Subscriber callback functions
-  void joyCB(const sensor_msgs::Joy::ConstPtr& msg);
+  void joyCB(const ds4_driver::Status::ConstPtr& msg);
   void cmdVelCB(const geometry_msgs::Twist::ConstPtr& msg);
   void fanSpeedCB(const std_msgs::Int32::ConstPtr& msg);
   void eStopCB(const std_msgs::Bool::ConstPtr& msg);
