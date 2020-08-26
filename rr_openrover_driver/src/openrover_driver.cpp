@@ -392,6 +392,7 @@ void OpenRover::joyCB(const sensor_msgs::Joy::ConstPtr& msg){
 //Get joy_msg Trimmers button and increase trim
   joy_commands_ = *msg;
   printf(joy_commands_.buttons);
+  printf(joy_commands);
 }
 
 void OpenRover::cmdVelCB(const geometry_msgs::Twist::ConstPtr& msg)
