@@ -139,7 +139,7 @@ private:
   std::vector<unsigned char> serial_fan_buffer_;
 
   // ROS Subscriber callback functions
-  void joyCB(const sensor_msgs:Joy:ConstPtr& msg);
+  void joyCB(const sensor_msgs::Joy::ConstPtr& msg);
   void cmdVelCB(const geometry_msgs::Twist::ConstPtr& msg);
   void fanSpeedCB(const std_msgs::Int32::ConstPtr& msg);
   void eStopCB(const std_msgs::Bool::ConstPtr& msg);
