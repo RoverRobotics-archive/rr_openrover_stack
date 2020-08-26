@@ -379,7 +379,7 @@ void OpenRover::timeoutCB(const ros::WallTimerEvent& e)
   return;
 }
 
-void OpenRover::fanSpeedCB(const std_msgs::Int32::ConstPtr& msg)
+void OpenRover::fanSpeedCB(const  std_msgs::Int32::ConstPtr& msg)
 {
   if (is_serial_coms_open_ && (serial_fan_buffer_.size() == 0))
   {
@@ -389,10 +389,16 @@ void OpenRover::fanSpeedCB(const std_msgs::Int32::ConstPtr& msg)
   return;
 }
 
-void OpenRover::joyCB(const ds4_driver::Status::ConstPtr& msg){
+void OpenRover::joyCB(const std_msgs::Int32::ConstPtr& msg){
 //Get joy_msg Trimmers button and increase trim
-  joy_commands_ = *msg;
-
+  if (msg->data == 0){
+    //do nothing
+  }else if(msg->data ==1 && trim <= 1){
+    //increase
+    trim+=0.05;
+  }else if(msg->data ==2 && trim >= -1){
+    trim-=0.05;
+  }
 }
 
 void OpenRover::cmdVelCB(const geometry_msgs::Twist::ConstPtr& msg)

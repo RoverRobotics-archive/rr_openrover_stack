@@ -131,7 +131,7 @@ private:
   float total_weight_;  // in kg
   // int motor_speed_diff_max_; ---WIP
   geometry_msgs::Twist cmd_vel_commanded_;
-  ds4_driver::Joy joy_commands_;
+  int::Joy joy_commands_;
 
   std::vector<unsigned char> serial_fast_buffer_;
   std::vector<unsigned char> serial_medium_buffer_;
@@ -139,7 +139,7 @@ private:
   std::vector<unsigned char> serial_fan_buffer_;
 
   // ROS Subscriber callback functions
-  void joyCB(const ds4_driver::Status::ConstPtr& msg);
+  void joyCB(const std_msgs::Int32::ConstPtr& msg);
   void cmdVelCB(const geometry_msgs::Twist::ConstPtr& msg);
   void fanSpeedCB(const std_msgs::Int32::ConstPtr& msg);
   void eStopCB(const std_msgs::Bool::ConstPtr& msg);
