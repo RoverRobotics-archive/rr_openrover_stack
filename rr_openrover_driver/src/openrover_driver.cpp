@@ -418,6 +418,7 @@ void OpenRover::cmdVelCB(const geometry_msgs::Twist::ConstPtr& msg)
     }else if(linear_rate <0){
       turn_rate = -trim;
     }
+    ROS_INFO("Trim value is at %f",trim);
   }
   static bool prev_e_stop_state_ = false;
 
