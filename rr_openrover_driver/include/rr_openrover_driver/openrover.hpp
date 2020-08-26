@@ -85,6 +85,7 @@ private:
   ros::Publisher battery_status_a_pub, battery_status_b_pub;
   ros::Publisher battery_state_of_charge_pub;
 
+  ros::Subscriber joy_sub;
   ros::Subscriber cmd_vel_sub;
   ros::Subscriber fan_speed_sub;
   ros::Subscriber e_stop_sub;
@@ -129,6 +130,7 @@ private:
   float total_weight_;  // in kg
   // int motor_speed_diff_max_; ---WIP
   geometry_msgs::Twist cmd_vel_commanded_;
+  sensor_msgs::Joy joy_commands_;
 
   std::vector<unsigned char> serial_fast_buffer_;
   std::vector<unsigned char> serial_medium_buffer_;
@@ -136,6 +138,7 @@ private:
   std::vector<unsigned char> serial_fan_buffer_;
 
   // ROS Subscriber callback functions
+  void joyCB(const sensor_msgs:Joy:ConstPtr& msg);
   void cmdVelCB(const geometry_msgs::Twist::ConstPtr& msg);
   void fanSpeedCB(const std_msgs::Int32::ConstPtr& msg);
   void eStopCB(const std_msgs::Bool::ConstPtr& msg);
