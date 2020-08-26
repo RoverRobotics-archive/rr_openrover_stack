@@ -127,7 +127,7 @@ private:
   int motor_speed_flipper_coef_;
   int motor_speed_deadband_;
   double trim;
-  bool trimbuttonpressed;
+  int prev;
   float total_weight_;  // in kg
   // int motor_speed_diff_max_; ---WIP
   geometry_msgs::Twist cmd_vel_commanded_;
