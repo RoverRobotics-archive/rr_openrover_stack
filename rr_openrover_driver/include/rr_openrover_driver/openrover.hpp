@@ -9,6 +9,7 @@
 #include <string>
 #include <fstream>
 
+#include <sensor_msgs/Joy.h>
 #include <geometry_msgs/Twist.h>
 #include <std_msgs/Bool.h>
 #include "rr_openrover_driver_msgs/RawRrOpenroverDriverFastRateData.h"
