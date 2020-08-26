@@ -406,9 +406,9 @@ void OpenRover::cmdVelCB(const geometry_msgs::Twist::ConstPtr& msg)
   double flipper_rate = msg->angular.y;
   if (turn_rate == 0){
     if(linear_rate > 0){
-      linear_rate = trim
+      linear_rate = trim;
     }else if(linear_rate <0){
-      linear_rate = -trim
+      linear_rate = -trim;
     }
   }
   static bool prev_e_stop_state_ = false;
