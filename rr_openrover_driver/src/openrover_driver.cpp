@@ -10,6 +10,7 @@
 #include <iostream>
 #include <sys/ioctl.h>
 
+#include <sensor_msgs/Joy.h>
 #include "tf2_geometry_msgs/tf2_geometry_msgs.h"
 #include "tf2_geometry_msgs/tf2_geometry_msgs.h"
 #include "std_msgs/Int32.h"
