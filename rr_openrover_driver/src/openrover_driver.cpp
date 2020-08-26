@@ -117,6 +117,7 @@ bool OpenRover::start()
   motor_speeds_pub = nh_priv_.advertise<std_msgs::Int32MultiArray>("motor_speeds_commanded", 1);
   vel_calc_pub = nh_priv_.advertise<std_msgs::Float32MultiArray>("vel_calc_pub", 1);
 
+  joy_sub = nh_priv_.subscribe("/cmd_vel/managed", 1, &OpenRover::joyCB, this);
   cmd_vel_sub = nh_priv_.subscribe("/cmd_vel/managed", 1, &OpenRover::cmdVelCB, this);
   fan_speed_sub = nh_priv_.subscribe("/rr_openrover_driver/fan_speed", 1, &OpenRover::fanSpeedCB, this);
   e_stop_sub = nh_priv_.subscribe("/soft_estop/enable", 1, &OpenRover::eStopCB, this);
@@ -387,6 +388,12 @@ void OpenRover::fanSpeedCB(const std_msgs::Int32::ConstPtr& msg)
   return;
 }
 
+void OpenRover::joyCB(const sensor_msgs::Joy::ConstPtr& msg){
+//Get joy_msg Trimmers button and increase trim
+  joy_commands_ = *msg;
+  printf(joy_commands_.buttons);
+}
+
 void OpenRover::cmdVelCB(const geometry_msgs::Twist::ConstPtr& msg)
 {  // converts from cmd_vel (m/s and radians/s) into motor speed commands
   cmd_vel_commanded_ = *msg;
@@ -396,6 +403,13 @@ void OpenRover::cmdVelCB(const geometry_msgs::Twist::ConstPtr& msg)
   double turn_rate = msg->angular.z;
   double linear_rate = msg->linear.x;
   double flipper_rate = msg->angular.y;
+  if (turn_rate == 0){
+    if(linear_rate > 0){
+      linear_rate = trim
+    }else if(linear_rate <0){
+      linear_rate = -trim
+    }
+  }
   static bool prev_e_stop_state_ = false;
 
   double diff_vel_commanded = turn_rate / odom_angular_coef_ / odom_traction_factor_;
