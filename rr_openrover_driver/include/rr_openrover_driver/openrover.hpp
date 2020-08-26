@@ -131,8 +131,6 @@ private:
   float total_weight_;  // in kg
   // int motor_speed_diff_max_; ---WIP
   geometry_msgs::Twist cmd_vel_commanded_;
-  int::Joy joy_commands_;
-
   std::vector<unsigned char> serial_fast_buffer_;
   std::vector<unsigned char> serial_medium_buffer_;
   std::vector<unsigned char> serial_slow_buffer_;
