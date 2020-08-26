@@ -118,7 +118,7 @@ bool OpenRover::start()
   motor_speeds_pub = nh_priv_.advertise<std_msgs::Int32MultiArray>("motor_speeds_commanded", 1);
   vel_calc_pub = nh_priv_.advertise<std_msgs::Float32MultiArray>("vel_calc_pub", 1);
 
-  joy_sub = nh_priv_.subscribe("/status", 1, &OpenRover::joyCB, this);
+  joy_sub = nh_priv_.subscribe("/trimstate", 1, &OpenRover::joyCB, this);
   cmd_vel_sub = nh_priv_.subscribe("/cmd_vel/managed", 1, &OpenRover::cmdVelCB, this);
   fan_speed_sub = nh_priv_.subscribe("/rr_openrover_driver/fan_speed", 1, &OpenRover::fanSpeedCB, this);
   e_stop_sub = nh_priv_.subscribe("/soft_estop/enable", 1, &OpenRover::eStopCB, this);
@@ -397,6 +397,7 @@ void OpenRover::joyCB(const std_msgs::Int32::ConstPtr& msg){
     //increase
     trim+=0.05;
   }else if(msg->data ==2 && trim >= -1){
+    //decease
     trim-=0.05;
   }
 }
