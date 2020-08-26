@@ -8,26 +8,32 @@ from nav_msgs.msg import Odometry
 import PyKDL
 import math
 from std_msgs.msg import Bool
+#import time
 
 class RoverZeroNode:
     def __init__(self):
         self._node = rospy.init_node('Rover_Zero_Controller', anonymous=True)
 
         # ROS params
+        # Basic
         self._port = rospy.get_param('~dev', '/dev/ttyACM0')
-        self._address = rospy.get_param('~address', 128)
+        self._address = rospy.get_param('~address', 0x80)
         self._baud = rospy.get_param('~baud', 115200)
-        self._max_vel = rospy.get_param('~max_vel', 5.0)
-        self._max_turn_rate = rospy.get_param('~max_turn_rate', 6.28)
+        self._max_vel = rospy.get_param('~max_vel', 1.25171)
+        self._max_acc = rospy.get_param('~max_acc', 9625)
+        self._max_turn_rate = rospy.get_param('~max_turn_rate', 1) #6.28
         self._duty_coef = rospy.get_param('~speed_to_duty_coef', 1.02)
-        self._diag_frequency = rospy.get_param('~diag_frequency_hz', 1.0)
+        self._diag_frequency = rospy.get_param('~diag_frequency_hz', 10.0)
         self._motor_cmd_frequency = rospy.get_param('~motor_cmd_frequency_hz', 30.0)
         self._odom_frequency = rospy.get_param('~odom_frequency_hz', 30.0)
-        self._cmd_vel_timeout = rospy.get_param('~cmd_vel_timeout', 0.5)
-        self._encoder_odom_enabled = rospy.get_param('~enable_encoder_odom', False)
-        self._esc_feedback_controls_enabled = rospy.get_param('~enable_esc_feedback_controls', False)
-        self._v_pid_overwrite = rospy.get_param('~v_pid_overwrite', False)
-        self._save_motor_controller_settings = rospy.get_param('~save_motor_controller_settings', False)
+        self._cmd_vel_timeout = rospy.get_param('~cmd_vel_timeout', 1.5) #0.5
+        self._timeout = rospy.get_param('~timeout', 0.1)
+
+        #Advanced Options 
+        self._encoder_odom_enabled = rospy.get_param('~enable_encoder_odom', False) #Unable Odom Publisher
+        self._esc_feedback_controls_enabled = rospy.get_param('~enable_esc_feedback_controls', False) #Enable Closed Loop Control
+        self._v_pid_overwrite = rospy.get_param('~v_pid_overwrite', False) #Enable this will priority config PID over Roboclaw' PID
+        self._save_motor_controller_settings = rospy.get_param('~save_motor_controller_settings', False) #Enable This will overwrite Motor Current/speed setting on RoboClaw Itself
         self._m1_v_p = rospy.get_param('~m1_v_p', 3.00)
         self._m1_v_i = rospy.get_param('~m1_v_i', 0.35)
         self._m1_v_d = rospy.get_param('~m1_v_d', 0.00)
@@ -36,17 +42,21 @@ class RoverZeroNode:
         self._m2_v_i = rospy.get_param('~m2_v_i', 0.35)
         self._m2_v_d = rospy.get_param('~m2_v_d', 0.00)
         self._m2_v_qpps = int(rospy.get_param('~m2_v_qpps', 10000))
+        self._highspeed_turn_damping = rospy.get_param('~highspeed_turn_damping', False)
+        self._trim = rospy.get_param('trim', 0.00)
         self._encoder_pulses_per_turn = rospy.get_param('~encoder_pulses_per_turn', 5400.0)
         self._left_motor_max_current = rospy.get_param('~left_motor_max_current', 5.0)
         self._right_motor_max_current = rospy.get_param('~right_motor_max_current', 5.0)
         self._active_brake_timeout = rospy.get_param('~active_brake_timeout', 1.0)
+        
+        #Odometry
         self._odom_frame = rospy.get_param('~odom_frame', "odom")
         self._base_link_frame = rospy.get_param('~base_link_frame', "base_link")
         self._wheel_base = rospy.get_param('~wheel_base', 0.358775)  # Distance between center of wheels
         self._wheel_radius = rospy.get_param('~wheel_radius', 0.127)   # Radius of wheel
 
         # Initialize Roboclaw Serial
-        self._roboclaw = Roboclaw(self._port, self._baud)
+        self._roboclaw = Roboclaw(self._port, self._baud, self._timeout)
         if not self._roboclaw.Open():
             rospy.logfatal('Could not open serial at ' + self._port)
             exit(1)
@@ -71,6 +81,8 @@ class RoverZeroNode:
         self._right_motor_current = None
         self._battery_voltage = None
         self._controller_error = None
+        self._measured_left_motor_speed = None
+        self._measured_right_motor_speed = None
 
         # Odometry values
         self._odom_position_x = 0.0
@@ -78,27 +90,27 @@ class RoverZeroNode:
         self._odom_orientation_theta = 0.0
 
         # ROS Publishers
-        if self._diag_frequency > 0.0:
+        if self._diag_frequency > 0.0: #enable /disable diagnostics with frequency
             self._pub_diag = rospy.Publisher('/diagnostics', DiagnosticArray, queue_size=1)
-        if self._encoder_odom_enabled and self._odom_frequency > 0.0:
+        if self._odom_frequency > 0.0: #enable/ disable odom with frequency
             self._pub_odom = rospy.Publisher('/odom', Odometry, queue_size=1)
 
         # ROS Subscribers
         self._twist_sub = rospy.Subscriber("/cmd_vel", Twist, self._twist_cmd_cb, queue_size=1)
-        self._estop_enable_sub = rospy.Subscriber("/soft_estop/enable", Bool, self._estop_enable_cb, queue_size=1)
-        self._estop_reset_sub = rospy.Subscriber("/soft_estop/reset", Bool, self._estop_reset_cb, queue_size=1)
+        self._estop_enable_sub = rospy.Subscriber("/soft_estop/enable", Bool, self._estop_enable_cb, queue_size=1) #EStop Enable
+        self._estop_reset_sub = rospy.Subscriber("/soft_estop/reset", Bool, self._estop_reset_cb, queue_size=1) #Estop Reset
+        self._trim_trigger_sub = rospy.Subscriber("/trim", String, self._trim_cb, queue_size=1)
 
         # ROS Timers
         if self._diag_frequency > 0.0:
             rospy.Timer(rospy.Duration(1.0 / self._diag_frequency), self._diag_cb)
         rospy.Timer(rospy.Duration(1.0 / self._motor_cmd_frequency), self._motor_cmd_cb)
-        if self._encoder_odom_enabled and self._odom_frequency > 0.0:
+        if self._odom_frequency > 0.0:
             rospy.Timer(rospy.Duration(1.0 / self._odom_frequency), self._odom_cb)
         if self._cmd_vel_timeout > 0.0:
             rospy.Timer(rospy.Duration(self._cmd_vel_timeout), self._cmd_vel_timeout_cb)
 
         # Get Roboclaw Firmware Version
-        self._firmware_version = self._roboclaw.ReadVersion(self._address)[1].replace('\n', '')
 
         self._configure_motor_controller()
 
@@ -106,22 +118,20 @@ class RoverZeroNode:
         self._roboclaw.ResetEncoders(self._address)
 
     def _configure_motor_controller(self):
-        self._firmware_version = self._roboclaw.ReadVersion(self._address)
-
+        self._firmware_version = self._roboclaw.ReadVersion(self._address)[1].replace('\n', '')
         self._roboclaw.SetM1MaxCurrent(self._address, int(100 * self._left_motor_max_current))
         self._roboclaw.SetM2MaxCurrent(self._address, int(100 * self._right_motor_max_current))
-
-        if self._esc_feedback_controls_enabled:
-            if self._v_pid_overwrite:
+        if self._esc_feedback_controls_enabled: #Use Closed Loop Control
+            if self._v_pid_overwrite: #Use Closed loop control with values from Config File
                 self._roboclaw.SetM1VelocityPID(self._address, self._m1_v_p, self._m1_v_i, self._m1_v_d, self._m1_v_qpps)
                 self._roboclaw.SetM2VelocityPID(self._address, self._m2_v_p, self._m2_v_i, self._m2_v_d, self._m2_v_qpps)
             else:
-                self._get_V_PID()
-
-        if self._save_motor_controller_settings:
+                self._get_V_PID() #Use Closed Loop Control with values from MotorController
+        #Otherwise ignore and use normal setting
+        if self._save_motor_controller_settings: #update to roboclaw
             self._roboclaw.WriteNVM(self._address)
 
-    def _get_V_PID(self):
+    def _get_V_PID(self): #Get PID from Roboclalw
         (res, p, i, d, qpps) = self._roboclaw.ReadM1VelocityPID(self._address)
         if res:
             self._m1_v_p = p
@@ -166,7 +176,7 @@ class RoverZeroNode:
         if self._cmd_vel_timeout <= 0.0:
             rospy.logwarn('cmd_vel timeout (cmd_vel_timeout) disabled.  Robot will execute last cmd_vel message forever.')
 
-        if not self._encoder_odom_enabled:
+        if not self._odom_frequency <= 0:
             rospy.logwarn('Encoder odometry are not enabled (enable_encoder_odom).')
 
         if self._esc_feedback_controls_enabled:
@@ -179,8 +189,6 @@ class RoverZeroNode:
                 if (p == 0.0 and i == 0.0 and d == 0.0) or qpps <= 0:
                     rospy.logfatal('Invalid PID parameters for left motor saved on Roboclaw.')
                     fatal_misconfiguration = True
-
-        if self._esc_feedback_controls_enabled:
             if self._v_pid_overwrite:
                 if (self._m2_v_p == 0.0 and self._m2_v_i == 0.0 and self._m2_v_d == 0.0) or self._m2_v_qpps <= 0:
                     rospy.logfatal('Invalid user specified PID parameters for right motor.')
@@ -250,11 +258,31 @@ class RoverZeroNode:
             self._estop_on_ = False
             self._variable_lock.release()
 
+    def _trim_cb(self,trimstate):
+        if trimstate.data == 2 and self.trim < 1:
+            self.trim += 0.05
+        elif trimstate.data == 1 and self.trim > -1:
+            self.trim -= 0.05
+
     def _twist_to_wheel_velocities(self, linear_rate, angular_rate):
         if linear_rate > self._max_vel:
             linear_rate = self._max_vel
+        elif abs(linear_rate) > self._max_vel:
+            linear_rate = -self._max_vel 
         if angular_rate > self._max_turn_rate:
             angular_rate = self._max_turn_rate
+        elif abs(angular_rate) > self._max_turn_rate:
+            angular_rate = -self._max_turn_rate
+
+        #turn damping
+        if self._highspeed_turn_damping == True:
+            angular_rate = 1/(abs(linear_rate))*angular_rate #probably could use a better function
+        #trim
+        if angular_rate == 0:
+            if linear_rate > 0:
+                angular_rate = self.trim
+            elif linear_rate <0:
+                angular_rate = -self.trim
 
         left_ = (linear_rate - 0.5 * self._wheel_base * angular_rate)
         right_ = (linear_rate + 0.5 * self._wheel_base * angular_rate)
@@ -374,8 +402,10 @@ class RoverZeroNode:
                              values=[KeyValue(key='Firmware Version', value=str(self._firmware_version)),
                                      KeyValue(key='Left Motor Max Current', value='{MAX_CURRENT} A'.format(MAX_CURRENT=str(self._left_motor_max_current))),
                                      KeyValue(key='Left Motor Current', value='{CURRENT} A'.format(CURRENT=str(self._left_motor_current))),
-                                     KeyValue(key='Left Motor Max Current', value='{MAX_CURRENT} A'.format(MAX_CURRENT=str(self._right_motor_max_current))),
+                                     KeyValue(key='Left Motor Running Speed', value='{SPEED} A'.format(SPEED=str(self._left_motor_speed))),
+                                     KeyValue(key='Right Motor Max Current', value='{MAX_CURRENT} A'.format(MAX_CURRENT=str(self._right_motor_max_current))),
                                      KeyValue(key='Right Motor Current', value='{CURRENT} A'.format(CURRENT=str(self._right_motor_current))),
+                                     KeyValue(key='Right Motor Running Speed', value='{SPEED} A'.format(SPEED=str(self._right_motor_speed))),
                                      KeyValue(key='Battery Voltage', value='{VOLTAGE}V'.format(VOLTAGE=str(self._battery_voltage))),
                                      KeyValue(key='Drive Mode', value='Closed Loop Control' if self._esc_feedback_controls_enabled else 'Open Loop Control')
                                      ]
@@ -387,6 +417,7 @@ class RoverZeroNode:
     def _diagnostics_update(self):
         self.get_battery_voltage()
         self.get_motor_current()
+        self.get_motor_speed()
 
     def get_battery_voltage(self):
         self._serial_lock.acquire()
@@ -401,6 +432,16 @@ class RoverZeroNode:
         if res:
             self._left_motor_current = m1_current / 100.0
             self._right_motor_current = m2_current / 100.0
+
+    def get_motor_speed(self):
+        self._serial_lock.acquire()
+        (res1, m1_speed) = self._roboclaw.ReadSpeedM1(self._address)
+        (res2, m2_speed) = self._roboclaw.ReadSpeedM2(self._address)
+        self._serial_lock.release()
+
+        if res1 and res2:
+            self._left_motor_speed = m1_speed / 92
+            self._right_motor_speed = m2_speed / 92
 
     def spin(self):
         rospy.spin()
