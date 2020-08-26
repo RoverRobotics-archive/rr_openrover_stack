@@ -393,14 +393,13 @@ void OpenRover::joyCB(const std_msgs::Int32::ConstPtr& msg){
 //Get joy_msg Trimmers button and increase trim
   if (msg->data == 0){
     //do nothing
-  }else if(msg->data ==1 && trim <= 1 &&prev != msg->data){
+  }else if(msg->data ==1 && trim <= 1){
     //increase
     trim+=0.05;
-  }else if(msg->data ==2 && trim >= -1 &&prev != msg->data){
+  }else if(msg->data ==2 && trim >= -1 ){
     //decease
     trim-=0.05;
   }
-  prev = msg->data;
 }
 
 void OpenRover::cmdVelCB(const geometry_msgs::Twist::ConstPtr& msg)
