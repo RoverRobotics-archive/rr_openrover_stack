@@ -7,7 +7,7 @@
     <node pkg="rr_rover_zero_driver" type="rover_zero.py" name="rover_zero_driver_node" output="screen">
         <param name="dev" value="/dev/rover-zero"/>
         <param name="address" value="128"/>
-        <param name="baud" value="115200"/>
+        <param name="baud" value="115200"/> #S1 baudrate
         <param name="max_vel" value="5.0"/>
         <param name="max_turn_rate" value="6.28"/>
         <param name="speed_to_duty_coef" value="1.02"/>
@@ -15,6 +15,7 @@
         <param name="motor_cmd_frequency_hz" value="30.0"/>
         <param name="odom_frequency_hz" value="30.0"/>
         <param name="cmd_vel_timeout" value="0.5"/>
+        <param name="timeout" value="0.1"/>
         <param name="enable_encoder_odom" value="False"/>
         <param name="enable_esc_feedback_controls" value="True"/>
         <param name="v_pid_overwrite" value="False"/>
@@ -27,6 +28,8 @@
         <param name="m2_v_i" value="0.35"/>
         <param name="m2_v_d" value="0.0"/>
         <param name="m2_v_qpps" value="10000"/>
+        <param name="highspeed_turn_damping" value="False"/>
+        <param name="trim" value="0.00"/>
         <param name="encoder_pulses_per_turn" value="5400.0"/>
         <param name="left_motor_max_current" value="10.0"/>
         <param name="right_motor_max_current" value="10.0"/>
@@ -36,22 +39,6 @@
         <param name="wheel_base" value="0.358775"/>  # Distance between center of wheels
         <param name="wheel_radius" value="0.127"/>
         <remap from="/cmd_vel" to="/cmd_vel/managed"/>
-    </node>
-
-    <!-- Xbox 360 Controller Button Mapping -->
-    <node pkg="rr_control_input_manager" type="xbox_mapper.py" name="rr_xbox_mapper_node" output="screen" >
-        <remap from="joy" to="/joystick" />
-        <remap from="/joystick/a_button" to="/soft_estop/enable" />
-        <remap from="/joystick/b_button" to="/soft_estop/reset" />
-        <remap from="/joystick/y_button" to="/joy_priority" />
-        <remap from="/joystick/x_button" to="/pause_navigation"/>
-        <param name="max_vel_fwd" value="1.0" />
-        <param name="max_vel_turn" value="6.28" />
-        <param name="adjustable_throttle" value="True" />
-        <param name="drive_increment" value="20" />
-        <param name="flipper_increment" value="20" />
-        <param name="x_button_toggle" value="true"/>
-        <param name="y_button_toggle" value="true"/>
     </node>
 
     <!--  Twist Mux  -->
@@ -69,10 +56,4 @@
         <rosparam file="$(find rr_control_input_manager)/config/input_topics.yaml" command="load"/>
     </node>
 
-    <!-- Xbox controller driver -->
-    <node pkg="joy" type="joy_node" name="joy_node" output="screen" respawn="true" >
-        <param name="autorepeat_rate" value="10" />
-        <remap from="/joy" to="/joystick" />
-        <param name="dev" value="/dev/input/jsX"/>
-    </node>
 </launch>
