@@ -20,7 +20,6 @@ class RoverZeroNode:
         self._address = rospy.get_param('~address', 0x80)
         self._baud = rospy.get_param('~baud', 115200)
         self._max_vel = rospy.get_param('~max_vel', 1.25171)
-        self._max_acc = rospy.get_param('~max_acc', 9625)
         self._max_turn_rate = rospy.get_param('~max_turn_rate', 1) #6.28
         self._duty_coef = rospy.get_param('~speed_to_duty_coef', 1.02)
         self._diag_frequency = rospy.get_param('~diag_frequency_hz', 10.0)
@@ -49,12 +48,6 @@ class RoverZeroNode:
         self._right_motor_max_current = rospy.get_param('~right_motor_max_current', 5.0)
         self._active_brake_timeout = rospy.get_param('~active_brake_timeout', 1.0)
         
-        #Odometry
-        self._odom_frame = rospy.get_param('~odom_frame', "odom")
-        self._base_link_frame = rospy.get_param('~base_link_frame', "base_link")
-        self._wheel_base = rospy.get_param('~wheel_base', 0.358775)  # Distance between center of wheels
-        self._wheel_radius = rospy.get_param('~wheel_radius', 0.127)   # Radius of wheel
-
         # Initialize Roboclaw Serial
         self._roboclaw = Roboclaw(self._port, self._baud, self._timeout)
         if not self._roboclaw.Open():
@@ -94,6 +87,7 @@ class RoverZeroNode:
             self._pub_diag = rospy.Publisher('/diagnostics', DiagnosticArray, queue_size=1)
         if self._odom_frequency > 0.0: #enable/ disable odom with frequency
             self._pub_odom = rospy.Publisher('/odom', Odometry, queue_size=1)
+            
 
         # ROS Subscribers
         self._twist_sub = rospy.Subscriber("/cmd_vel", Twist, self._twist_cmd_cb, queue_size=1)
@@ -107,6 +101,10 @@ class RoverZeroNode:
         rospy.Timer(rospy.Duration(1.0 / self._motor_cmd_frequency), self._motor_cmd_cb)
         if self._odom_frequency > 0.0:
             rospy.Timer(rospy.Duration(1.0 / self._odom_frequency), self._odom_cb)
+            self._odom_frame = rospy.get_param('~odom_frame', "odom")
+            self._base_link_frame = rospy.get_param('~base_link_frame', "base_link")
+        self._wheel_base = rospy.get_param('~wheel_base', 0.358775)  # Distance between center of wheels
+        self._wheel_radius = rospy.get_param('~wheel_radius', 0.127)   # Radius of wheel
         if self._cmd_vel_timeout > 0.0:
             rospy.Timer(rospy.Duration(self._cmd_vel_timeout), self._cmd_vel_timeout_cb)
 
@@ -176,9 +174,9 @@ class RoverZeroNode:
         if self._cmd_vel_timeout <= 0.0:
             rospy.logwarn('cmd_vel timeout (cmd_vel_timeout) disabled.  Robot will execute last cmd_vel message forever.')
 
-        if not self._odom_frequency <= 0:
-            rospy.logwarn('Encoder odometry are not enabled (enable_encoder_odom).')
-
+        if self._highspeed_turn_damping = False:
+            rospy.logwarn('highspeed turn damping is disabled. Robot will turn with same rate at higher speed')
+            
         if self._esc_feedback_controls_enabled:
             if self._v_pid_overwrite:
                 if (self._m1_v_p == 0.0 and self._m1_v_i == 0.0 and self._m1_v_d == 0.0) or self._m1_v_qpps <= 0:
@@ -216,14 +214,15 @@ class RoverZeroNode:
 
         if self._active_brake_timeout <= 0:
             rospy.logwarn('Active breaking timeout (active_brake_timeout) is disabled. If PID control is enabled and active breaking is disabled when idle, passive current may be applied motors causing potential motor overheating or reduced battery life.')
+        if not self._odom_frequency <= 0:
+            rospy.logwarn('Encoder odometry are not enabled (enable_encoder_odom).')
+            if not isinstance(self._odom_frame, str) or not self._odom_frame:
+                rospy.logfatal('Invalid baselink frame: \'%s\'', self._odom_frame)
+                fatal_misconfiguration = True
 
-        if not isinstance(self._odom_frame, str) or not self._odom_frame:
-            rospy.logfatal('Invalid baselink frame: \'%s\'', self._odom_frame)
-            fatal_misconfiguration = True
-
-        if not isinstance(self._base_link_frame, str) or not self._base_link_frame:
-            rospy.logfatal('Invalid baselink frame: \'%s\'', self._base_link_frame)
-            fatal_misconfiguration = True
+            if not isinstance(self._base_link_frame, str) or not self._base_link_frame:
+                rospy.logfatal('Invalid baselink frame: \'%s\'', self._base_link_frame)
+                fatal_misconfiguration = True
 
         if self._wheel_base <= 0.0:
             rospy.logfatal("Wheel base (wheel_base) must be greater than 0")
