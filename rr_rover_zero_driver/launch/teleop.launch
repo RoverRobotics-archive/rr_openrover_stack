@@ -28,7 +28,7 @@
         <param name="m2_v_i" value="0.35"/>
         <param name="m2_v_d" value="0.0"/>
         <param name="m2_v_qpps" value="10000"/>
-        <param name="highspeed_turn_damping" value=False/>
+        <param name="highspeed_turn_damping" value="False"/>
         <param name="trim" value="0.00"/>
         <param name="encoder_pulses_per_turn" value="5400.0"/>
         <param name="left_motor_max_current" value="10.0"/>

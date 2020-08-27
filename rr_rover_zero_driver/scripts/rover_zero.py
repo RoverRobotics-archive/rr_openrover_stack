@@ -7,7 +7,7 @@ from diagnostic_msgs.msg import DiagnosticArray, DiagnosticStatus, KeyValue
 from nav_msgs.msg import Odometry
 import PyKDL
 import math
-from std_msgs.msg import Bool
+from std_msgs.msg import Bool, String
 #import time
 
 class RoverZeroNode:
@@ -47,7 +47,8 @@ class RoverZeroNode:
         self._left_motor_max_current = rospy.get_param('~left_motor_max_current', 5.0)
         self._right_motor_max_current = rospy.get_param('~right_motor_max_current', 5.0)
         self._active_brake_timeout = rospy.get_param('~active_brake_timeout', 1.0)
-        
+        self._wheel_base = rospy.get_param('~wheel_base', 0.358775)  # Distance between center of wheels
+        self._wheel_radius = rospy.get_param('~wheel_radius', 0.127)   # Radius of wheel        
         # Initialize Roboclaw Serial
         self._roboclaw = Roboclaw(self._port, self._baud, self._timeout)
         if not self._roboclaw.Open():
@@ -67,7 +68,7 @@ class RoverZeroNode:
         self._active_brake_start_time = None
         self._active_brake_enabled = False
         self._distance_per_encoder_pulse = 2 * math.pi * self._wheel_radius / self._encoder_pulses_per_turn
-
+        
         # Diagnostic Parameters
         self._firmware_version = None
         self._left_motor_current = None
@@ -98,13 +99,13 @@ class RoverZeroNode:
         # ROS Timers
         if self._diag_frequency > 0.0:
             rospy.Timer(rospy.Duration(1.0 / self._diag_frequency), self._diag_cb)
-        rospy.Timer(rospy.Duration(1.0 / self._motor_cmd_frequency), self._motor_cmd_cb)
+        
+	rospy.Timer(rospy.Duration(1.0 / self._motor_cmd_frequency), self._motor_cmd_cb)
         if self._odom_frequency > 0.0:
             rospy.Timer(rospy.Duration(1.0 / self._odom_frequency), self._odom_cb)
             self._odom_frame = rospy.get_param('~odom_frame', "odom")
             self._base_link_frame = rospy.get_param('~base_link_frame', "base_link")
-        self._wheel_base = rospy.get_param('~wheel_base', 0.358775)  # Distance between center of wheels
-        self._wheel_radius = rospy.get_param('~wheel_radius', 0.127)   # Radius of wheel
+
         if self._cmd_vel_timeout > 0.0:
             rospy.Timer(rospy.Duration(self._cmd_vel_timeout), self._cmd_vel_timeout_cb)
 
@@ -174,7 +175,7 @@ class RoverZeroNode:
         if self._cmd_vel_timeout <= 0.0:
             rospy.logwarn('cmd_vel timeout (cmd_vel_timeout) disabled.  Robot will execute last cmd_vel message forever.')
 
-        if self._highspeed_turn_damping = False:
+        if self._highspeed_turn_damping == False:
             rospy.logwarn('highspeed turn damping is disabled. Robot will turn with same rate at higher speed')
             
         if self._esc_feedback_controls_enabled:
@@ -216,6 +217,7 @@ class RoverZeroNode:
             rospy.logwarn('Active breaking timeout (active_brake_timeout) is disabled. If PID control is enabled and active breaking is disabled when idle, passive current may be applied motors causing potential motor overheating or reduced battery life.')
         if not self._odom_frequency <= 0:
             rospy.logwarn('Encoder odometry are not enabled (enable_encoder_odom).')
+        else:
             if not isinstance(self._odom_frame, str) or not self._odom_frame:
                 rospy.logfatal('Invalid baselink frame: \'%s\'', self._odom_frame)
                 fatal_misconfiguration = True
@@ -401,10 +403,10 @@ class RoverZeroNode:
                              values=[KeyValue(key='Firmware Version', value=str(self._firmware_version)),
                                      KeyValue(key='Left Motor Max Current', value='{MAX_CURRENT} A'.format(MAX_CURRENT=str(self._left_motor_max_current))),
                                      KeyValue(key='Left Motor Current', value='{CURRENT} A'.format(CURRENT=str(self._left_motor_current))),
-                                     KeyValue(key='Left Motor Running Speed', value='{SPEED} A'.format(SPEED=str(self._left_motor_speed))),
+#                                     KeyValue(key='Left Motor Running Speed', value='{SPEED} '.format(SPEED=str(self._left_motor_speed))),
                                      KeyValue(key='Right Motor Max Current', value='{MAX_CURRENT} A'.format(MAX_CURRENT=str(self._right_motor_max_current))),
                                      KeyValue(key='Right Motor Current', value='{CURRENT} A'.format(CURRENT=str(self._right_motor_current))),
-                                     KeyValue(key='Right Motor Running Speed', value='{SPEED} A'.format(SPEED=str(self._right_motor_speed))),
+#                                    KeyValue(key='Right Motor Running Speed', value='{SPEED} '.format(SPEED=str(self._right_motor_speed))),
                                      KeyValue(key='Battery Voltage', value='{VOLTAGE}V'.format(VOLTAGE=str(self._battery_voltage))),
                                      KeyValue(key='Drive Mode', value='Closed Loop Control' if self._esc_feedback_controls_enabled else 'Open Loop Control')
                                      ]
@@ -416,7 +418,7 @@ class RoverZeroNode:
     def _diagnostics_update(self):
         self.get_battery_voltage()
         self.get_motor_current()
-        self.get_motor_speed()
+#        self.get_motor_speed()
 
     def get_battery_voltage(self):
         self._serial_lock.acquire()
