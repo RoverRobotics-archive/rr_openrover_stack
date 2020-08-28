@@ -268,11 +268,11 @@ class RoverZeroNode:
     def _twist_to_wheel_velocities(self, linear_rate, angular_rate):
         if linear_rate > self._max_vel:
             linear_rate = self._max_vel
-        elif abs(linear_rate) > self._max_vel:
+        elif linear_rate < -self._max_vel:
             linear_rate = -self._max_vel 
         if angular_rate > self._max_turn_rate:
             angular_rate = self._max_turn_rate
-        elif abs(angular_rate) > self._max_turn_rate:
+        elif angular_rate < -self._max_turn_rate:
             angular_rate = -self._max_turn_rate
 
         #turn damping
