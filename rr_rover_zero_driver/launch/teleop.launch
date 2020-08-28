@@ -8,8 +8,8 @@
         <param name="dev" value="/dev/rover-zero"/>
         <param name="address" value="128"/>
         <param name="baud" value="115200"/> #S1 baudrate
-        <param name="max_vel" value="5.0"/>
-        <param name="max_turn_rate" value="6.28"/>
+        <param name="max_vel" value="1.0"/>
+        <param name="max_turn_rate" value="6"/>
         <param name="speed_to_duty_coef" value="1.02"/>
         <param name="diag_frequency_hz" value="1.0"/>
         <param name="motor_cmd_frequency_hz" value="30.0"/>
@@ -55,5 +55,4 @@
         <param name="wired_or_wireless" value="wireless"/>
         <rosparam file="$(find rr_control_input_manager)/config/input_topics.yaml" command="load"/>
     </node>
-
 </launch>

@@ -22,7 +22,7 @@ class RoverZeroNode:
         self._max_vel = rospy.get_param('~max_vel', 1.25171)
         self._max_turn_rate = rospy.get_param('~max_turn_rate', 1) #6.28
         self._duty_coef = rospy.get_param('~speed_to_duty_coef', 1.02)
-        self._diag_frequency = rospy.get_param('~diag_frequency_hz', 10.0)
+        self._diag_frequency = rospy.get_param('~diag_frequency_hz', 1.0)
         self._motor_cmd_frequency = rospy.get_param('~motor_cmd_frequency_hz', 30.0)
         self._odom_frequency = rospy.get_param('~odom_frequency_hz', 30.0)
         self._cmd_vel_timeout = rospy.get_param('~cmd_vel_timeout', 1.5) #0.5
@@ -42,7 +42,7 @@ class RoverZeroNode:
         self._m2_v_d = rospy.get_param('~m2_v_d', 0.00)
         self._m2_v_qpps = int(rospy.get_param('~m2_v_qpps', 10000))
         self._highspeed_turn_damping = rospy.get_param('~highspeed_turn_damping', False)
-        self._trim = rospy.get_param('trim', 0.00)
+        self._trim = rospy.get_param('~trim',0.00)
         self._encoder_pulses_per_turn = rospy.get_param('~encoder_pulses_per_turn', 5400.0)
         self._left_motor_max_current = rospy.get_param('~left_motor_max_current', 5.0)
         self._right_motor_max_current = rospy.get_param('~right_motor_max_current', 5.0)
@@ -177,7 +177,10 @@ class RoverZeroNode:
 
         if self._highspeed_turn_damping == False:
             rospy.logwarn('highspeed turn damping is disabled. Robot will turn with same rate at higher speed')
-            
+
+        if self._trim != 0:
+	    rospy.logwarn('trim value is not 0. Robot is moving with an offset')
+
         if self._esc_feedback_controls_enabled:
             if self._v_pid_overwrite:
                 if (self._m1_v_p == 0.0 and self._m1_v_i == 0.0 and self._m1_v_d == 0.0) or self._m1_v_qpps <= 0:
@@ -260,19 +263,20 @@ class RoverZeroNode:
             self._variable_lock.release()
 
     def _trim_cb(self,trimstate):
-        if trimstate.data == 2 and self.trim < 1:
-            self.trim += 0.05
-        elif trimstate.data == 1 and self.trim > -1:
-            self.trim -= 0.05
+        if trimstate.data == "2" and self._trim < 1:
+            self._trim += 0.05
+        elif trimstate.data == "1" and self._trim > -1:
+            self._trim -= 0.05
+	print(self._trim)
 
     def _twist_to_wheel_velocities(self, linear_rate, angular_rate):
         if linear_rate > self._max_vel:
             linear_rate = self._max_vel
         elif linear_rate < -self._max_vel:
             linear_rate = -self._max_vel 
-        if angular_rate > self._max_turn_rate:
+        if 0 !=angular_rate > self._max_turn_rate:
             angular_rate = self._max_turn_rate
-        elif angular_rate < -self._max_turn_rate:
+        elif 0 != angular_rate < -self._max_turn_rate:
             angular_rate = -self._max_turn_rate
 
         #turn damping
@@ -281,9 +285,9 @@ class RoverZeroNode:
         #trim
         if angular_rate == 0:
             if linear_rate > 0:
-                angular_rate = self.trim
+                angular_rate = self._trim
             elif linear_rate <0:
-                angular_rate = -self.trim
+                angular_rate = -self._trim
 
         left_ = (linear_rate - 0.5 * self._wheel_base * angular_rate)
         right_ = (linear_rate + 0.5 * self._wheel_base * angular_rate)
