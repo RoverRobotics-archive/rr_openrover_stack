@@ -23,6 +23,7 @@
   <exec_depend>roscpp</exec_depend>
   <exec_depend>rospy</exec_depend>
   <exec_depend>std_msgs</exec_depend>
+  <exec_depend>ds4_driver</exec_depend>
   <test_depend>rostest</test_depend>
 
 

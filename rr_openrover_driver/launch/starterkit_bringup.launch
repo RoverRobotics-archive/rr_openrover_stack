@@ -33,10 +33,10 @@
         <arg name="use_standard_msgs" value="false" />
     </include>
 
-    <!-- PS4 Controller ROS Driver -->
-    <node pkg="ds4_driver" type="ds4_twist_node.py" name="ds4_twist" output="screen" >
+    <!-- PS4 Mapper -->
+    <node pkg="rr_control_input_manager" type="ps4_mapper.py" name="ps4_mapper" output="screen" >
         <rosparam command="load" file="$(find rr_openrover_driver)/config/ps4_controller_config.yaml" />
-        <param name="stamped" value="false" />
+        <param name="stamped" value="True" />
     </node>
 
 
@@ -50,8 +50,6 @@
 
     <!-- Control input manager -->
     <node pkg="rr_control_input_manager" type="control_input_manager.py" name="rr_control_input_manager_node" output="log" >
-        <param name="driver" value="xboxdrv"/>
-        <param name="wired_or_wireless" value="wireless"/>
         <rosparam file="$(find rr_control_input_manager)/config/input_topics.yaml" command="load"/>
     </node>
 
