@@ -6,7 +6,7 @@ inputs:
     # Use L2 and R2 for rotation
     # z: axis_l2 - axis_r2
     # Use right horizontal stick for rotation
-    y: axis_right_y 
+    y: -axis_right_y 
     z: axis_right_x
 scales:
   linear:
