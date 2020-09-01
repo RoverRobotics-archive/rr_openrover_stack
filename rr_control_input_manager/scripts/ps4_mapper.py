@@ -8,7 +8,7 @@
 
 import rospy
 from geometry_msgs.msg import Twist, TwistStamped
-from std_msgs.msg import Bool, String
+from std_msgs.msg import Bool, Int32
 from ds4_driver.msg import Status
 
 
@@ -32,9 +32,9 @@ class ps4_mapper(object):
         self._pub = rospy.Publisher('cmd_vel/joystick', self._cls, queue_size=1)
 	self._pub_squ = rospy.Publisher('/joystick/square', Bool, queue_size=1, latch =True)
 	self._pub_triangle = rospy.Publisher('/joystick/triangle', Bool, queue_size=1, latch =True)
-	self._pub_circle = rospy.Publisher('/soft_estop/reset', Bool, queue_size=1, latch =True)
-	self._pub_cross = rospy.Publisher('/soft_estop/enable', Bool, queue_size=1, latch =True)
-	self._pub_trim  = rospy.Publisher('/trim', String, queue_size=1)
+	self._pub_circle = rospy.Publisher('/soft_estop/reset', Bool, queue_size=1) #, latch =True)
+	self._pub_cross = rospy.Publisher('/soft_estop/enable', Bool, queue_size=1) #, latch =True)
+	self._pub_trim  = rospy.Publisher('/trimstate', Int32, queue_size=1)
         rospy.Subscriber('status', Status, self.cb_status, queue_size=1)
 
     def cb_status(self, msg):
@@ -63,12 +63,12 @@ class ps4_mapper(object):
                 setattr(vel_vec, k, scale * val)
 
 	if (msg.button_l1 or msg.button_r1) and self.buttonpressed == False:
-	    trim_msg = String()
+	    trim_msg = Int32()
             if msg.button_r1:
-		trim_msg.data = "2"
+		trim_msg.data = 2
                 self._pub_trim.publish(trim_msg)
             elif msg.button_l1:
-		trim_msg.data = "1"
+		trim_msg.data = 1
                 self._pub_trim.publish(trim_msg)
             self.buttonpressed = True
         elif self.buttonpressed == True: #Debounce
@@ -76,14 +76,20 @@ class ps4_mapper(object):
             if self.counter == 50:
                 self.counter = 0
                 self.buttonpressed = False
+	button_msg = Bool()
+	button_msg.data = False
+	button2_msg = Bool()
+	button2_msg.data = False
 	if msg.button_cross:
 	    button_msg = Bool()
 	    button_msg.data = True
    	    self._pub_cross.publish(button_msg)
         if msg.button_circle:
-	    button_msg = Bool()
-	    button_msg.data = True
-	    self._pub_circle.publish(button_msg)
+	    button2_msg = Bool()
+	    button2_msg.data = True
+	    self._pub_circle.publish(button2_msg)
+	self._pub_circle.publish(button2_msg)
+	self._pub_cross.publish(button_msg)
         self._pub.publish(to_pub)
 
 

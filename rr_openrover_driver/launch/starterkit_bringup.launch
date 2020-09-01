@@ -21,12 +21,6 @@
         <param name="slow_data_rate" value="1.0"/>
     </node>
 
-    <!-- OpenRover Diagnostics -->
-    <node pkg="rr_openrover_driver" type="diagnostics.py" name="rr_openrover_diagnostics_node" output="log">
-        <remap from="/raw_slow_rate_data" to="/$(arg openrover_node_name)/raw_slow_rate_data"/>
-    </node>
-
-
     <!-- PS4 Ubuntu Driver -->
     <include file="$(find ds4_driver)/launch/ds4_driver.launch" >
         <arg name="addr" value="" />

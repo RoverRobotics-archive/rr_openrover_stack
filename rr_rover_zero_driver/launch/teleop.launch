@@ -41,6 +41,18 @@
         <remap from="/cmd_vel" to="/cmd_vel/managed"/>
     </node>
 
+    <!-- PS4 Ubuntu Driver -->
+    <include file="$(find ds4_driver)/launch/ds4_driver.launch" >
+        <arg name="addr" value="" />
+        <arg name="use_standard_msgs" value="false" />
+    </include>
+
+    <!-- PS4 Mapper -->
+    <node pkg="rr_control_input_manager" type="ps4_mapper.py" name="ps4_mapper" output="screen" >
+        <rosparam command="load" file="$(find rr_openrover_driver)/config/ps4_controller_config.yaml" />
+        <param name="stamped" value="True" />
+    </node>
+
     <!--  Twist Mux  -->
     <node pkg="twist_mux" type="twist_mux" name="twist_mux" output="screen">
         <remap from="cmd_vel_out" to="/cmd_vel/managed"/>
@@ -51,8 +63,6 @@
 
     <!-- Control input manager -->
     <node pkg="rr_control_input_manager" type="control_input_manager.py" name="rr_control_input_manager_node" output="log" >
-        <param name="driver" value="xboxdrv"/>
-        <param name="wired_or_wireless" value="wireless"/>
         <rosparam file="$(find rr_control_input_manager)/config/input_topics.yaml" command="load"/>
     </node>
 </launch>
