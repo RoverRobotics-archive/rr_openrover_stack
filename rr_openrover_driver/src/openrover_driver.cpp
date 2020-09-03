@@ -16,7 +16,7 @@
 #include "std_msgs/Int32.h"
 #include "std_msgs/Int32MultiArray.h"
 #include "std_msgs/Float32MultiArray.h"
-#include "std_msgs/Float.h"
+#include "std_msgs/Float32.h"
 #include "geometry_msgs/Twist.h"
 #include <std_msgs/Bool.h>
 #include "nav_msgs/Odometry.h"
@@ -390,13 +390,13 @@ void OpenRover::fanSpeedCB(const  std_msgs::Int32::ConstPtr& msg)
   return;
 }
 
-void OpenRover::trimCB(const std_msgs::Float::ConstPtr& msg){
+void OpenRover::trimCB(const std_msgs::Float32::ConstPtr& msg){
 //Get trim_increment value
-  trim+= msg->data
+  trim+= msg->data;
+  ROS_INFO("Trim value is at %f", trim);
 }
 
-void OpenRover::cmdVelCB(const geometry_msgs::Twist::ConstPtr& msg)
-{  // converts from cmd_vel (m/s and radians/s) into motor speed commands
+void OpenRover::cmdVelCB(const geometry_msgs::Twist::ConstPtr& msg){  // converts from cmd_vel (m/s and radians/s) into motor speed commands
   cmd_vel_commanded_ = *msg;
   float left_motor_speed, right_motor_speed;
   int flipper_motor_speed;
@@ -407,10 +407,10 @@ void OpenRover::cmdVelCB(const geometry_msgs::Twist::ConstPtr& msg)
   if (turn_rate == 0){
     if(linear_rate > 0){
       turn_rate = trim;
-    }else if(linear_rate <0){
+    }
+    else if(linear_rate <0){
       turn_rate = -trim;
     }
-    ROS_INFO("Trim value is at %f",trim);
   }
   static bool prev_e_stop_state_ = false;
 
