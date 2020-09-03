@@ -126,7 +126,7 @@ private:
   int motor_speed_angular_coef_;
   int motor_speed_flipper_coef_;
   int motor_speed_deadband_;
-  double trim;
+  float trim;
   float total_weight_;  // in kg
   // int motor_speed_diff_max_; ---WIP
   geometry_msgs::Twist cmd_vel_commanded_;
@@ -136,7 +136,7 @@ private:
   std::vector<unsigned char> serial_fan_buffer_;
 
   // ROS Subscriber callback functions
-  void joyCB(const std_msgs::Int32::ConstPtr& msg);
+  void trimCB(const std_msgs::Float::ConstPtr& msg);
   void cmdVelCB(const geometry_msgs::Twist::ConstPtr& msg);
   void fanSpeedCB(const std_msgs::Int32::ConstPtr& msg);
   void eStopCB(const std_msgs::Bool::ConstPtr& msg);

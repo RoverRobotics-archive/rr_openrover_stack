@@ -7,7 +7,7 @@ from diagnostic_msgs.msg import DiagnosticArray, DiagnosticStatus, KeyValue
 from nav_msgs.msg import Odometry
 import PyKDL
 import math
-from std_msgs.msg import Bool, String
+from std_msgs.msg import Bool, Float
 #import time
 
 class RoverZeroNode:
@@ -20,16 +20,16 @@ class RoverZeroNode:
         self._address = rospy.get_param('~address', 0x80)
         self._baud = rospy.get_param('~baud', 115200)
         self._max_vel = rospy.get_param('~max_vel', 1.25171)
-        self._max_turn_rate = rospy.get_param('~max_turn_rate', 1) #6.28
+        self._max_turn_rate = rospy.get_param('~max_turn_rate', 6.28)
         self._duty_coef = rospy.get_param('~speed_to_duty_coef', 1.02)
         self._diag_frequency = rospy.get_param('~diag_frequency_hz', 1.0)
         self._motor_cmd_frequency = rospy.get_param('~motor_cmd_frequency_hz', 30.0)
         self._odom_frequency = rospy.get_param('~odom_frequency_hz', 30.0)
-        self._cmd_vel_timeout = rospy.get_param('~cmd_vel_timeout', 1.5) #0.5
+        self._cmd_vel_timeout = rospy.get_param('~cmd_vel_timeout', 0.5)
         self._timeout = rospy.get_param('~timeout', 0.1)
 
         #Advanced Options 
-        self._encoder_odom_enabled = rospy.get_param('~enable_encoder_odom', False) #Unable Odom Publisher
+        self._encoder_odom_enabled = rospy.get_param('~enable_encoder_odom', False) #Enable Odom Publisher
         self._esc_feedback_controls_enabled = rospy.get_param('~enable_esc_feedback_controls', False) #Enable Closed Loop Control
         self._v_pid_overwrite = rospy.get_param('~v_pid_overwrite', False) #Enable this will priority config PID over Roboclaw' PID
         self._save_motor_controller_settings = rospy.get_param('~save_motor_controller_settings', False) #Enable This will overwrite Motor Current/speed setting on RoboClaw Itself
@@ -94,7 +94,7 @@ class RoverZeroNode:
         self._twist_sub = rospy.Subscriber("/cmd_vel", Twist, self._twist_cmd_cb, queue_size=1)
         self._estop_enable_sub = rospy.Subscriber("/soft_estop/enable", Bool, self._estop_enable_cb, queue_size=1) #EStop Enable
         self._estop_reset_sub = rospy.Subscriber("/soft_estop/reset", Bool, self._estop_reset_cb, queue_size=1) #Estop Reset
-        self._trim_trigger_sub = rospy.Subscriber("/trim", String, self._trim_cb, queue_size=1)
+        self._trim_trigger_sub = rospy.Subscriber("/trim_increment", Float, self._trim_cb, queue_size=1)
 
         # ROS Timers
         if self._diag_frequency > 0.0:
@@ -262,12 +262,9 @@ class RoverZeroNode:
             self._estop_on_ = False
             self._variable_lock.release()
 
-    def _trim_cb(self,trimstate):
-        if trimstate.data == "2" and self._trim < 1:
-            self._trim += 0.05
-        elif trimstate.data == "1" and self._trim > -1:
-            self._trim -= 0.05
-	print(self._trim)
+    def _trim_cb(self,trim_increment):
+        self._trim += trim_increment.data
+        rospy.loginfo('Trim value is at: %f', self._trim)
 
     def _twist_to_wheel_velocities(self, linear_rate, angular_rate):
         if linear_rate > self._max_vel:
@@ -280,7 +277,7 @@ class RoverZeroNode:
             angular_rate = -self._max_turn_rate
 
         #turn damping
-        if self._highspeed_turn_damping == True:
+        if self._highspeed_turn_damping == True and linear_rate != 0:
             angular_rate = 1/(abs(linear_rate))*angular_rate #probably could use a better function
         #trim
         if angular_rate == 0:

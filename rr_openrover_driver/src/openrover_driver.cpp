@@ -16,6 +16,7 @@
 #include "std_msgs/Int32.h"
 #include "std_msgs/Int32MultiArray.h"
 #include "std_msgs/Float32MultiArray.h"
+#include "std_msgs/Float.h"
 #include "geometry_msgs/Twist.h"
 #include <std_msgs/Bool.h>
 #include "nav_msgs/Odometry.h"
@@ -118,7 +119,7 @@ bool OpenRover::start()
   motor_speeds_pub = nh_priv_.advertise<std_msgs::Int32MultiArray>("motor_speeds_commanded", 1);
   vel_calc_pub = nh_priv_.advertise<std_msgs::Float32MultiArray>("vel_calc_pub", 1);
 
-  joy_sub = nh_priv_.subscribe("/trimstate", 1, &OpenRover::joyCB, this);
+  trim_sub = nh_priv_.subscribe("/trim_increment", 1, &OpenRover::trimCB, this);
   cmd_vel_sub = nh_priv_.subscribe("/cmd_vel/managed", 1, &OpenRover::cmdVelCB, this);
   fan_speed_sub = nh_priv_.subscribe("/rr_openrover_driver/fan_speed", 1, &OpenRover::fanSpeedCB, this);
   e_stop_sub = nh_priv_.subscribe("/soft_estop/enable", 1, &OpenRover::eStopCB, this);
@@ -389,17 +390,9 @@ void OpenRover::fanSpeedCB(const  std_msgs::Int32::ConstPtr& msg)
   return;
 }
 
-void OpenRover::joyCB(const std_msgs::Int32::ConstPtr& msg){
-//Get joy_msg Trimmers button and increase trim
-  if (msg->data == 0){
-    //do nothing
-  }else if(msg->data ==1 && trim <= 1){
-    //increase
-    trim+=0.05;
-  }else if(msg->data ==2 && trim >= -1 ){
-    //decease
-    trim-=0.05;
-  }
+void OpenRover::trimCB(const std_msgs::Float::ConstPtr& msg){
+//Get trim_increment value
+  trim+= msg->data
 }
 
 void OpenRover::cmdVelCB(const geometry_msgs::Twist::ConstPtr& msg)

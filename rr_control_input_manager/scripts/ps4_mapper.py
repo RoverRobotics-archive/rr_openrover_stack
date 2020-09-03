@@ -8,7 +8,7 @@
 
 import rospy
 from geometry_msgs.msg import Twist, TwistStamped
-from std_msgs.msg import Bool, Int32
+from std_msgs.msg import Bool, Float
 from ds4_driver.msg import Status
 
 
@@ -22,7 +22,7 @@ class ps4_mapper(object):
             self._cls = Twist
         self._inputs = rospy.get_param('~inputs')
         self._scales = rospy.get_param('~scales')
-	self.buttonpressed = False
+	    self.buttonpressed = False
         self.counter = 0
         self._attrs = []
         for attr in Status.__slots__:
@@ -30,11 +30,12 @@ class ps4_mapper(object):
                 self._attrs.append(attr)
 
         self._pub = rospy.Publisher('cmd_vel/joystick', self._cls, queue_size=1)
-	self._pub_squ = rospy.Publisher('/joystick/square', Bool, queue_size=1, latch =True)
-	self._pub_triangle = rospy.Publisher('/joystick/triangle', Bool, queue_size=1, latch =True)
-	self._pub_circle = rospy.Publisher('/soft_estop/reset', Bool, queue_size=1) #, latch =True)
-	self._pub_cross = rospy.Publisher('/soft_estop/enable', Bool, queue_size=1) #, latch =True)
-	self._pub_trim  = rospy.Publisher('/trimstate', Int32, queue_size=1)
+	    self._pub_squ = rospy.Publisher('/joystick/square', Bool, queue_size=1, latch =True)
+	    self._pub_triangle = rospy.Publisher('/joystick/triangle', Bool, queue_size=1, latch =True)
+	    self._pub_circle = rospy.Publisher('/soft_estop/reset', Bool, queue_size=1) #, latch =True)
+	    self._pub_cross = rospy.Publisher('/soft_estop/enable', Bool, queue_size=1) #, latch =True)
+	    self._pub_trim  = rospy.Publisher('/trim_increment', Float, queue_size=1)
+        self._trim_incre_value = rospy.get_param('~trim_increment_value',0.05)
         rospy.Subscriber('status', Status, self.cb_status, queue_size=1)
 
     def cb_status(self, msg):
@@ -63,13 +64,12 @@ class ps4_mapper(object):
                 setattr(vel_vec, k, scale * val)
 
 	if (msg.button_l1 or msg.button_r1) and self.buttonpressed == False:
-	    trim_msg = Int32()
+	    trim_msg = Float()
             if msg.button_r1:
-		trim_msg.data = 2
-                self._pub_trim.publish(trim_msg)
+                trim_msg = self._trim_incre_value
             elif msg.button_l1:
-		trim_msg.data = 1
-                self._pub_trim.publish(trim_msg)
+                trim_msg = -self._trim_incre_value
+            self._pub_trim.publish(trim_msg)
             self.buttonpressed = True
         elif self.buttonpressed == True: #Debounce
             self.counter +=1
@@ -90,7 +90,7 @@ class ps4_mapper(object):
 	    self._pub_circle.publish(button2_msg)
 	self._pub_circle.publish(button2_msg)
 	self._pub_cross.publish(button_msg)
-        self._pub.publish(to_pub)
+    self._pub.publish(to_pub)
 
 
 def main():
