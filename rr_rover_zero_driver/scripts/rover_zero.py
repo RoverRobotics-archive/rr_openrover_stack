@@ -7,7 +7,7 @@ from diagnostic_msgs.msg import DiagnosticArray, DiagnosticStatus, KeyValue
 from nav_msgs.msg import Odometry
 import PyKDL
 import math
-from std_msgs.msg import Bool, Float
+from std_msgs.msg import Bool, Float32
 #import time
 
 class RoverZeroNode:
@@ -20,14 +20,13 @@ class RoverZeroNode:
         self._address = rospy.get_param('~address', 0x80)
         self._baud = rospy.get_param('~baud', 115200)
         self._max_vel = rospy.get_param('~max_vel', 1.25171)
-        self._max_turn_rate = rospy.get_param('~max_turn_rate', 6.28)
+        self._max_turn_rate = rospy.get_param('~max_turn_rate', 1.00)
         self._duty_coef = rospy.get_param('~speed_to_duty_coef', 1.02)
         self._diag_frequency = rospy.get_param('~diag_frequency_hz', 1.0)
         self._motor_cmd_frequency = rospy.get_param('~motor_cmd_frequency_hz', 30.0)
         self._odom_frequency = rospy.get_param('~odom_frequency_hz', 30.0)
         self._cmd_vel_timeout = rospy.get_param('~cmd_vel_timeout', 0.5)
         self._timeout = rospy.get_param('~timeout', 0.1)
-
         #Advanced Options 
         self._encoder_odom_enabled = rospy.get_param('~enable_encoder_odom', False) #Enable Odom Publisher
         self._esc_feedback_controls_enabled = rospy.get_param('~enable_esc_feedback_controls', False) #Enable Closed Loop Control
@@ -41,7 +40,7 @@ class RoverZeroNode:
         self._m2_v_i = rospy.get_param('~m2_v_i', 0.35)
         self._m2_v_d = rospy.get_param('~m2_v_d', 0.00)
         self._m2_v_qpps = int(rospy.get_param('~m2_v_qpps', 10000))
-        self._highspeed_turn_damping = rospy.get_param('~highspeed_turn_damping', False)
+        self._damping_factor = rospy.get_param('~highspeed_turn_damping_factor', 1.78816)
         self._trim = rospy.get_param('~trim',0.00)
         self._encoder_pulses_per_turn = rospy.get_param('~encoder_pulses_per_turn', 5400.0)
         self._left_motor_max_current = rospy.get_param('~left_motor_max_current', 5.0)
@@ -94,7 +93,7 @@ class RoverZeroNode:
         self._twist_sub = rospy.Subscriber("/cmd_vel", Twist, self._twist_cmd_cb, queue_size=1)
         self._estop_enable_sub = rospy.Subscriber("/soft_estop/enable", Bool, self._estop_enable_cb, queue_size=1) #EStop Enable
         self._estop_reset_sub = rospy.Subscriber("/soft_estop/reset", Bool, self._estop_reset_cb, queue_size=1) #Estop Reset
-        self._trim_trigger_sub = rospy.Subscriber("/trim_increment", Float, self._trim_cb, queue_size=1)
+        self._trim_trigger_sub = rospy.Subscriber("/trim_increment", Float32, self._trim_cb, queue_size=1)
 
         # ROS Timers
         if self._diag_frequency > 0.0:
@@ -175,7 +174,7 @@ class RoverZeroNode:
         if self._cmd_vel_timeout <= 0.0:
             rospy.logwarn('cmd_vel timeout (cmd_vel_timeout) disabled.  Robot will execute last cmd_vel message forever.')
 
-        if self._highspeed_turn_damping == False:
+        if self._damping_factor == 0:
             rospy.logwarn('highspeed turn damping is disabled. Robot will turn with same rate at higher speed')
 
         if self._trim != 0:
@@ -267,26 +266,28 @@ class RoverZeroNode:
         rospy.loginfo('Trim value is at: %f', self._trim)
 
     def _twist_to_wheel_velocities(self, linear_rate, angular_rate):
+	rospy.loginfo('Input value: %f %f', linear_rate, angular_rate)
+
         if linear_rate > self._max_vel:
             linear_rate = self._max_vel
         elif linear_rate < -self._max_vel:
-            linear_rate = -self._max_vel 
-        if 0 !=angular_rate > self._max_turn_rate:
+            linear_rate = -self._max_vel
+	if angular_rate == 0:
+            if linear_rate > 0:
+                angular_rate = self._trim
+            elif linear_rate < 0:
+                angular_rate = -self._trim
+	elif 0 != angular_rate > self._max_turn_rate:
             angular_rate = self._max_turn_rate
         elif 0 != angular_rate < -self._max_turn_rate:
             angular_rate = -self._max_turn_rate
+	rospy.loginfo('Limited value: %f %f', linear_rate, angular_rate)
 
-        #turn damping
-        if self._highspeed_turn_damping == True and linear_rate != 0:
-            angular_rate = 1/(abs(linear_rate))*angular_rate #probably could use a better function
-        #trim
-        if angular_rate == 0:
-            if linear_rate > 0:
-                angular_rate = self._trim
-            elif linear_rate <0:
-                angular_rate = -self._trim
-
-        left_ = (linear_rate - 0.5 * self._wheel_base * angular_rate)
+	#turn damping
+        if self._damping_factor != 0 and linear_rate != 0 and angular_rate != 0:
+            angular_rate = math.exp(-3* (abs(linear_rate) / self._damping_factor))* angular_rate
+        rospy.loginfo('New Value: %f %f', linear_rate, angular_rate)
+	left_ = (linear_rate - 0.5 * self._wheel_base * angular_rate)
         right_ = (linear_rate + 0.5 * self._wheel_base * angular_rate)
 
         return left_, right_

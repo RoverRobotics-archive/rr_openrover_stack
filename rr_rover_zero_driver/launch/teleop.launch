@@ -9,7 +9,7 @@
         <param name="address" value="128"/>
         <param name="baud" value="115200"/> #S1 baudrate
         <param name="max_vel" value="1.0"/>
-        <param name="max_turn_rate" value="6"/>
+        <param name="max_turn_rate" value="1"/>
         <param name="speed_to_duty_coef" value="1.02"/>
         <param name="diag_frequency_hz" value="1.0"/>
         <param name="motor_cmd_frequency_hz" value="30.0"/>
@@ -17,7 +17,7 @@
         <param name="cmd_vel_timeout" value="0.5"/>
         <param name="timeout" value="0.1"/>
         <param name="enable_encoder_odom" value="False"/>
-        <param name="enable_esc_feedback_controls" value="True"/>
+        <param name="enable_esc_feedback_controls" value="False"/>
         <param name="v_pid_overwrite" value="False"/>
         <param name="save_motor_controller_settings" value="False"/>
         <param name="m1_v_p" value="3.0"/>
@@ -28,11 +28,11 @@
         <param name="m2_v_i" value="0.35"/>
         <param name="m2_v_d" value="0.0"/>
         <param name="m2_v_qpps" value="10000"/>
-        <param name="highspeed_turn_damping" value="False"/>
+        <param name="highspeed_damping_factor" value="1.7"/>
         <param name="trim" value="0.00"/>
         <param name="encoder_pulses_per_turn" value="5400.0"/>
-        <param name="left_motor_max_current" value="10.0"/>
-        <param name="right_motor_max_current" value="10.0"/>
+        <param name="left_motor_max_current" value="15.0"/>
+        <param name="right_motor_max_current" value="15.0"/>
         <param name="active_brake_timeout" value="1.0"/>
         <param name="odom_frame" value="odom"/>
         <param name="base_link_frame" value="base_link"/>

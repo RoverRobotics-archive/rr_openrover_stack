@@ -96,7 +96,6 @@ bool OpenRover::start()
   slow_timer = nh_priv_.createWallTimer(ros::WallDuration(1.0 / slow_rate_hz_), &OpenRover::robotDataSlowCB, this);
   timeout_timer = nh_priv_.createWallTimer(ros::WallDuration(timeout_), &OpenRover::timeoutCB, this, true);
 
-
   if (!(nh_priv_.getParam("use_legacy", use_legacy_)))
   {
     ROS_WARN("Failed to retrieve drive_type from parameter.Defaulting to %s", use_legacy_ ? "true" : "false");
@@ -124,7 +123,7 @@ bool OpenRover::start()
   fan_speed_sub = nh_priv_.subscribe("/rr_openrover_driver/fan_speed", 1, &OpenRover::fanSpeedCB, this);
   e_stop_sub = nh_priv_.subscribe("/soft_estop/enable", 1, &OpenRover::eStopCB, this);
   e_stop_reset_sub = nh_priv_.subscribe("/soft_estop/reset", 1, &OpenRover::eStopResetCB, this);
-
+  trim = 0;
   return true;
 }
 
