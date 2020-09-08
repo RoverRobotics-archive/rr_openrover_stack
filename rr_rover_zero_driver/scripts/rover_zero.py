@@ -319,11 +319,11 @@ class RoverZeroNode:
         return int(pulse_rate)
 
     def speed_to_duty(self, speed):
-	if speed >= 1:
-	    speed = 0.9
-        duty = int(32768 * (self._duty_coef * speed))
-        if duty < -32768:
+	duty = int(32768 * (self._duty_coef * speed))
+	if duty < -32768:
             duty = -32768
+        if duty > 32767:
+            duty = 32767
         return duty
 
     def send_motor_duty(self, left_duty, right_duty):

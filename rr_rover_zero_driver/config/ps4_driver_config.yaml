@@ -12,7 +12,7 @@
 # and subscribe to sensor_msgs/JoyFeedbackArray.
 # If false, will publish ds4_driver/Status and subscribe to
 # ds4_driver/Feedback.
-use_standard_msgs: true
+use_standard_msgs: false
 
 # Rate in Hz at which a joystick that has a non-changing state will resend the
 # previously sent message. When disabled (zero), only publish Joy messages
