@@ -20,7 +20,7 @@ class RoverZeroNode:
         self._address = rospy.get_param('~address', 0x80)
         self._baud = rospy.get_param('~baud', 115200)
         self._max_vel = rospy.get_param('~max_vel', 1.25171)
-        self._max_turn_rate = rospy.get_param('~max_turn_rate', 1.00)
+        self._max_turn_rate = rospy.get_param('~max_turn_rate', 6.00)
         self._duty_coef = rospy.get_param('~speed_to_duty_coef', 1.02)
         self._diag_frequency = rospy.get_param('~diag_frequency_hz', 1.0)
         self._motor_cmd_frequency = rospy.get_param('~motor_cmd_frequency_hz', 30.0)
@@ -40,7 +40,7 @@ class RoverZeroNode:
         self._m2_v_i = rospy.get_param('~m2_v_i', 0.35)
         self._m2_v_d = rospy.get_param('~m2_v_d', 0.00)
         self._m2_v_qpps = int(rospy.get_param('~m2_v_qpps', 10000))
-        self._damping_factor = rospy.get_param('~highspeed_turn_damping_factor', 1.78816)
+        self._damping_factor = rospy.get_param('~highspeed_turn_damping_factor', 0)
         self._trim = rospy.get_param('~trim',0.00)
         self._encoder_pulses_per_turn = rospy.get_param('~encoder_pulses_per_turn', 5400.0)
         self._left_motor_max_current = rospy.get_param('~left_motor_max_current', 5.0)
@@ -266,8 +266,6 @@ class RoverZeroNode:
         rospy.loginfo('Trim value is at: %f', self._trim)
 
     def _twist_to_wheel_velocities(self, linear_rate, angular_rate):
-	rospy.loginfo('Input value: %f %f', linear_rate, angular_rate)
-
         if linear_rate > self._max_vel:
             linear_rate = self._max_vel
         elif linear_rate < -self._max_vel:
@@ -281,16 +279,13 @@ class RoverZeroNode:
             angular_rate = self._max_turn_rate
         elif 0 != angular_rate < -self._max_turn_rate:
             angular_rate = -self._max_turn_rate
-	rospy.loginfo('Limited value: %f %f', linear_rate, angular_rate)
-
 	#turn damping
         if self._damping_factor != 0 and linear_rate != 0 and angular_rate != 0:
             angular_rate = math.exp(-3* (abs(linear_rate) / self._damping_factor))* angular_rate
-        rospy.loginfo('New Value: %f %f', linear_rate, angular_rate)
 	left_ = (linear_rate - 0.5 * self._wheel_base * angular_rate)
         right_ = (linear_rate + 0.5 * self._wheel_base * angular_rate)
-
-        return left_, right_
+	
+	return left_, right_
 
     def _motor_cmd_cb(self, event):
         self._variable_lock.acquire()
@@ -316,6 +311,7 @@ class RoverZeroNode:
 
         else:
             left_cmd, right_cmd = self.speed_to_duty(left_speed), self.speed_to_duty(right_speed)
+	    #rospy.loginfo("Duty Value: %f , %f" , left_cmd , right_cmd)
             self.send_motor_duty(left_cmd, right_cmd)
 
     def speed_to_pulse_rate(self, speed):
@@ -323,12 +319,11 @@ class RoverZeroNode:
         return int(pulse_rate)
 
     def speed_to_duty(self, speed):
+	if speed >= 1:
+	    speed = 0.9
         duty = int(32768 * (self._duty_coef * speed))
         if duty < -32768:
             duty = -32768
-        if duty > 32768:
-            duty = 32768
-
         return duty
 
     def send_motor_duty(self, left_duty, right_duty):

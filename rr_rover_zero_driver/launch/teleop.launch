@@ -9,7 +9,7 @@
         <param name="address" value="128"/>
         <param name="baud" value="115200"/> #S1 baudrate
         <param name="max_vel" value="1.0"/>
-        <param name="max_turn_rate" value="1"/>
+        <param name="max_turn_rate" value="6"/>
         <param name="speed_to_duty_coef" value="1.02"/>
         <param name="diag_frequency_hz" value="1.0"/>
         <param name="motor_cmd_frequency_hz" value="30.0"/>
@@ -31,8 +31,8 @@
         <param name="highspeed_damping_factor" value="1.7"/>
         <param name="trim" value="0.00"/>
         <param name="encoder_pulses_per_turn" value="5400.0"/>
-        <param name="left_motor_max_current" value="15.0"/>
-        <param name="right_motor_max_current" value="15.0"/>
+        <param name="left_motor_max_current" value="20.0"/>
+        <param name="right_motor_max_current" value="20.0"/>
         <param name="active_brake_timeout" value="1.0"/>
         <param name="odom_frame" value="odom"/>
         <param name="base_link_frame" value="base_link"/>
@@ -42,14 +42,19 @@
     </node>
 
     <!-- PS4 Ubuntu Driver -->
-    <include file="$(find ds4_driver)/launch/ds4_driver.launch" >
-        <arg name="addr" value="" />
-        <arg name="use_standard_msgs" value="false" />
-    </include>
+    <node pkg="ds4_driver" type="ds4_driver_node.py" name="ds4_driver" output="screen" >
+	<rosparam command="load" file="$(find rr_rover_zero_driver)/config/ps4_driver_config.yaml" />
+	<param name="device_addr" value="" />
+	<param name="use_standard_msgs" value="false" />
+	<param name="autorepeat_rate" value="0" />
+    </node>
 
+    <node pkg="tf2_ros" type="static_transform_publisher" name="ds4_to_imu"
+    args="0 0.05 -0.01 -1.5707 0 1.5707 ds4 ds4_imu" />
+ 
     <!-- PS4 Mapper -->
     <node pkg="rr_control_input_manager" type="ps4_mapper.py" name="ps4_mapper" output="screen" >
-        <rosparam command="load" file="$(find rr_openrover_driver)/config/ps4_controller_config.yaml" />
+        <rosparam command="load" file="$(find rr_rover_zero_driver)/config/ps4_controller_config.yaml" />
         <param name="stamped" value="True" />
     </node>
 
