@@ -10,7 +10,7 @@
 import rospy
 from geometry_msgs.msg import Twist, TwistStamped
 from std_msgs.msg import Bool, Float32
-from ds4_driver.msg import Status
+from ds4_driver.msg import Status, Feedback
 
 
 class ps4_mapper(object):
@@ -37,8 +37,12 @@ class ps4_mapper(object):
         self._pub_cross = rospy.Publisher('/soft_estop/enable', Bool, queue_size=1)  # , latch =True)
         self._pub_trim = rospy.Publisher('/trim_increment', Float32, queue_size=1)
         self._trim_incre_value = rospy.get_param('~trim_increment_value', 0.05)
+	self._pub_feedback = rospy.Publisher("set_feedback", Feedback, queue_size=1)
         rospy.Subscriber('status', Status, self.cb_status, queue_size=1)
+        rospy.loginfo("Linear Scale is at %f" , self._scales["linear"]["x"])
+	self._feedback = Feedback()
 
+        self._feedback.set_rumble = True
     def cb_status(self, msg):
         """
         :param msg:
@@ -57,13 +61,12 @@ class ps4_mapper(object):
         else:
             twist = to_pub
         # go through each velocity input types
-        for vel_type in self._inputs:
+	for vel_type in self._inputs:
             vel_vec = getattr(twist, vel_type)
             for k, expr in self._inputs[vel_type].items():
                 scale = self._scales[vel_type].get(k, 1.0)
                 val = eval(expr, {}, input_vals)
                 setattr(vel_vec, k, scale * val)
-
         if (msg.button_l1 or msg.button_r1) and self.buttonpressed is False:
             trim_msg = Float32()
             if msg.button_r1:
@@ -77,6 +80,20 @@ class ps4_mapper(object):
             if self.counter == 50:
                 self.counter = 0
                 self.buttonpressed = False
+		self._feedback.set_rumble = False
+		self._pub_feedback.publish(self._feedback)
+	if (msg.button_dpad_up or msg.button_dpad_down) and self.buttonpressed is False:
+	    if msg.button_dpad_up and self._scales["linear"].get("x") < 3:
+		self._scales["linear"]["x"] += 0.05
+	    elif msg.button_dpad_down and self._scales["linear"].get("x") > 0.05:
+		self._scales["linear"]["x"] -= 0.05
+	    elif self._scales["linear"].get("x") <= 0.06 or self._scales["linear"].get("x") >= 3:
+		self._feedback.set_rumble = True
+		rospy.loginfo("Limit Reach %f", self._scales["linear"].get("x"))
+		self._feedback.rumble_big = 1
+		self._pub_feedback.publish(self._feedback)
+	    rospy.loginfo('Linear Scale is at %f' ,self._scales["linear"]["x"])
+	    self.buttonpressed = True
         button_msg = Bool()
         button_msg.data = False
         button2_msg = Bool()
