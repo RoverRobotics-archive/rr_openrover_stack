@@ -810,6 +810,10 @@ void OpenRover::updateMeasuredVelocities()
   int left_rpm = robot_data_[i_REG_MOTOR_FB_RPM_LEFT];
   int right_rpm = robot_data_[i_REG_MOTOR_FB_RPM_RIGHT];
 
+
+  cout << robot_data_[i_REG_MOTOR_FB_RPM_LEFT];
+  cout << robot_data_[i_REG_MOTOR_FB_RPM_RIGHT];
+
   left_vel_measured_ = odom_encoder_coef_ / left_rpm;
   right_vel_measured_ = odom_encoder_coef_ / right_rpm;
 
