@@ -807,44 +807,11 @@ void OpenRover::serialManager()
 
 void OpenRover::updateMeasuredVelocities()
 {
-  int left_enc = robot_data_[i_ENCODER_INTERVAL_MOTOR_LEFT];
-  int right_enc = robot_data_[i_ENCODER_INTERVAL_MOTOR_RIGHT];
+  int left_rpm = robot_data_[i_REG_MOTOR_FB_RPM_LEFT];
+  int right_rpm = robot_data_[i_REG_MOTOR_FB_RPM_RIGHT];
 
-  // Bound left_encoder readings to range of normal operation.
-  if (left_enc < ENCODER_MIN)
-  {
-    left_vel_measured_ = 0;
-  }
-  else if (left_enc > ENCODER_MAX)
-  {
-    left_vel_measured_ = 0;
-  }
-  else if (motor_speeds_commanded_[LEFT_MOTOR_INDEX_] > MOTOR_NEUTRAL)  // this sets direction of measured
-  {
-    left_vel_measured_ = odom_encoder_coef_ / left_enc;
-  }
-  else
-  {
-    left_vel_measured_ = -odom_encoder_coef_ / left_enc;
-  }
-
-  // Bound right_encoder readings to range of normal operation.
-  if (right_enc < ENCODER_MIN)
-  {
-    right_vel_measured_ = 0;
-  }
-  else if (right_enc > ENCODER_MAX)
-  {
-    right_vel_measured_ = 0;
-  }
-  else if (motor_speeds_commanded_[RIGHT_MOTOR_INDEX_] > MOTOR_NEUTRAL)  // this sets direction of measured
-  {
-    right_vel_measured_ = odom_encoder_coef_ / right_enc;
-  }
-  else
-  {
-    right_vel_measured_ = -odom_encoder_coef_ / right_enc;
-  }
+  left_vel_measured_ = odom_encoder_coef_ / left_rpm;
+  right_vel_measured_ = odom_encoder_coef_ / right_rpm;
 
   return;
 }
