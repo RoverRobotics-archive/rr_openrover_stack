@@ -807,11 +807,11 @@ void OpenRover::serialManager()
 
 void OpenRover::updateMeasuredVelocities()
 {
-  int left_rpm = robot_data_[i_REG_MOTOR_FB_RPM_LEFT];
-  int right_rpm = robot_data_[i_REG_MOTOR_FB_RPM_RIGHT];
+  short left_rpm = robot_data_[i_REG_MOTOR_FB_RPM_LEFT];
+  short right_rpm = robot_data_[i_REG_MOTOR_FB_RPM_RIGHT];
 
 
-  cout << robot_data_[i_REG_MOTOR_FB_RPM_LEFT];
+  cout << 'left' << robot_data_[i_REG_MOTOR_FB_RPM_LEFT];
   cout << robot_data_[i_REG_MOTOR_FB_RPM_RIGHT];
 
   left_vel_measured_ = odom_encoder_coef_ / left_rpm;
