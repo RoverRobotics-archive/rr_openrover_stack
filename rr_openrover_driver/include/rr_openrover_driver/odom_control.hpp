@@ -18,7 +18,7 @@ public:
   OdomControl(bool use_control, PidGains pid_gains, int max, int min);  // max min values for returned value
 
   unsigned char run(bool e_stop_on, bool control_on, double commanded_vel, double measured_vel,
-                    double dt);  // in m/s
+                    double dt, int firmwareBuildNumber);  // in m/s
   void start(bool use_control, PidGains pid_gains, int max, int min);
   void reset();
 
@@ -64,7 +64,7 @@ public:
 private:
   // Controller Functions
   void velocityController();
-  double filter(double left_motor_vel, double dt);
+  double filter(double left_motor_vel, double dt, int firmwareBuildNumber);
   bool hasZeroHistory(const std::vector<double>& vel_history);
   int boundMotorSpeed(int motor_speed, int max, int min);
   int deadbandOffset(int motor_speed, int deadband_offset);

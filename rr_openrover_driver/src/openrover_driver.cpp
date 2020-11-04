@@ -763,9 +763,9 @@ void OpenRover::serialManager()
       updateMeasuredVelocities();  // Update openrover measured velocities based on latest encoder readings
 
       motor_speeds_commanded_[LEFT_MOTOR_INDEX_] =
-          left_controller_.run(e_stop_on_, closed_loop_control_on_, left_vel_commanded_, left_vel_measured_, dt);
+          left_controller_.run(e_stop_on_, closed_loop_control_on_, left_vel_commanded_, left_vel_measured_, dt, robot_data_[i_BUILDNO]);
       motor_speeds_commanded_[RIGHT_MOTOR_INDEX_] =
-          right_controller_.run(e_stop_on_, closed_loop_control_on_, right_vel_commanded_, right_vel_measured_, dt);
+          right_controller_.run(e_stop_on_, closed_loop_control_on_, right_vel_commanded_, right_vel_measured_, dt, robot_data_[i_BUILDNO]);
 
       left_vel_filtered_ = left_controller_.velocity_filtered_;
       right_vel_filtered_ = right_controller_.velocity_filtered_;
