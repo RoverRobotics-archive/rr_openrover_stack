@@ -807,18 +807,73 @@ void OpenRover::serialManager()
 
 void OpenRover::updateMeasuredVelocities()
 {
-  signed short int left_rpm = robot_data_[i_REG_MOTOR_FB_RPM_LEFT];
-  signed short int right_rpm = robot_data_[i_REG_MOTOR_FB_RPM_RIGHT];
+  
+  int robotFirmwareBuild = robot_data_[i_BUILDNO];
 
-  float lconversion = left_rpm;
-  float rconversion = right_rpm;
+  if(robotFirmwareBuild == BUILD_NUMBER_WITH_GOOD_RPM_DATA){
+    signed short int left_rpm = robot_data_[i_REG_MOTOR_FB_RPM_LEFT];
+    signed short int right_rpm = robot_data_[i_REG_MOTOR_FB_RPM_RIGHT];
+    int lperiod = robot_data_[i_ENCODER_INTERVAL_MOTOR_LEFT];
+    int rperiod = robot_data_[i_ENCODER_INTERVAL_MOTOR_RIGHT];
 
-  left_vel_measured_ = lconversion / 5000;
-  right_vel_measured_ = rconversion / 5000;
+    float lconversion = left_rpm;
+    
+    float rconversion = right_rpm;
 
-  std::cout << "L: " << left_vel_measured_ << std::endl;
-  std::cout << "R: " << right_vel_measured_ << std::endl;
+    std::cout << "l period:  " << lperiod << std::endl;
+    std::cout << "r period   " << rperiod << std::endl;
 
+    std::cout << "L rpm: " << left_rpm << std::endl;
+    std::cout << "R rpm: " << right_rpm << std::endl;
+
+    left_vel_measured_ = lconversion / 9100;
+    right_vel_measured_ = rconversion / 9100;
+
+    std::cout << "L: " << left_vel_measured_ << std::endl;
+    std::cout << "R: " << right_vel_measured_ << std::endl;
+  }
+  else{
+    //do it the old way
+    int left_enc = robot_data_[i_ENCODER_INTERVAL_MOTOR_LEFT];
+    int right_enc = robot_data_[i_ENCODER_INTERVAL_MOTOR_RIGHT];
+
+    // Bound left_encoder readings to range of normal operation.
+    if (left_enc < ENCODER_MIN)
+    {
+      left_vel_measured_ = 0;
+    }
+    else if (left_enc > ENCODER_MAX)
+    {
+      left_vel_measured_ = 0;
+    }
+    else if (motor_speeds_commanded_[LEFT_MOTOR_INDEX_] > MOTOR_NEUTRAL)  // this sets direction of measured
+    {
+      left_vel_measured_ = odom_encoder_coef_ / left_enc;
+    }
+    else
+    {
+      left_vel_measured_ = -odom_encoder_coef_ / left_enc;
+    }
+
+    // Bound right_encoder readings to range of normal operation.
+    if (right_enc < ENCODER_MIN)
+    {
+      right_vel_measured_ = 0;
+    }
+    else if (right_enc > ENCODER_MAX)
+    {
+      right_vel_measured_ = 0;
+    }
+    else if (motor_speeds_commanded_[RIGHT_MOTOR_INDEX_] > MOTOR_NEUTRAL)  // this sets direction of measured
+    {
+      right_vel_measured_ = odom_encoder_coef_ / right_enc;
+    }
+    else
+    {
+      right_vel_measured_ = -odom_encoder_coef_ / right_enc;
+    }
+
+  }
   return;
 }
 

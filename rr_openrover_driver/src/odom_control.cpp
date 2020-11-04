@@ -121,6 +121,10 @@ unsigned char OdomControl::run(bool e_stop_on, bool control_on, double commanded
 
   velocity_filtered_ = filter(measured_vel, dt);
 
+  std::cout << "velocity filtered: " << velocity_filtered_ << std::endl;
+  std::cout << "dt: " << dt << std::endl;
+
+
   //If rover is E-Stopped, respond with NEUTRAL comman
   if (e_stop_on)
   {
@@ -282,6 +286,7 @@ double OdomControl::filter(double velocity, double dt)
   velocity_history_.insert(velocity_history_.begin(), velocity);
   velocity_history_.pop_back();
 
+  /*
   if (accel > MAX_ACCEL_CUTOFF_)
   {
     change_in_velocity = 0.5*dt*MAX_ACCEL_CUTOFF_;
@@ -291,11 +296,12 @@ double OdomControl::filter(double velocity, double dt)
   {
     change_in_velocity = -0.5*dt*MAX_ACCEL_CUTOFF_;
     velocity = velocity_filtered_history_[0] + change_in_velocity;
-  }
+  }*/
 
   // Hanning low pass filter filter
   // velocity_filtered_ = 0.25 * velocity + 0.5 * velocity_filtered_history_[0] + 0.25 * velocity_filtered_history_[1];
-  velocity_filtered_ = 0.1 * velocity + 0.25 * velocity_filtered_history_[0] + 0.30 * velocity_filtered_history_[1] + 0.25 * velocity_filtered_history_[2] + 0.1 * velocity_filtered_history_[3];
+  //velocity_filtered_ = 0.1 * velocity + 0.25 * velocity_filtered_history_[0] + 0.30 * velocity_filtered_history_[1] + 0.25 * velocity_filtered_history_[2] + 0.1 * velocity_filtered_history_[3];
+  velocity_filtered_ = 0.3 * velocity + 0.7 * velocity_filtered_history_[0]; //+ 0.30 * velocity_filtered_history_[1] + 0.25 * velocity_filtered_history_[2] + 0.1 * velocity_filtered_history_[3];
   velocity_filtered_history_.insert(velocity_filtered_history_.begin(), velocity_filtered_);
   velocity_filtered_history_.pop_back();
 
