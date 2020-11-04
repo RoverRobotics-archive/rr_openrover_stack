@@ -6,7 +6,7 @@ namespace openrover
 //special build numbers that have significance for operation of the driver
 const int BUILD_NUMBER_WITH_GOOD_RPM_DATA = 10007;
 
-const int MOTOR_RPM_TO_WHEEL_RPM_RATIO = 9100;
+const int MOTOR_RPM_TO_MPS_RATIO = 9100;
 
 const unsigned char SERIAL_START_BYTE = 253;
 const int SERIAL_OUT_PACKAGE_LENGTH = 7;

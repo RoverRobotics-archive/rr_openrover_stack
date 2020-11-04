@@ -814,8 +814,8 @@ void OpenRover::updateMeasuredVelocities()
     signed short int left_rpm = robot_data_[i_REG_MOTOR_FB_RPM_LEFT];
     signed short int right_rpm = robot_data_[i_REG_MOTOR_FB_RPM_RIGHT];
 
-    left_vel_measured_ = (float) left_rpm / MOTOR_RPM_TO_WHEEL_RPM_RATIO;
-    right_vel_measured_ = (float) right_rpm / MOTOR_RPM_TO_WHEEL_RPM_RATIO;
+    left_vel_measured_ = (float) left_rpm / MOTOR_RPM_TO_MPS_RATIO;
+    right_vel_measured_ = (float) right_rpm / MOTOR_RPM_TO_MPS_RATIO;
   }
   else{
     //do it the old way
