@@ -813,24 +813,9 @@ void OpenRover::updateMeasuredVelocities()
   if(robotFirmwareBuild == BUILD_NUMBER_WITH_GOOD_RPM_DATA){
     signed short int left_rpm = robot_data_[i_REG_MOTOR_FB_RPM_LEFT];
     signed short int right_rpm = robot_data_[i_REG_MOTOR_FB_RPM_RIGHT];
-    int lperiod = robot_data_[i_ENCODER_INTERVAL_MOTOR_LEFT];
-    int rperiod = robot_data_[i_ENCODER_INTERVAL_MOTOR_RIGHT];
 
-    float lconversion = left_rpm;
-    
-    float rconversion = right_rpm;
-
-    std::cout << "l period:  " << lperiod << std::endl;
-    std::cout << "r period   " << rperiod << std::endl;
-
-    std::cout << "L rpm: " << left_rpm << std::endl;
-    std::cout << "R rpm: " << right_rpm << std::endl;
-
-    left_vel_measured_ = lconversion / 9100;
-    right_vel_measured_ = rconversion / 9100;
-
-    std::cout << "L: " << left_vel_measured_ << std::endl;
-    std::cout << "R: " << right_vel_measured_ << std::endl;
+    left_vel_measured_ = (float) left_rpm / MOTOR_RPM_TO_WHEEL_RPM_RATIO;
+    right_vel_measured_ = (float) right_rpm / MOTOR_RPM_TO_WHEEL_RPM_RATIO;
   }
   else{
     //do it the old way

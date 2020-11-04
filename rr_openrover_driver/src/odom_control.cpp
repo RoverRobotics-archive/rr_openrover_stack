@@ -121,10 +121,6 @@ unsigned char OdomControl::run(bool e_stop_on, bool control_on, double commanded
 
   velocity_filtered_ = filter(measured_vel, dt, firmwareBuildNumber);
 
-  std::cout << "velocity filtered: " << velocity_filtered_ << std::endl;
-  std::cout << "dt: " << dt << std::endl;
-
-
   //If rover is E-Stopped, respond with NEUTRAL comman
   if (e_stop_on)
   {
@@ -286,7 +282,6 @@ double OdomControl::filter(double velocity, double dt, int firmwareBuildNumber)
   velocity_history_.pop_back();
   
   if(firmwareBuildNumber == BUILD_NUMBER_WITH_GOOD_RPM_DATA){
-    std::cout << "switching correctly" << std::endl;
     velocity_filtered_ = 0.3 * velocity + 0.7 * velocity_filtered_history_[0];   
     
   }
