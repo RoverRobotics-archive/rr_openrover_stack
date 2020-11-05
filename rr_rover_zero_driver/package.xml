@@ -1,9 +1,9 @@
 <?xml version="1.0"?>
 <package format="2">
   <name>rr_rover_zero_driver</name>
-  <version>1.1.1</version>
+  <version>1.2.0</version>
   <description>The rover_zero_driver package</description>
-  <maintainer email="nickp@todo.todo">nickp</maintainer>
+  <maintainer email="john@roverrobotics.com">John Bartholomew</maintainer>
 
 
   <!-- One license tag required, multiple allowed, one license per tag -->

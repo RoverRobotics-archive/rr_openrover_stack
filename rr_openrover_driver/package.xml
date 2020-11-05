@@ -1,14 +1,14 @@
 <?xml version="1.0"?>
 <package format="2">
   <name>rr_openrover_driver</name>
-  <version>1.1.1</version>
+  <version>1.2.0</version>
   <description>
     Provides an interface between ros and Rover Robotics rover hardware. Inputs to rr_openrover_driver
     include emergency stop and velocity commands.  It outputs diagnostic data such as encoder
     readings and battery charge.
   </description>
 
-  <maintainer email="nickpadilla@roverrobotics.com">Nick Padilla</maintainer>
+  <maintainer email="john@roverrobotics.com">John Bartholomew</maintainer>
 
   <license>BSD</license>
 
