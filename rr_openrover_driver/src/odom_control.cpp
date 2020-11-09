@@ -282,7 +282,7 @@ double OdomControl::filter(double velocity, double dt, int firmwareBuildNumber)
   velocity_history_.pop_back();
   
   if(firmwareBuildNumber == BUILD_NUMBER_WITH_GOOD_RPM_DATA){
-    velocity_filtered_ = 0.3 * velocity + 0.7 * velocity_filtered_history_[0];   
+    velocity_filtered_ = 0.9 * velocity + 0.1 * velocity_filtered_history_[0];   
     
   }
   else{
