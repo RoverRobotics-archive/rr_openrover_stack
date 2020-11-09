@@ -763,9 +763,9 @@ void OpenRover::serialManager()
       updateMeasuredVelocities();  // Update openrover measured velocities based on latest encoder readings
 
       motor_speeds_commanded_[LEFT_MOTOR_INDEX_] =
-          left_controller_.run(e_stop_on_, closed_loop_control_on_, left_vel_commanded_, left_vel_measured_, dt);
+          left_controller_.run(e_stop_on_, closed_loop_control_on_, left_vel_commanded_, left_vel_measured_, dt, robot_data_[i_BUILDNO]);
       motor_speeds_commanded_[RIGHT_MOTOR_INDEX_] =
-          right_controller_.run(e_stop_on_, closed_loop_control_on_, right_vel_commanded_, right_vel_measured_, dt);
+          right_controller_.run(e_stop_on_, closed_loop_control_on_, right_vel_commanded_, right_vel_measured_, dt, robot_data_[i_BUILDNO]);
 
       left_vel_filtered_ = left_controller_.velocity_filtered_;
       right_vel_filtered_ = right_controller_.velocity_filtered_;
@@ -807,45 +807,84 @@ void OpenRover::serialManager()
 
 void OpenRover::updateMeasuredVelocities()
 {
-  int left_enc = robot_data_[i_ENCODER_INTERVAL_MOTOR_LEFT];
-  int right_enc = robot_data_[i_ENCODER_INTERVAL_MOTOR_RIGHT];
+  
+  int robotFirmwareBuild = robot_data_[i_BUILDNO];
 
-  // Bound left_encoder readings to range of normal operation.
-  if (left_enc < ENCODER_MIN)
-  {
-    left_vel_measured_ = 0;
-  }
-  else if (left_enc > ENCODER_MAX)
-  {
-    left_vel_measured_ = 0;
-  }
-  else if (motor_speeds_commanded_[LEFT_MOTOR_INDEX_] > MOTOR_NEUTRAL)  // this sets direction of measured
-  {
-    left_vel_measured_ = odom_encoder_coef_ / left_enc;
-  }
-  else
-  {
-    left_vel_measured_ = -odom_encoder_coef_ / left_enc;
-  }
+  if(robotFirmwareBuild == BUILD_NUMBER_WITH_GOOD_RPM_DATA){
+    signed short int left_rpm = robot_data_[i_REG_MOTOR_FB_RPM_LEFT];
+    signed short int right_rpm = robot_data_[i_REG_MOTOR_FB_RPM_RIGHT];
 
-  // Bound right_encoder readings to range of normal operation.
-  if (right_enc < ENCODER_MIN)
-  {
-    right_vel_measured_ = 0;
-  }
-  else if (right_enc > ENCODER_MAX)
-  {
-    right_vel_measured_ = 0;
-  }
-  else if (motor_speeds_commanded_[RIGHT_MOTOR_INDEX_] > MOTOR_NEUTRAL)  // this sets direction of measured
-  {
-    right_vel_measured_ = odom_encoder_coef_ / right_enc;
-  }
-  else
-  {
-    right_vel_measured_ = -odom_encoder_coef_ / right_enc;
-  }
+    int left_enc = robot_data_[i_ENCODER_INTERVAL_MOTOR_LEFT];
+    int right_enc = robot_data_[i_ENCODER_INTERVAL_MOTOR_RIGHT];
 
+    if(left_rpm > 0){
+      left_vel_measured_ = (float) left_rpm / MOTOR_RPM_TO_MPS_RATIO + MOTOR_RPM_TO_MPS_CFB;
+    }
+    else if(left_rpm < 0){
+      left_vel_measured_ = (float) left_rpm / MOTOR_RPM_TO_MPS_RATIO - MOTOR_RPM_TO_MPS_CFB;
+    }
+    else{
+      left_vel_measured_ = 0;
+    }
+
+    if(right_rpm > 0){
+      right_vel_measured_ = (float) right_rpm / MOTOR_RPM_TO_MPS_RATIO + MOTOR_RPM_TO_MPS_CFB;
+    }
+    else if(right_rpm < 0){
+      right_vel_measured_ = (float) right_rpm / MOTOR_RPM_TO_MPS_RATIO - MOTOR_RPM_TO_MPS_CFB;
+    }
+    else{
+      right_vel_measured_ = 0;
+    }
+
+    if(odom_axle_track_ == ODOM_AXLE_TRACK_F){
+      right_vel_measured_ /= WHEEL_TO_TRACK_RATIO;
+      left_vel_measured_ /= WHEEL_TO_TRACK_RATIO;
+    }
+
+  }
+  else{
+    //do it the old way
+    int left_enc = robot_data_[i_ENCODER_INTERVAL_MOTOR_LEFT];
+    int right_enc = robot_data_[i_ENCODER_INTERVAL_MOTOR_RIGHT];
+
+    // Bound left_encoder readings to range of normal operation.
+    if (left_enc < ENCODER_MIN)
+    {
+      left_vel_measured_ = 0;
+    }
+    else if (left_enc > ENCODER_MAX)
+    {
+      left_vel_measured_ = 0;
+    }
+    else if (motor_speeds_commanded_[LEFT_MOTOR_INDEX_] > MOTOR_NEUTRAL)  // this sets direction of measured
+    {
+      left_vel_measured_ = odom_encoder_coef_ / left_enc;
+    }
+    else
+    {
+      left_vel_measured_ = -odom_encoder_coef_ / left_enc;
+    }
+
+    // Bound right_encoder readings to range of normal operation.
+    if (right_enc < ENCODER_MIN)
+    {
+      right_vel_measured_ = 0;
+    }
+    else if (right_enc > ENCODER_MAX)
+    {
+      right_vel_measured_ = 0;
+    }
+    else if (motor_speeds_commanded_[RIGHT_MOTOR_INDEX_] > MOTOR_NEUTRAL)  // this sets direction of measured
+    {
+      right_vel_measured_ = odom_encoder_coef_ / right_enc;
+    }
+    else
+    {
+      right_vel_measured_ = -odom_encoder_coef_ / right_enc;
+    }
+
+  }
   return;
 }
 

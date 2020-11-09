@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package format="2">
   <name>rr_control_input_manager</name>
-  <version>1.1.1</version>
+  <version>1.2.0</version>
   <description>
     Filter velocity commands by ensuring that message time stamps do not exceed given timeout thresholds.
   </description>
@@ -9,7 +9,7 @@
   <!-- One maintainer tag required, multiple allowed, one person per tag -->
   <!-- Example:  -->
   <!-- <maintainer email="jane.doe@example.com">Jane Doe</maintainer> -->
-  <maintainer email="nickpadilla@roverrobotics.com">Nicholas Padilla</maintainer>
+  <maintainer email="john@roverrobotics.com">John Bartholomew</maintainer>
 
   <license>BSD</license>
 

@@ -1,6 +1,9 @@
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Changelog for package rr_openrover_driver
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+1.2.0 (2020-11-05)
+------------------
+* Add support for rpm based odometry from rover pro.
 
 1.1.1 (2020-06-15)
 ------------------

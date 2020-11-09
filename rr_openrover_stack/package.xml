@@ -1,14 +1,14 @@
 <?xml version="1.0"?>
 <package format="2">
   <name>rr_openrover_stack</name>
-  <version>1.1.1</version>
+  <version>1.2.0</version>
   <description>
     Packages related to the operation of Rover Robotics rover hardware.  This includes a client
     for interfacing with the hardware (rr_openrover_driver) and a tool for filtering time stamped
     velocity commands (rr_control_input_manager).
   </description>
 
-  <maintainer email="nickpadilla@roverrobotics.com">Nick Padilla</maintainer>
+  <maintainer email="john@roverrobotics.com">John Bartholomew</maintainer>
 
 
   <license>BSD</license>
