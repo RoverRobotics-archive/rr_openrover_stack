@@ -9,6 +9,7 @@ const int BUILD_NUMBER_WITH_GOOD_RPM_DATA = 10007;
 //empirically tuned - tested extensively
 const float MOTOR_RPM_TO_MPS_RATIO = 13749 / 1.26;
 const float MOTOR_RPM_TO_MPS_CFB = -0.07;
+const float WHEEL_TO_TRACK_RATIO = 1.818;
 
 const unsigned char SERIAL_START_BYTE = 253;
 const int SERIAL_OUT_PACKAGE_LENGTH = 7;

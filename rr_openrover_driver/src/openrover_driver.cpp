@@ -837,6 +837,11 @@ void OpenRover::updateMeasuredVelocities()
       right_vel_measured_ = 0;
     }
 
+    if(odom_axle_track_ == ODOM_AXLE_TRACK_F){
+      right_vel_measured_ /= WHEEL_TO_TRACK_RATIO;
+      left_vel_measured_ /= WHEEL_TO_TRACK_RATIO;
+    }
+
   }
   else{
     //do it the old way
