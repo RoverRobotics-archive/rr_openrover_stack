@@ -2,6 +2,15 @@
 
 namespace openrover
 {
+
+//special build numbers that have significance for operation of the driver
+const int BUILD_NUMBER_WITH_GOOD_RPM_DATA = 10007;
+
+//empirically tuned - tested extensively
+const float MOTOR_RPM_TO_MPS_RATIO = 13749 / 1.26;
+const float MOTOR_RPM_TO_MPS_CFB = -0.07;
+const float WHEEL_TO_TRACK_RATIO = 1.818;
+
 const unsigned char SERIAL_START_BYTE = 253;
 const int SERIAL_OUT_PACKAGE_LENGTH = 7;
 const int SERIAL_IN_PACKAGE_LENGTH = 5;
@@ -22,7 +31,7 @@ const int MOTOR_SPEED_ANGULAR_COEF_F_HS = 50;
 const float ODOM_ENCODER_COEF_4WD = 182.405;                                   // r_wheel*2*pi*(2.54/100)/96*1e6/45
 const float ODOM_AXLE_TRACK_4WD = 14.375;                                      // distance between wheels
 const float ODOM_ANGULAR_COEF_4WD = 1.0 / (ODOM_AXLE_TRACK_4WD * 2.54 / 100);  // rad per meter
-const float ODOM_TRACTION_FACTOR_4WD = 0.610;
+const float ODOM_TRACTION_FACTOR_4WD = 0.9;
 // high speed cmd_vel to motor command 4wd constants
 const int MOTOR_SPEED_LINEAR_COEF_4WD_HS = 31;
 const int MOTOR_SPEED_ANGULAR_COEF_4WD_HS = 6;
@@ -103,8 +112,9 @@ const int i_BATTERY_CURRENT_A = 68;
 const int i_BATTERY_CURRENT_B = 70;
 
 const int ROBOT_DATA_INDEX_FAST[] = {
-  i_ENCODER_INTERVAL_MOTOR_LEFT, i_ENCODER_INTERVAL_MOTOR_RIGHT
+  i_ENCODER_INTERVAL_MOTOR_LEFT, i_ENCODER_INTERVAL_MOTOR_RIGHT,
   //, i_ENCODER_INTERVAL_MOTOR_FLIPPER  ----WIP //10hz
+  i_REG_MOTOR_FB_RPM_LEFT, i_REG_MOTOR_FB_RPM_RIGHT
 };
 
 const int ROBOT_DATA_INDEX_MEDIUM[] = {
