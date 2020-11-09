@@ -70,9 +70,9 @@ class ps4_mapper(object):
         if (msg.button_l1 or msg.button_r1) and self.buttonpressed is False:
             trim_msg = Float32()
             if msg.button_r1:
-                trim_msg = self._trim_incre_value
-            elif msg.button_l1:
                 trim_msg = -self._trim_incre_value
+            elif msg.button_l1:
+                trim_msg = +self._trim_incre_value
             self._pub_trim.publish(trim_msg)
             self.buttonpressed = True
         elif self.buttonpressed:  # Debounce
