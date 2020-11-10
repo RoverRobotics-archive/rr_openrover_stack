@@ -428,7 +428,7 @@ class RoverZeroNode:
         self._serial_lock.release()
 
         if res:
-            self._left_motor_current = m1_current / 100.0
+            self._left_motor_current = m1_current / 100.0 #getting amp values by dividing by 100 (from Roboclaw's User Manual)
             self._right_motor_current = m2_current / 100.0
 
     def get_motor_speed(self):
