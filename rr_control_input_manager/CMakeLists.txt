@@ -44,7 +44,7 @@ include_directories(
 ## Install ##
 #############
 
-catkin_install_python(PROGRAMS scripts/control_input_manager.py scripts/xbox_mapper.py scripts/ps4_mapper.py
+catkin_install_python(PROGRAMS scripts/control_input_manager.py scripts/ps4_mapper.py
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 )
 
