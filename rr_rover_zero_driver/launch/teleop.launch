@@ -49,9 +49,6 @@
 	<param name="autorepeat_rate" value="0" />
     </node>
 
-    <node pkg="tf2_ros" type="static_transform_publisher" name="ds4_to_imu"
-    args="0 0.05 -0.01 -1.5707 0 1.5707 ds4 ds4_imu" />
- 
     <!-- PS4 Mapper -->
     <node pkg="rr_control_input_manager" type="ps4_mapper.py" name="ps4_mapper" output="screen" >
         <rosparam command="load" file="$(find rr_rover_zero_driver)/config/ps4_controller_config.yaml" />
