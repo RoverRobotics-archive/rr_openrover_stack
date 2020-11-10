@@ -217,7 +217,7 @@ class RoverZeroNode:
 
         if self._active_brake_timeout <= 0:
             rospy.logwarn('Active breaking timeout (active_brake_timeout) is disabled. If PID control is enabled and active breaking is disabled when idle, passive current may be applied motors causing potential motor overheating or reduced battery life.')
-        if not self._odom_frequency <= 0:
+        if self._odom_frequency <= 0:
             rospy.logwarn('Encoder odometry are not enabled (enable_encoder_odom).')
         else:
             if not isinstance(self._odom_frame, str) or not self._odom_frame:
@@ -436,9 +436,9 @@ class RoverZeroNode:
         (res1, m1_speed) = self._roboclaw.ReadSpeedM1(self._address)
         (res2, m2_speed) = self._roboclaw.ReadSpeedM2(self._address)
         self._serial_lock.release()
-
-        if res1 and res2:
-            self._left_motor_speed = m1_speed / 92
+	
+        if res1 and res2: 
+            self._left_motor_speed = m1_speed / 92 #number is based on rover zero quadrature encoder specs'
             self._right_motor_speed = m2_speed / 92
 
     def spin(self):
