@@ -10,11 +10,13 @@
 #include <iostream>
 #include <sys/ioctl.h>
 
+#include <sensor_msgs/Joy.h>
 #include "tf2_geometry_msgs/tf2_geometry_msgs.h"
 #include "tf2_geometry_msgs/tf2_geometry_msgs.h"
 #include "std_msgs/Int32.h"
 #include "std_msgs/Int32MultiArray.h"
 #include "std_msgs/Float32MultiArray.h"
+#include "std_msgs/Float32.h"
 #include "geometry_msgs/Twist.h"
 #include <std_msgs/Bool.h>
 #include "nav_msgs/Odometry.h"
@@ -94,7 +96,6 @@ bool OpenRover::start()
   slow_timer = nh_priv_.createWallTimer(ros::WallDuration(1.0 / slow_rate_hz_), &OpenRover::robotDataSlowCB, this);
   timeout_timer = nh_priv_.createWallTimer(ros::WallDuration(timeout_), &OpenRover::timeoutCB, this, true);
 
-
   if (!(nh_priv_.getParam("use_legacy", use_legacy_)))
   {
     ROS_WARN("Failed to retrieve drive_type from parameter.Defaulting to %s", use_legacy_ ? "true" : "false");
@@ -117,11 +118,12 @@ bool OpenRover::start()
   motor_speeds_pub = nh_priv_.advertise<std_msgs::Int32MultiArray>("motor_speeds_commanded", 1);
   vel_calc_pub = nh_priv_.advertise<std_msgs::Float32MultiArray>("vel_calc_pub", 1);
 
+  trim_sub = nh_priv_.subscribe("/trim_increment", 1, &OpenRover::trimCB, this);
   cmd_vel_sub = nh_priv_.subscribe("/cmd_vel/managed", 1, &OpenRover::cmdVelCB, this);
   fan_speed_sub = nh_priv_.subscribe("/rr_openrover_driver/fan_speed", 1, &OpenRover::fanSpeedCB, this);
   e_stop_sub = nh_priv_.subscribe("/soft_estop/enable", 1, &OpenRover::eStopCB, this);
   e_stop_reset_sub = nh_priv_.subscribe("/soft_estop/reset", 1, &OpenRover::eStopResetCB, this);
-
+  trim = 0;
   return true;
 }
 
@@ -377,7 +379,7 @@ void OpenRover::timeoutCB(const ros::WallTimerEvent& e)
   return;
 }
 
-void OpenRover::fanSpeedCB(const std_msgs::Int32::ConstPtr& msg)
+void OpenRover::fanSpeedCB(const  std_msgs::Int32::ConstPtr& msg)
 {
   if (is_serial_coms_open_ && (serial_fan_buffer_.size() == 0))
   {
@@ -387,8 +389,13 @@ void OpenRover::fanSpeedCB(const std_msgs::Int32::ConstPtr& msg)
   return;
 }
 
-void OpenRover::cmdVelCB(const geometry_msgs::Twist::ConstPtr& msg)
-{  // converts from cmd_vel (m/s and radians/s) into motor speed commands
+void OpenRover::trimCB(const std_msgs::Float32::ConstPtr& msg){
+//Get trim_increment value
+  trim+= msg->data;
+  ROS_INFO("Trim value is at %f", trim);
+}
+
+void OpenRover::cmdVelCB(const geometry_msgs::Twist::ConstPtr& msg){  // converts from cmd_vel (m/s and radians/s) into motor speed commands
   cmd_vel_commanded_ = *msg;
   float left_motor_speed, right_motor_speed;
   int flipper_motor_speed;
@@ -396,6 +403,14 @@ void OpenRover::cmdVelCB(const geometry_msgs::Twist::ConstPtr& msg)
   double turn_rate = msg->angular.z;
   double linear_rate = msg->linear.x;
   double flipper_rate = msg->angular.y;
+  if (turn_rate == 0){
+    if(linear_rate > 0){
+      turn_rate = trim;
+    }
+    else if(linear_rate <0){
+      turn_rate = -trim;
+    }
+  }
   static bool prev_e_stop_state_ = false;
 
   double diff_vel_commanded = turn_rate / odom_angular_coef_ / odom_traction_factor_;

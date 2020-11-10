@@ -11,6 +11,7 @@
 
 #include <geometry_msgs/Twist.h>
 #include <std_msgs/Bool.h>
+#include <std_msgs/Float32.h>
 #include "rr_openrover_driver_msgs/RawRrOpenroverDriverFastRateData.h"
 #include "rr_openrover_driver_msgs/RawRrOpenroverDriverMedRateData.h"
 #include "rr_openrover_driver_msgs/RawRrOpenroverDriverSlowRateData.h"
@@ -85,6 +86,7 @@ private:
   ros::Publisher battery_status_a_pub, battery_status_b_pub;
   ros::Publisher battery_state_of_charge_pub;
 
+  ros::Subscriber trim_sub;
   ros::Subscriber cmd_vel_sub;
   ros::Subscriber fan_speed_sub;
   ros::Subscriber e_stop_sub;
@@ -125,17 +127,17 @@ private:
   int motor_speed_angular_coef_;
   int motor_speed_flipper_coef_;
   int motor_speed_deadband_;
-
+  float trim;
   float total_weight_;  // in kg
   // int motor_speed_diff_max_; ---WIP
   geometry_msgs::Twist cmd_vel_commanded_;
-
   std::vector<unsigned char> serial_fast_buffer_;
   std::vector<unsigned char> serial_medium_buffer_;
   std::vector<unsigned char> serial_slow_buffer_;
   std::vector<unsigned char> serial_fan_buffer_;
 
   // ROS Subscriber callback functions
+  void trimCB(const std_msgs::Float32::ConstPtr& msg);
   void cmdVelCB(const geometry_msgs::Twist::ConstPtr& msg);
   void fanSpeedCB(const std_msgs::Int32::ConstPtr& msg);
   void eStopCB(const std_msgs::Bool::ConstPtr& msg);

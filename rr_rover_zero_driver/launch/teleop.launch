@@ -7,16 +7,17 @@
     <node pkg="rr_rover_zero_driver" type="rover_zero.py" name="rover_zero_driver_node" output="screen">
         <param name="dev" value="/dev/rover-zero"/>
         <param name="address" value="128"/>
-        <param name="baud" value="115200"/>
-        <param name="max_vel" value="5.0"/>
-        <param name="max_turn_rate" value="6.28"/>
+        <param name="baud" value="115200"/> #S1 baudrate
+        <param name="max_vel" value="1.0"/>
+        <param name="max_turn_rate" value="6"/>
         <param name="speed_to_duty_coef" value="1.02"/>
         <param name="diag_frequency_hz" value="1.0"/>
         <param name="motor_cmd_frequency_hz" value="30.0"/>
         <param name="odom_frequency_hz" value="30.0"/>
         <param name="cmd_vel_timeout" value="0.5"/>
+        <param name="timeout" value="0.1"/>
         <param name="enable_encoder_odom" value="False"/>
-        <param name="enable_esc_feedback_controls" value="True"/>
+        <param name="enable_esc_feedback_controls" value="False"/>
         <param name="v_pid_overwrite" value="False"/>
         <param name="save_motor_controller_settings" value="False"/>
         <param name="m1_v_p" value="3.0"/>
@@ -27,9 +28,11 @@
         <param name="m2_v_i" value="0.35"/>
         <param name="m2_v_d" value="0.0"/>
         <param name="m2_v_qpps" value="10000"/>
+        <param name="highspeed_damping_factor" value="1.7"/>
+        <param name="trim" value="0.00"/>
         <param name="encoder_pulses_per_turn" value="5400.0"/>
-        <param name="left_motor_max_current" value="10.0"/>
-        <param name="right_motor_max_current" value="10.0"/>
+        <param name="left_motor_max_current" value="20.0"/>
+        <param name="right_motor_max_current" value="20.0"/>
         <param name="active_brake_timeout" value="1.0"/>
         <param name="odom_frame" value="odom"/>
         <param name="base_link_frame" value="base_link"/>
@@ -38,20 +41,18 @@
         <remap from="/cmd_vel" to="/cmd_vel/managed"/>
     </node>
 
-    <!-- Xbox 360 Controller Button Mapping -->
-    <node pkg="rr_control_input_manager" type="xbox_mapper.py" name="rr_xbox_mapper_node" output="screen" >
-        <remap from="joy" to="/joystick" />
-        <remap from="/joystick/a_button" to="/soft_estop/enable" />
-        <remap from="/joystick/b_button" to="/soft_estop/reset" />
-        <remap from="/joystick/y_button" to="/joy_priority" />
-        <remap from="/joystick/x_button" to="/pause_navigation"/>
-        <param name="max_vel_fwd" value="1.0" />
-        <param name="max_vel_turn" value="6.28" />
-        <param name="adjustable_throttle" value="True" />
-        <param name="drive_increment" value="20" />
-        <param name="flipper_increment" value="20" />
-        <param name="x_button_toggle" value="true"/>
-        <param name="y_button_toggle" value="true"/>
+    <!-- PS4 Ubuntu Driver -->
+    <node pkg="ds4_driver" type="ds4_driver_node.py" name="ds4_driver" output="screen" >
+	<rosparam command="load" file="$(find rr_rover_zero_driver)/config/ps4_driver_config.yaml" />
+	<param name="device_addr" value="" />
+	<param name="use_standard_msgs" value="false" />
+	<param name="autorepeat_rate" value="0" />
+    </node>
+
+    <!-- PS4 Mapper -->
+    <node pkg="rr_control_input_manager" type="ps4_mapper.py" name="ps4_mapper" output="screen" >
+        <rosparam command="load" file="$(find rr_rover_zero_driver)/config/ps4_controller_config.yaml" />
+        <param name="stamped" value="True" />
     </node>
 
     <!--  Twist Mux  -->
@@ -64,15 +65,6 @@
 
     <!-- Control input manager -->
     <node pkg="rr_control_input_manager" type="control_input_manager.py" name="rr_control_input_manager_node" output="log" >
-        <param name="driver" value="xboxdrv"/>
-        <param name="wired_or_wireless" value="wireless"/>
         <rosparam file="$(find rr_control_input_manager)/config/input_topics.yaml" command="load"/>
-    </node>
-
-    <!-- Xbox controller driver -->
-    <node pkg="joy" type="joy_node" name="joy_node" output="screen" respawn="true" >
-        <param name="autorepeat_rate" value="10" />
-        <remap from="/joy" to="/joystick" />
-        <param name="dev" value="/dev/input/jsX"/>
     </node>
 </launch>

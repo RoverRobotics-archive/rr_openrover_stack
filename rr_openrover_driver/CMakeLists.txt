@@ -8,6 +8,7 @@ find_package(catkin REQUIRED COMPONENTS
   std_msgs
   message_generation
   geometry_msgs
+  sensor_msgs
   nav_msgs
   tf2
   rr_openrover_driver_msgs
@@ -23,7 +24,7 @@ generate_messages(
 
 catkin_package(
   INCLUDE_DIRS include
-  CATKIN_DEPENDS message_runtime rr_openrover_driver_msgs
+  CATKIN_DEPENDS message_runtime rr_openrover_driver_msgs sensor_msgs ds4_driver
 )
 
 ###########

@@ -1,6 +1,10 @@
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Changelog for package rr_openrover_driver
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2.0.0 (2020-11-10)
+------------------
+* Add trim subscription and estop subscription, to handle those inputs.
+
 1.2.0 (2020-11-05)
 ------------------
 * Add support for rpm based odometry from rover pro.
