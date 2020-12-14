@@ -1,6 +1,10 @@
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Changelog for package rr_openrover_driver
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2.0.1 (2020-12-14)
+------------------
+* Change how rover pro driver interprets build number received from roverpro robot.
+
 2.0.0 (2020-11-10)
 ------------------
 * Add trim subscription and estop subscription, to handle those inputs.
