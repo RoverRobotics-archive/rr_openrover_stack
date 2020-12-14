@@ -54,7 +54,6 @@ class RoverZeroNode:
             rospy.logfatal('Could not open serial at ' + self._port)
             exit(1)
 
-        self.verify_ros_parameters()
 
         # Class Variables
         self._left_motor_speed = 0.0
@@ -109,7 +108,7 @@ class RoverZeroNode:
             rospy.Timer(rospy.Duration(self._cmd_vel_timeout), self._cmd_vel_timeout_cb)
 
         # Get Roboclaw Firmware Version
-
+	self.verify_ros_parameters()
         self._configure_motor_controller()
 
         # Reset Encoders
