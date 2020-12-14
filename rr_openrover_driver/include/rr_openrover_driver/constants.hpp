@@ -4,7 +4,7 @@ namespace openrover
 {
 
 //special build numbers that have significance for operation of the driver
-const int BUILD_NUMBER_WITH_GOOD_RPM_DATA = 10007;
+const int BUILD_NUMBER_WITH_GOOD_RPM_DATA = 100;
 
 //empirically tuned - tested extensively
 const float MOTOR_RPM_TO_MPS_RATIO = 13749 / 1.26;
