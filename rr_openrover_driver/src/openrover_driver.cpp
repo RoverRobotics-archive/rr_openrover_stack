@@ -827,7 +827,7 @@ void OpenRover::updateMeasuredVelocities()
   which returns in the format aabbcc. We divide by 100 to truncate
   cc since we don't care about the PATCH field of semantic versioning
   */
-  unsigned int robotFirmwareBuild = (unsigned int)robot_data_[i_BUILDNO] / 100;
+  int robotFirmwareBuild = robot_data_[i_BUILDNO] / 100;
 
   if(robotFirmwareBuild == BUILD_NUMBER_WITH_GOOD_RPM_DATA){
     signed short int left_rpm = robot_data_[i_REG_MOTOR_FB_RPM_LEFT];

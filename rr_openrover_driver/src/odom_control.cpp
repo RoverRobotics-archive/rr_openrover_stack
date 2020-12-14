@@ -119,7 +119,14 @@ unsigned char OdomControl::run(bool e_stop_on, bool control_on, double commanded
 
   velocity_measured_ = measured_vel;
 
-  velocity_filtered_ = filter(measured_vel, dt, firmwareBuildNumber);
+  /*
+  Truncate the last two digits of the firmware version number,
+  which returns in the format aabbcc. We divide by 100 to truncate
+  cc since we don't care about the PATCH field of semantic versioning
+  */
+  int firmwareBuildNumberTrunc = firmwareBuildNumber / 100;
+
+  velocity_filtered_ = filter(measured_vel, dt, firmwareBuildNumberTrunc);
 
   //If rover is E-Stopped, respond with NEUTRAL comman
   if (e_stop_on)
