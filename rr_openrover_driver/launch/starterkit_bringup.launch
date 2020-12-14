@@ -6,10 +6,10 @@
     <!-- OpenRover Driver -->
     <node pkg="rr_openrover_driver" type="openrover_driver_node" name="$(arg openrover_node_name)" respawn="false" output="screen">
         <param name="port" value="/dev/rover" />
-        <param name="drive_type" value="4wd" />
+        <param name="drive_type" value="2wd" />
         <param name="enable_timeout" type="bool" value="true"/>
         <param name="timeout" type="double" value="0.3"/>
-        <param name="closed_loop_control_on" type="bool" value="true" />
+        <param name="closed_loop_control_on" type="bool" value="false" />
         <!--<param name="closed_loop_control_on" type="bool" value="true" />--><!-- Requires fast_data_rate >= 60 -->
         <param name="total_weight" type="double" value="20.41"/>
         <param name="traction_factor" value="1.0"/>
