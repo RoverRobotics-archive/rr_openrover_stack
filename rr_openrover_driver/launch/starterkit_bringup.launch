@@ -15,7 +15,7 @@
         <param name="traction_factor" value="1.0"/>
         <param name="odom_covariance_0" value="0.01"/>
         <param name="odom_covariance_35" value="0.03"/>
-	<param name="use_legacy" value="true" />
+	
         <param name="fast_data_rate" value="20.0"/>
         <param name="medium_data_rate" value="2.0"/>
         <param name="Kp" value="10"/>
