@@ -922,8 +922,12 @@ void OpenRover::updateRobotData(int param)
   catch (std::string s)
   {
     char str_ex[50];
-    sprintf(str_ex, "Failed to update param %i. ", param);
-    throw std::string(str_ex) + s;
+    sprintf(str_ex, "Failed to update param %i. Will try to re-open port", param);
+    //try to re-open the serial port
+    if (!(openComs()))
+    {
+      ROS_WARN("Failed to restart serial communication.");
+    }
   }
   return;
 }
@@ -942,15 +946,6 @@ bool OpenRover::sendCommand(int param1, int param2)
   write_buffer[6] =
       (char)255 - (write_buffer[1] + write_buffer[2] + write_buffer[3] + write_buffer[4] + write_buffer[5]) % 255;
 
-  if (!(serial_port_fd_ > 0))
-  {
-    ROS_INFO("Serial communication failed. Attempting to restart.");
-    if (!(openComs()))
-    {
-      ROS_WARN("Failed to restart serial communication.");
-    }
-  }
-
   if (write(serial_port_fd_, write_buffer, SERIAL_OUT_PACKAGE_LENGTH) < SERIAL_OUT_PACKAGE_LENGTH)
   {
     char str_ex[50];
@@ -967,14 +962,6 @@ int OpenRover::readCommand()
   unsigned char read_buffer[1];
   unsigned char start_byte_read, checksum, read_checksum, data1, data2, dataNO;
   int data;
-  if (!(serial_port_fd_ > 0))
-  {
-    ROS_INFO("Serial communication failed. Attempting to restart.");
-    if (!(openComs()))
-    {
-      ROS_WARN("Failed to restart serial communication.");
-    }
-  }
 
   int bits_read = read(serial_port_fd_, read_buffer, 1);
   start_byte_read = read_buffer[0];

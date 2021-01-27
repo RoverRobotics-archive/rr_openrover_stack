@@ -28,6 +28,6 @@ topics:
   priority: 10
 - 
   name    : freedom
-  topic   : /managed/freedom
+  topic   : /managed/fleet_manager
   timeout : 0.5
   priority: 90
