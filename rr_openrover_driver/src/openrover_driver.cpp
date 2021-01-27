@@ -665,7 +665,7 @@ void OpenRover::publishSlowRateData()
   battery_status_b_pub.publish(interpret_battery_status(robot_data_[i_BATTERY_STATUS_B]));
 
   std_msgs::Int32 soc;
-  soc.data = (robot_data_[i_REG_ROBOT_REL_SOC_A] + robot_data_[i_REG_ROBOT_REL_SOC_B]) / 2;
+  soc.data = (std::min(robot_data_[i_REG_ROBOT_REL_SOC_A],robot_data_[i_REG_ROBOT_REL_SOC_B]));
   battery_state_of_charge_pub.publish(soc);
 
   if(use_legacy_) {
@@ -921,7 +921,7 @@ void OpenRover::updateRobotData(int param)
   }
   catch (std::string s)
   {
-    char str_ex[50];
+    char str_ex[70];
     sprintf(str_ex, "Failed to update param %i. Will try to re-open port", param);
     //try to re-open the serial port
     if (!(openComs()))
