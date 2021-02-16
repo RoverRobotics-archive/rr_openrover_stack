@@ -59,7 +59,7 @@ OpenRover::OpenRover(ros::NodeHandle& nh, ros::NodeHandle& nh_priv)
   , l_pid_csv_file_("")
   , r_pid_csv_file_("")
 {
-  ROS_INFO("Initializing openrover driver.");
+  ROS_INFO("Initializing rover driver.");
 }
 
 bool OpenRover::start()
@@ -1147,7 +1147,7 @@ int main(int argc, char* argv[])
   */
   if (!openrover.start())
   {
-    ROS_FATAL("Failed to start the openrover driver");
+    ROS_FATAL("Failed to start the rover driver");
     ros::requestShutdown();
   }
 

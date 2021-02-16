@@ -43,9 +43,6 @@ OdomControl::OdomControl()
   , velocity_measured_(0)
   , velocity_filtered_(0)
 {
-  ROS_INFO("odom Kp: %f", K_P_);
-  ROS_INFO("odom Ki: %f", K_I_);
-  ROS_INFO("odom Kd: %f", K_D_);
 }
 
 OdomControl::OdomControl(bool use_control, PidGains pid_gains, int max, int min, std::ofstream* fs)
@@ -73,9 +70,6 @@ OdomControl::OdomControl(bool use_control, PidGains pid_gains, int max, int min,
   , velocity_measured_(0)
   , velocity_filtered_(0)
 {
-  ROS_INFO("odom Kp: %f", K_P_);
-  ROS_INFO("odom Ki: %f", K_I_);
-  ROS_INFO("odom Kd: %f", K_D_);
 
   if (fs_ != nullptr && fs_->is_open()) {
     *fs_ << "time,Kp,Ki,Kd,error,integral_error,differential_error,error_filtered,meas_vel,filt_vel,cmd_vel,dt,motor_cmd\n";
