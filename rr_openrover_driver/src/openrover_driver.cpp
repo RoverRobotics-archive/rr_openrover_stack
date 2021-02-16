@@ -70,8 +70,6 @@ bool OpenRover::start()
     return false;
   }
 
-  ROS_INFO("%f, %f, %f", pidGains_.Kp, pidGains_.Ki, pidGains_.Kd);
-
   if (l_fs_.is_open()) {
     left_controller_ = OdomControl(closed_loop_control_on_, pidGains_, MOTOR_SPEED_MAX, MOTOR_SPEED_MIN, &l_fs_);
   }
@@ -98,7 +96,7 @@ bool OpenRover::start()
 
   if (!(nh_priv_.getParam("use_legacy", use_legacy_)))
   {
-    ROS_WARN("Failed to retrieve drive_type from parameter.Defaulting to %s", use_legacy_ ? "true" : "false");
+    ROS_WARN("Failed to retrieve use_legacy from parameter.Defaulting to %s", use_legacy_ ? "true" : "false");
   }
 
   if(use_legacy_) {
@@ -116,7 +114,7 @@ bool OpenRover::start()
   is_charging_pub = nh_priv_.advertise<std_msgs::Bool>("charging", 1);
 
   motor_speeds_pub = nh_priv_.advertise<std_msgs::Int32MultiArray>("motor_speeds_commanded", 1);
-  vel_calc_pub = nh_priv_.advertise<std_msgs::Float32MultiArray>("vel_calc_pub", 1);
+  vel_calc_pub = nh_priv_.advertise<std_msgs::Float32MultiArray>("wheel_velocities", 1);
 
   trim_sub = nh_priv_.subscribe("/trim_increment", 1, &OpenRover::trimCB, this);
   cmd_vel_sub = nh_priv_.subscribe("/cmd_vel/managed", 1, &OpenRover::cmdVelCB, this);
